@@ -1,20 +1,39 @@
-#include "webserv.hpp"
+#include "Config.hpp"
 
-int	main(int argc, char *argv[])
+/*
+		Our Webserv Flow
+
+		START
+		|
+		Config Parse
+		|
+		Object Genrate
+		|
+		listen()
+	__	|
+	|	kevent Occured
+loop|	|										____
+	|__	Ident Check									|
+		|					|						|
+		(server)			(client)				|
+		|					|						|
+		connect() Client	Filter Check			|	loop
+							|			|			|
+							(read)		(write)		|
+							|			|			|
+							Response	Request	____|
+*/
+
+int main(int argc, char *argv[])
 {
-	if (argc == 2)
+	try
 	{
-		try
-		{
-			Config& configFile = Config::getConfFile();
-			configFile.setFile(argv[1]);
-		}
-		catch(const std::exception& e)
-		{
-			std::cerr << e.what() << '\n';
-		}
+		(void)argc;
+		Config configTest(argv[1]);
 	}
-	else
-		std::cout << "argument error!" << std::endl;
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what() << '\n';
+	}
 	return (0);
 }

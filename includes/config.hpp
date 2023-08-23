@@ -1,40 +1,37 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
+#include "ServerInfo.hpp"
 #include <iostream>
-#include <string>
 #include <map>
+#include <vector>
+#include <string>
 #include <fstream>
 #include <exception>
-
-typedef struct	s_fileInfo
-{
-	std::ifstream	file;
-	std::string		buf;
-	int				bufSize;
-}				t_fileInfo;
+// 싱글톤 보류
 
 class Config
 {
-private:
-	static Config*						confFile;
-	std::map<std::string, std::string>	confParse;
-	Config();
-	Config(const Config& source);
-	~Config();
-
 public:
-	static Config*								getConfFile();
-	void										openFile(char *fileName);
-	void										setFile(char *fileName);
-	std::map<std::string, std::string>			getFile();
-	class FileError : public std::exception
+	Config();
+	Config(const std::string &fileName);
+	Config(const Config &source);
+	~Config();
+	std::map<std::string, std::string> getGeneralBlock();
+	std::vector<ServerInfo *> getSeverBlock();
+	class FileOpenFailException : public std::exception
 	{
 	public:
 		virtual const char *what() const throw();
 	};
-};
 
-Config* Config::confFile = NULL;
+private:
+	std::map<std::string, std::string> _generalBlock;
+	std::vector<ServerInfo *> servers;
+
+	void parseConfigFile(const std::string &fileName);
+	std::pair<std::string, std::string> getPair(std::ifstream &file, std::string word);
+	void parseServerInfo(std::ifstream &file);
+};
 
 #endif

@@ -1,60 +1,103 @@
-#include "config.hpp"
+#include "Config.hpp"
 
 Config::Config()
 {
+}
+
+Config::Config(const std::string &fileName)
+{
+	parseConfigFile(fileName);
 }
 
 Config::~Config()
 {
 }
 
-Config::Config(const Config& source)
+Config::Config(const Config &source)
 {
 	(void)source;
 }
 
-Config*	Config::getConfFile()
+void Config::parseConfigFile(const std::string &fileName)
 {
-	if (confFile == NULL)
-		confFile = new Config();
-	return (confFile);
+	std::ifstream file;
+	std::string word;
+	std::string whitespace = " \t\r\n\f\v";
+
+	file.open(fileName);
+
+	if (file.is_open() == false)
+	{
+		throw FileOpenFailException();
+	}
+
+	file >> word;
+
+	while (true)
+	{
+		if (file.eof() == true)
+			break;
+		if (word == "server")
+		{
+			parseServerInfo(file);
+		}
+		else
+		{
+			_generalBlock.insert(getPair(file, word));
+		}
+		file >> word;
+	}
+	for (int i = 0; i < servers.size(); i++)
+	{
+		servers[i]->getServerInfo();
+	}
 }
 
-void	Config::openFile(char *fileName)
+std::pair<std::string, std::string> Config::getPair(std::ifstream &file, std::string word)
 {
-	t_fileInfo	fileInfo;
+	std::string value;
+	std::string key;
 
-	fileInfo.file.open(fileName);
-	if (!fileInfo.file.is_open())
-		throw FileError();
-	fileInfo.file.seekg(0, std::ios::end);
-	fileInfo.bufSize = fileInfo.file.tellg();
-	fileInfo.buf.resize(fileInfo.bufSize);
-	fileInfo.file.seekg(0, std::ios::beg);
-	fileInfo.file.read(&fileInfo.buf[0], fileInfo.bufSize);
-	std::cout << fileInfo.buf << std::endl;
+	while (true)
+	{
+		if (std::find(word.begin(), word.end(), ';') != word.end())
+		{
+			value = word;
+			return (std::pair<std::string, std::string>(key, value));
+		}
+		else
+		{
+			key = word;
+		}
+		file >> word;
+	}
 }
 
-void	Config::setFile(char *fileName)
+void Config::parseServerInfo(std::ifstream &file)
 {
-	openFile(fileName);
+	int flag = 0;
+	std::string word;
+
+	while (true)
+	{
+		file >> word;
+		if (word == "{")
+			flag++;
+		else if (word == "}")
+			flag--;
+		else if (word == "location")
+		{
+		}
+		else
+		{
+			servers.push_back(new ServerInfo(getPair(file, word)));
+		}
+		if (flag == 0)
+			return;
+	}
 }
 
-const char *Config::FileError::what() const throw()
+const char *Config::FileOpenFailException::what() const throw()
 {
-	return ("File open error!");
+	return ("file open error");
 }
-
-// class Config
-// {
-// private:
-// 	static Config						conf_file;
-// 	std::map<std::string, std::string>	conf_parse;
-// 	Config();
-// 	Config(const Config& source);
-// 	~Config();
-// 	void	parsing_config(std::string file);
-// public:
-// 	void								set_file();
-// 	std::map<std::string, std::string>	get_file();
-// };

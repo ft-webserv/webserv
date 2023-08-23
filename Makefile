@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------- #
 
 CC					:= c++
-CFLAGS				:= -Wall -Wextra -Werror -std=c++98
+#  CFLAGS				:= -Wall -Wextra -Werror -std=c++98
 CPPFLAGS			= -I includes
 MJ					= -MJ $(patsubst $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(BUILD_DIR)/$(JSON_DIR)/%.part.json, $@)
 
@@ -14,6 +14,9 @@ MJ					= -MJ $(patsubst $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(BUILD_DIR)/$(JSON_DIR)/%.
 SRC_DIR				:= sources
 
 CONFIG_DIR			:= Config
+SERVER_DIR			:= Server
+SERVERMANAGER_DIR	:= ServerManager
+SERVERINFO_DIR		:= ServerInfo
 
 BUILD_DIR			:= build
 OBJ_DIR				:= obj
@@ -25,6 +28,9 @@ JSON_DIR			:= json
 
 SRCS				:= $(addprefix $(SRC_DIR)/, main.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(CONFIG_DIR)/, Config.cpp)
+SRCS				+= $(addprefix $(SRC_DIR)/$(SERVER_DIR)/, Server.cpp)
+# SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERMANAGER_DIR)/, ServerManager.cpp)
+SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERINFO_DIR)/, ServerInfo.cpp)
 
 OBJS				:= $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(SRCS))
 
@@ -54,6 +60,7 @@ $(NAME): $(OBJS)
 		@$(CC) $(CFLAGS) $(OBJS) -o $@
 		@printf "\n$(MAGENTA)[$(NAME)] Linking Success\n$(DEF_COLOR)"
 
+
 $(BUILD_DIR)/$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | dir_guard
 		@$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@ $(MJ)
 		@$(eval COMPILED_FILES = $(shell expr $(COMPILED_FILES) + 1))
@@ -79,8 +86,8 @@ json:
 		@(echo '[' && find . -name "*.part.json" | xargs cat && echo ']') > $(JSON)
 
 dir_guard:
-		@mkdir -p $(addprefix $(BUILD_DIR)/$(OBJ_DIR)/, $(CONFIG_DIR)) \
-			$(addprefix $(BUILD_DIR)/$(JSON_DIR)/, $(CONFIG_DIR))
+		@mkdir -p $(addprefix $(BUILD_DIR)/$(OBJ_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(SERVERMANAGER_DIR) $(SERVERINFO_DIR))\
+			$(addprefix $(BUILD_DIR)/$(JSON_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(SERVERMANAGER_DIR) $(SERVERINFO_DIR))
 
 .PHONY: all clean fclean re dir_guard
 
