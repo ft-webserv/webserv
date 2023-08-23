@@ -27,10 +27,11 @@ public:
 
 private:
 	std::map<std::string, std::string> _generalBlock;
-	std::vector<ServerInfo *> servers;
+	std::vector<ServerInfo *> _serverInfos;
 
 	void parseConfigFile(const std::string &fileName);
 	std::pair<std::string, std::string> getPair(std::ifstream &file, std::string word);
+	void parseLocationInfo(std::ifstream &file, ServerInfo &target);
 	void parseServerInfo(std::ifstream &file);
 };
 

@@ -15,7 +15,7 @@ public:
 	virtual ~ServerManager(void);
 
 private:
-	std::map<std::string, Server> Servers;
+	std::map<std::string, Server> _serverInfos;
 	void addServer(/* arguments */);
 	void setServer(char *fileName);
 };

@@ -4,13 +4,10 @@ ServerInfo::ServerInfo(void)
 {
 }
 
-ServerInfo::ServerInfo(std::pair<std::string, std::string> pair)
-{
-	this->setServerInfo(pair);
-}
-
 ServerInfo::ServerInfo(const ServerInfo &src)
 {
+	this->_info = src._info;
+	this->_locationInfos = src._locationInfos;
 }
 
 ServerInfo::~ServerInfo(void)
@@ -27,15 +24,23 @@ ServerInfo &ServerInfo::operator=(ServerInfo const &rhs)
 
 void ServerInfo::setServerInfo(std::pair<std::string, std::string> pair)
 {
-	_serverInfo.insert(pair);
+	_info.insert(pair);
+}
+
+void ServerInfo::addLocationInfo(LocationInfo *tmp)
+{
+	_locationInfos.push_back(tmp);
 }
 
 void ServerInfo::getServerInfo()
 {
-	int i = 0;
-	std::map<std::string, std::string>::iterator it = _serverInfo.begin();
-	for (; it != _serverInfo.end(); it++)
+	std::map<std::string, std::string>::iterator it = _info.begin();
+	for (; it != _info.end(); it++)
 	{
 		std::cout << it->first << " : " << it->second << std::endl;
+	}
+	for (int i = 0; i < _locationInfos.size(); i++)
+	{
+		_locationInfos[i]->getLocationInfo();
 	}
 }

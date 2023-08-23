@@ -30,7 +30,7 @@ SRCS				:= $(addprefix $(SRC_DIR)/, main.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(CONFIG_DIR)/, Config.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(SERVER_DIR)/, Server.cpp)
 # SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERMANAGER_DIR)/, ServerManager.cpp)
-SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERINFO_DIR)/, ServerInfo.cpp)
+SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERINFO_DIR)/, ServerInfo.cpp LocationInfo.cpp)
 
 OBJS				:= $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(SRCS))
 
