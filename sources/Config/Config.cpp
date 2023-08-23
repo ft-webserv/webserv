@@ -18,10 +18,15 @@ Config::Config(const Config &source)
 	(void)source;
 }
 
+std::vector<ServerInfo *> Config::getServerInfos()
+{
+	return (_serverInfos);
+}
+
 void Config::parseConfigFile(const std::string &fileName)
 {
 	std::ifstream file;
-	std::string word;
+	std::string word, key, val;
 	std::string whitespace = " \t\r\n\f\v";
 
 	file.open(fileName);
@@ -38,36 +43,29 @@ void Config::parseConfigFile(const std::string &fileName)
 		if (word == "server")
 			parseServerInfo(file);
 		else
-			_generalBlock.insert(getPair(file, word));
+		{
+			val = word;
+			while (true)
+			{
+				file >> word;
+				key = word;
+				key.erase(std::find(key.begin(), key.end(), ';'));
+				_generalInfo.insert(std::pair<std::string, std::string>(key, val));
+				if (std::find(word.begin(), word.end(), ';') != word.end())
+					break;
+			}
+		}
 		file >> word;
 	}
 	for (int i = 0; i < _serverInfos.size(); i++)
 		_serverInfos[i]->getServerInfo();
 }
 
-std::pair<std::string, std::string> Config::getPair(std::ifstream &file, std::string word)
-{
-	std::string value;
-	std::string key;
-
-	while (true)
-	{
-		if (std::find(word.begin(), word.end(), ';') != word.end())
-		{
-			value = word;
-			return (std::pair<std::string, std::string>(key, value));
-		}
-		else
-			key = word;
-		file >> word;
-	}
-}
-
 void Config::parseServerInfo(std::ifstream &file)
 {
 	int flag = 0;
 	ServerInfo tmp;
-	std::string word;
+	std::string word, key, val;
 
 	while (true)
 	{
@@ -79,7 +77,18 @@ void Config::parseServerInfo(std::ifstream &file)
 		else if (word == "location")
 			parseLocationInfo(file, tmp);
 		else
-			tmp.setServerInfo(getPair(file, word));
+		{
+			val = word;
+			while (true)
+			{
+				file >> word;
+				key = word;
+				key.erase(std::find(key.begin(), key.end(), ';'));
+				tmp.setServerInfo(std::pair<std::string, std::string>(key, val));
+				if (std::find(word.begin(), word.end(), ';') != word.end())
+					break;
+			}
+		}
 		if (flag == 0)
 		{
 			_serverInfos.push_back(new ServerInfo(tmp));
@@ -92,7 +101,7 @@ void Config::parseLocationInfo(std::ifstream &file, ServerInfo &target)
 {
 	int flag = 0;
 	LocationInfo tmp;
-	std::string word;
+	std::string word, key, val;
 
 	file >> word;
 	tmp.setPath(word);
@@ -104,7 +113,18 @@ void Config::parseLocationInfo(std::ifstream &file, ServerInfo &target)
 		else if (word == "}")
 			flag--;
 		else
-			tmp.setLocationInfo(getPair(file, word));
+		{
+			val = word;
+			while (true)
+			{
+				file >> word;
+				key = word;
+				key.erase(std::find(key.begin(), key.end(), ';'));
+				tmp.setLocationInfo(std::pair<std::string, std::string>(key, val));
+				if (std::find(word.begin(), word.end(), ';') != word.end())
+					break;
+			}
+		}
 		if (flag == 0)
 		{
 			target.addLocationInfo(new LocationInfo(tmp));

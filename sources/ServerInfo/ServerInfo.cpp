@@ -32,15 +32,16 @@ void ServerInfo::addLocationInfo(LocationInfo *tmp)
 	_locationInfos.push_back(tmp);
 }
 
-void ServerInfo::getServerInfo()
+std::map<std::string, std::string> &ServerInfo::getServerInfo()
 {
-	std::map<std::string, std::string>::iterator it = _info.begin();
-	for (; it != _info.end(); it++)
-	{
-		std::cout << it->first << " : " << it->second << std::endl;
-	}
-	for (int i = 0; i < _locationInfos.size(); i++)
-	{
-		_locationInfos[i]->getLocationInfo();
-	}
+	return (_info);
+	// std::map<std::string, std::string>::iterator it = _info.begin();
+	// for (; it != _info.end(); it++)
+	// {
+	// 	std::cout << it->first << " : " << it->second << std::endl;
+	// }
+	// for (int i = 0; i < _locationInfos.size(); i++)
+	// {
+	// 	_locationInfos[i]->getLocationInfo();
+	// }
 }

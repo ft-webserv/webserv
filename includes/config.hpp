@@ -17,8 +17,8 @@ public:
 	Config(const std::string &fileName);
 	Config(const Config &source);
 	~Config();
-	std::map<std::string, std::string> getGeneralBlock();
-	std::vector<ServerInfo *> getSeverBlock();
+	std::map<std::string, std::string> getgeneralInfo();
+	std::vector<ServerInfo *> getServerInfos();
 	class FileOpenFailException : public std::exception
 	{
 	public:
@@ -26,11 +26,10 @@ public:
 	};
 
 private:
-	std::map<std::string, std::string> _generalBlock;
+	std::map<std::string, std::string> _generalInfo;
 	std::vector<ServerInfo *> _serverInfos;
 
 	void parseConfigFile(const std::string &fileName);
-	std::pair<std::string, std::string> getPair(std::ifstream &file, std::string word);
 	void parseLocationInfo(std::ifstream &file, ServerInfo &target);
 	void parseServerInfo(std::ifstream &file);
 };

@@ -3,21 +3,22 @@
 
 #include "Server.hpp"
 #include "Config.hpp"
-#include <map>
+#include <vector>
 #include <string>
 
 class ServerManager
 {
 public:
-	ServerManager(void);
+	ServerManager(Config &conf);
 	ServerManager(const ServerManager &src);
 	ServerManager &operator=(ServerManager const &rhs);
 	virtual ~ServerManager(void);
 
 private:
-	std::map<std::string, Server> _serverInfos;
-	void addServer(/* arguments */);
-	void setServer(char *fileName);
+	Config &_conf;
+	std::map<std::string, Server> _servers;
+	void addServer(void);
+	Server setServer(void);
 };
 
 #endif
