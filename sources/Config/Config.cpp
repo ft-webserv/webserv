@@ -23,6 +23,11 @@ std::vector<ServerInfo *> Config::getServerInfos()
 	return (_serverInfos);
 }
 
+std::map<std::string, std::string> Config::getgeneralInfo()
+{
+	return (_generalInfo);
+}
+
 void Config::parseConfigFile(const std::string &fileName)
 {
 	std::ifstream file;

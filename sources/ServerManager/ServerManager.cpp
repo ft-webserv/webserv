@@ -18,27 +18,30 @@ ServerManager::~ServerManager(void)
 {
 }
 
+void ServerManager::openServSock(void)
+{
+
+}
+
 void ServerManager::addServer(void)
 {
-	Server val;
+	Server *val;
 	std::string key;
 	std::map<std::string, std::string>::iterator it;
 
 	for (int i = 0; i < _conf.getServerInfos().size(); i++)
 	{
-		val = setServer();
+		val = new Server();
 		for (it = _conf.getServerInfos()[i]->getServerInfo().begin(); it != _conf.getServerInfos()[i]->getServerInfo().end(); it++)
 		{
-			if (it->second == "server_name")
+			if (it->second == "listen")
 			{
-				key = it->first;
-				_servers.insert(std::pair<std::string, Server>(key, val));
 			}
 		}
 	}
 }
 
-Server ServerManager::setServer(void)
+Server *ServerManager::setServer(void)
 {
-	Server tmp;
+	Server *tmp;
 }

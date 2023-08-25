@@ -1,5 +1,5 @@
-#ifndef CONFIG_HPP
-#define CONFIG_HPP
+#ifndef Config_HPP
+#define Config_HPP
 
 #include "ServerInfo.hpp"
 #include <iostream>

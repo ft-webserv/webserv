@@ -3,8 +3,6 @@
 
 #include "Server.hpp"
 #include "Config.hpp"
-#include <vector>
-#include <string>
 
 class ServerManager
 {
@@ -16,9 +14,10 @@ public:
 
 private:
 	Config &_conf;
-	std::map<std::string, Server> _servers;
+	std::map<std::string, Server *> _servers;
+	void openServSock(void);
 	void addServer(void);
-	Server setServer(void);
+	Server *setServer(void);
 };
 
 #endif
