@@ -1,6 +1,15 @@
 #ifndef ServerManager_HPP
 #define ServerManager_HPP
 
+// stringstream header
+#include <sstream>
+
+// kqueue(), kevent() header
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
+
+// user define header
 #include "Server.hpp"
 #include "Config.hpp"
 
@@ -13,6 +22,7 @@ public:
 	virtual ~ServerManager(void);
 
 private:
+  Kqueue kqueue;
 	Config &_conf;
 	std::map<std::string, Server *> _servers;
 	void openServSock(void);

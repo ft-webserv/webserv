@@ -1,4 +1,5 @@
 #include "ServerManager.hpp"
+#include <sstream>
 
 ServerManager::ServerManager(Config &conf)
 	: _conf(conf)
@@ -20,7 +21,19 @@ ServerManager::~ServerManager(void)
 
 void ServerManager::openServSock(void)
 {
+  std::set<std::string>::iterator iter;  
+  std::stringstream ss;
+  int servSock;
+  int port;
 
+
+  for (iter = _conf.getPorts().begin(); iter != _conf.getPorts().end; iter++)
+  {
+    ss << *iter; 
+    ss >> port;
+    servSock = 
+
+  }
 }
 
 void ServerManager::addServer(void)

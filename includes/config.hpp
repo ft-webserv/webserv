@@ -8,6 +8,7 @@
 #include <string>
 #include <fstream>
 #include <exception>
+#include <set>
 // 싱글톤 보류
 
 class Config
@@ -19,6 +20,7 @@ public:
 	~Config();
 	std::map<std::string, std::string> getgeneralInfo();
 	std::vector<ServerInfo *> getServerInfos();
+  std::set<std::string> getPorts();
 	class FileOpenFailException : public std::exception
 	{
 	public:
@@ -28,6 +30,7 @@ public:
 private:
 	std::map<std::string, std::string> _generalInfo;
 	std::vector<ServerInfo *> _serverInfos;
+  std::set<std::string> _ports;
 
 	void parseConfigFile(const std::string &fileName);
 	void parseLocationInfo(std::ifstream &file, ServerInfo &target);

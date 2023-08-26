@@ -28,6 +28,11 @@ std::map<std::string, std::string> Config::getgeneralInfo()
 	return (_generalInfo);
 }
 
+std::set<std::string> Config::getPorts()
+{
+  return (_ports);
+}
+
 void Config::parseConfigFile(const std::string &fileName)
 {
 	std::ifstream file;
@@ -89,6 +94,8 @@ void Config::parseServerInfo(std::ifstream &file)
 				file >> word;
 				key = word;
 				key.erase(std::find(key.begin(), key.end(), ';'));
+        if (val == "listen")
+            _ports.insert(key);
 				tmp.setServerInfo(std::pair<std::string, std::string>(key, val));
 				if (std::find(word.begin(), word.end(), ';') != word.end())
 					break;
