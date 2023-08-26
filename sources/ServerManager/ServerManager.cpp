@@ -1,5 +1,4 @@
 #include "ServerManager.hpp"
-#include <sstream>
 
 ServerManager::ServerManager(Config &conf)
 	: _conf(conf)
@@ -19,24 +18,36 @@ ServerManager::~ServerManager(void)
 {
 }
 
-void ServerManager::openServSock(void)
+int ServerManager::newServSock()
 {
-  std::set<std::string>::iterator iter;  
-  std::stringstream ss;
-  int servSock;
-  int port;
+	std::set<int>::iterator iter;
+	int servSock;
+	struct sockaddr_in servAddr;
 
-
-  for (iter = _conf.getPorts().begin(); iter != _conf.getPorts().end; iter++)
-  {
-    ss << *iter; 
-    ss >> port;
-    servSock = 
-
-  }
+	for (iter = _conf.getPorts().begin(); iter != _conf.getPorts().end(); iter++)
+	{
+		if (servSock = socket(PF_INET, SOCK_STREAM, 0) == -1)
+		{
+			Exception::socketError("socket() error!");
+		}
+		memset(&servAddr, 0, sizeof(servAddr));
+		servAddr.sin_family = AF_INET;
+		servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+		servAddr.sin_port = htons(*iter);
+		if (bind(servSock, (struct sockaddr *)&servAddr, sizeof(servAddr)) == -1)
+		{
+			Exception::bindError("bind() error!");
+		}
+		if (listen(servSock, BACKLOG) == -1)
+		{
+			Exception::listenError("listen() error!");
+		}
+		fcntl(servSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
+		_kqueue.addEvent(servSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+	}
 }
 
-void ServerManager::addServer(void)
+void ServerManager::_addServer()
 {
 	Server *val;
 	std::string key;
@@ -47,14 +58,14 @@ void ServerManager::addServer(void)
 		val = new Server();
 		for (it = _conf.getServerInfos()[i]->getServerInfo().begin(); it != _conf.getServerInfos()[i]->getServerInfo().end(); it++)
 		{
-			if (it->second == "listen")
+			if (it->second == "server_name")
 			{
 			}
 		}
 	}
 }
 
-Server *ServerManager::setServer(void)
+Server *ServerManager::_setServer(void)
 {
 	Server *tmp;
 }

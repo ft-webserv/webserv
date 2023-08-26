@@ -1,17 +1,14 @@
 #ifndef ServerManager_HPP
 #define ServerManager_HPP
 
-// stringstream header
-#include <sstream>
-
-// kqueue(), kevent() header
-#include <sys/types.h>
-#include <sys/event.h>
-#include <sys/time.h>
+// standard header
+#include <cstring>
 
 // user define header
 #include "Server.hpp"
 #include "Config.hpp"
+#include "Kqueue.hpp"
+#include "Exception.hpp"
 
 class ServerManager
 {
@@ -20,14 +17,15 @@ public:
 	ServerManager(const ServerManager &src);
 	ServerManager &operator=(ServerManager const &rhs);
 	virtual ~ServerManager(void);
+	int newClientSock();
+	int newServSock();
 
 private:
-  Kqueue kqueue;
+	Kqueue _kqueue;
 	Config &_conf;
 	std::map<std::string, Server *> _servers;
-	void openServSock(void);
-	void addServer(void);
-	Server *setServer(void);
+	void _addServer(void);
+	Server *_setServer(void);
 };
 
 #endif
