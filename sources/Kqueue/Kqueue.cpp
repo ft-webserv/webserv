@@ -2,10 +2,13 @@
 
 Kqueue::Kqueue()
 {
-	if (_kq = kqueue() == -1)
+	if ((_kq = kqueue()) == -1)
 	{
 		Exception::kqueueError("kqueue() error!");
 	}
+	_eventList.resize(EVENTSIZE);
+	FD_ZERO(&_clients);
+	FD_ZERO(&_clients);
 }
 
 Kqueue::Kqueue(const Kqueue &copy)
@@ -14,6 +17,7 @@ Kqueue::Kqueue(const Kqueue &copy)
 
 Kqueue &Kqueue::operator=(const Kqueue &copy)
 {
+	return (*this);
 }
 
 Kqueue::~Kqueue()
@@ -28,15 +32,15 @@ void Kqueue::addEvent(uintptr_t ident, int16_t filter, uint16_t flags, uint32_t 
 	_changeList.push_back(tempEvent);
 }
 
-void Kqueue::enableEvent(const int Socket)
+void Kqueue::enableEvent(const uintptr_t Socket)
 {
 }
 
-void Kqueue::disableEvent(const int Socket)
+void Kqueue::disableEvent(const uintptr_t Socket)
 {
 }
 
-void Kqueue::deleteEvent(const int Socket)
+void Kqueue::deleteEvent(const uintptr_t Socket)
 {
 	close(Socket);
 }
@@ -54,4 +58,38 @@ std::vector<struct kevent> &Kqueue::getEventList()
 std::vector<struct kevent> &Kqueue::getChangeList()
 {
 	return (_changeList);
+}
+
+int Kqueue::doKevent()
+{
+	int res = kevent(_kq, &_changeList[0], _changeList.size(), &_eventList[0], EVENTSIZE, NULL);
+	if (res == -1)
+		Exception::keventError("kevent() error!");
+	_changeList.clear();
+	return (res);
+}
+
+void Kqueue::setFdset(const uintptr_t socket, eFdType flag)
+{
+	switch (flag)
+	{
+	case SERVER:
+		FD_SET(socket, &_servers);
+		break;
+	case CLIENT:
+		FD_SET(socket, &_clients);
+		break;
+	default:
+		break;
+	}
+}
+
+eFdType Kqueue::getFdType(const uintptr_t socket)
+{
+	if (FD_ISSET(socket, &_servers))
+		return (SERVER);
+	else if (FD_ISSET(socket, &_clients))
+		return (CLIENT);
+	else
+		return (DEFAULT);
 }

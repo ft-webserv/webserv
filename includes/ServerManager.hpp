@@ -8,7 +8,6 @@
 #include "Server.hpp"
 #include "Config.hpp"
 #include "Kqueue.hpp"
-#include "Exception.hpp"
 
 class ServerManager
 {
@@ -17,8 +16,7 @@ public:
 	ServerManager(const ServerManager &src);
 	ServerManager &operator=(ServerManager const &rhs);
 	virtual ~ServerManager(void);
-	int newClientSock();
-	int newServSock();
+	void runServer();
 
 private:
 	Kqueue _kqueue;
@@ -27,6 +25,7 @@ private:
 	void _addServer(void);
 	Server *_setServer(void);
 	void _monitoringEvent(void);
+	void _acceptClient(uintptr_t servSock);
 };
 
 #endif

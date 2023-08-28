@@ -27,3 +27,13 @@ void Exception::kqueueError(const std::string &message)
 {
 	throw std::runtime_error(message);
 }
+
+void Exception::keventError(const std::string &message)
+{
+	throw std::runtime_error(message);
+}
+
+void Exception::acceptError(const std::string &message)
+{
+	throw std::runtime_error(message);
+}

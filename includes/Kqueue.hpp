@@ -12,6 +12,15 @@
 
 // user define header
 
+#define EVENTSIZE (10)
+
+enum eFdType
+{
+    DEFAULT,
+    SERVER,
+    CLIENT
+};
+
 class Kqueue
 {
 public:
@@ -20,12 +29,21 @@ public:
     Kqueue &operator=(const Kqueue &copy);
     ~Kqueue();
     void addEvent(uintptr_t ident, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
-    void enableEvent(const int socket);
-    void disableEvent(const int socket);
-    void deleteEvent(const int socket);
+    void enableEvent(const uintptr_t socket);
+    void disableEvent(const uintptr_t socket);
+    void deleteEvent(const uintptr_t socket);
     int &getKq();
     std::vector<struct kevent> &getEventList();
     std::vector<struct kevent> &getChangeList();
+    int doKevent();
+
+public:
+    void setFdset(const uintptr_t socket, eFdType flag);
+    eFdType getFdType(const uintptr_t socket);
+
+private:
+    fd_set _servers;
+    fd_set _clients;
 
 private:
     int _kq;

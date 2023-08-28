@@ -1,5 +1,5 @@
 #ifndef Exception_HPP
-#define EXception_HPP
+#define Exception_HPP
 
 #include <exception>
 #include <string>
@@ -15,6 +15,8 @@ public:
 	static void bindError(const std::string &message);
 	static void listenError(const std::string &message);
 	static void kqueueError(const std::string &message);
+	static void keventError(const std::string &message);
+	static void acceptError(const std::string &message);
 };
 
 #endif

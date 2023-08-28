@@ -1,4 +1,5 @@
 #include "Config.hpp"
+#include "ServerManager.hpp"
 
 /*
 		Our Webserv Flow
@@ -30,6 +31,8 @@ int main(int argc, char *argv[])
 	{
 		(void)argc;
 		Config configTest(argv[1]);
+		ServerManager testManager(configTest);
+		testManager.runServer();
 	}
 	catch (const std::exception &e)
 	{

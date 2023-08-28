@@ -15,8 +15,10 @@ SRC_DIR				:= sources
 
 CONFIG_DIR			:= Config
 SERVER_DIR			:= Server
+KQUEUE_DIR			:= Kqueue
 SERVERMANAGER_DIR	:= ServerManager
 SERVERINFO_DIR		:= ServerInfo
+EXCEPTION_DIR		:= Exception
 
 BUILD_DIR			:= build
 OBJ_DIR				:= obj
@@ -29,8 +31,10 @@ JSON_DIR			:= json
 SRCS				:= $(addprefix $(SRC_DIR)/, main.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(CONFIG_DIR)/, Config.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(SERVER_DIR)/, Server.cpp)
-# SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERMANAGER_DIR)/, ServerManager.cpp)
+SRCS				+= $(addprefix $(SRC_DIR)/$(KQUEUE_DIR)/, Kqueue.cpp)
+SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERMANAGER_DIR)/, ServerManager.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERINFO_DIR)/, ServerInfo.cpp LocationInfo.cpp)
+SRCS				+= $(addprefix $(SRC_DIR)/$(EXCEPTION_DIR)/, Exception.cpp)
 
 OBJS				:= $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(SRCS))
 
@@ -86,8 +90,8 @@ json:
 		@(echo '[' && find . -name "*.part.json" | xargs cat && echo ']') > $(JSON)
 
 dir_guard:
-		@mkdir -p $(addprefix $(BUILD_DIR)/$(OBJ_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(SERVERMANAGER_DIR) $(SERVERINFO_DIR))\
-			$(addprefix $(BUILD_DIR)/$(JSON_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(SERVERMANAGER_DIR) $(SERVERINFO_DIR))
+		@mkdir -p $(addprefix $(BUILD_DIR)/$(OBJ_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(KQUEUE_DIR) $(SERVERMANAGER_DIR) $(SERVERINFO_DIR) $(EXCEPTION_DIR))\
+			$(addprefix $(BUILD_DIR)/$(JSON_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(KQUEUE_DIR) $(SERVERMANAGER_DIR) $(SERVERINFO_DIR) $(EXCEPTION_DIR))
 
 .PHONY: all clean fclean re dir_guard
 
