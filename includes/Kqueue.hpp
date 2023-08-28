@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/event.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 // user define header
 
@@ -22,10 +23,12 @@ public:
     void enableEvent(const int socket);
     void disableEvent(const int socket);
     void deleteEvent(const int socket);
-    std::vector<struct kevent> getEventList();
+    int &getKq();
+    std::vector<struct kevent> &getEventList();
+    std::vector<struct kevent> &getChangeList();
 
 private:
-    int kq;
+    int _kq;
     std::vector<struct kevent> _eventList;
     std::vector<struct kevent> _changeList;
 };

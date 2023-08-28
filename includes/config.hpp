@@ -19,9 +19,9 @@ public:
 	Config(const std::string &fileName);
 	Config(const Config &source);
 	~Config();
-	std::map<std::string, std::string> getgeneralInfo(void);
-	std::vector<ServerInfo *> getServerInfos(void);
-	std::set<int> getPorts(void);
+	std::map<std::string, std::string> &getgeneralInfo(void);
+	std::vector<ServerInfo *> &getServerInfos(void);
+	std::set<int> &getPorts(void);
 	class FileOpenFailException : public std::exception
 	{
 	public:

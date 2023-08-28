@@ -26,6 +26,7 @@ private:
 	std::map<std::string, Server *> _servers;
 	void _addServer(void);
 	Server *_setServer(void);
+	void _monitoringEvent(void);
 };
 
 #endif

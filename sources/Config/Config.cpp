@@ -18,16 +18,6 @@ Config::Config(const Config &source)
 	(void)source;
 }
 
-std::vector<ServerInfo *> Config::getServerInfos()
-{
-	return (_serverInfos);
-}
-
-std::map<std::string, std::string> Config::getgeneralInfo()
-{
-	return (_generalInfo);
-}
-
 void Config::parseConfigFile(const std::string &fileName)
 {
 	std::ifstream file;
@@ -146,7 +136,17 @@ void Config::parseLocationInfo(std::ifstream &file, ServerInfo &target)
 	}
 }
 
-std::set<int> Config::getPorts(void)
+std::vector<ServerInfo *> &Config::getServerInfos()
+{
+	return (_serverInfos);
+}
+
+std::map<std::string, std::string> &Config::getgeneralInfo()
+{
+	return (_generalInfo);
+}
+
+std::set<int> &Config::getPorts(void)
 {
 	return (_ports);
 }

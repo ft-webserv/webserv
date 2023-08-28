@@ -44,6 +44,7 @@ int ServerManager::newServSock()
 		}
 		fcntl(servSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 		_kqueue.addEvent(servSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+		_monitoringEvent();
 	}
 }
 
@@ -68,4 +69,14 @@ void ServerManager::_addServer()
 Server *ServerManager::_setServer(void)
 {
 	Server *tmp;
+}
+
+void ServerManager::_monitoringEvent()
+{
+	int numEvents;
+
+	numEvents = kevent();
+	while (true)
+	{
+	}
 }

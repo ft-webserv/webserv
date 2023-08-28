@@ -2,7 +2,7 @@
 
 Kqueue::Kqueue()
 {
-	if (kq = kqueue() == -1)
+	if (_kq = kqueue() == -1)
 	{
 		Exception::kqueueError("kqueue() error!");
 	}
@@ -41,6 +41,17 @@ void Kqueue::deleteEvent(const int Socket)
 	close(Socket);
 }
 
-std::vector<struct kevent> Kqueue::getEventList()
+int &Kqueue::getKq()
 {
+	return (_kq);
+}
+
+std::vector<struct kevent> &Kqueue::getEventList()
+{
+	return (_eventList);
+}
+
+std::vector<struct kevent> &Kqueue::getChangeList()
+{
+	return (_changeList);
 }
