@@ -75,6 +75,7 @@ void ServerManager::_monitoringEvent()
 	while (true)
 	{
 		numEvents = _kqueue.doKevent();
+		std::cout << numEvents << std::endl;
 		for (int i = 0; i < numEvents; i++)
 		{
 			event = &_kqueue.getEventList()[i];
@@ -101,7 +102,7 @@ void ServerManager::_monitoringEvent()
 					_acceptClient(event->ident);
 					break;
 				case CLIENT:
-					std::cout << "Hi im client!" << std::endl;
+					_readRequest(event->ident);
 					break;
 				default:
 					break;
@@ -109,6 +110,7 @@ void ServerManager::_monitoringEvent()
 			}
 			else if (event->flags & EVFILT_WRITE)
 			{
+				_writeResponse(event->ident);
 			}
 		}
 	}
@@ -125,3 +127,9 @@ void ServerManager::_acceptClient(uintptr_t servSock)
 	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	_kqueue.setFdset(clntSock, CLIENT);
 }
+void _readRequest(uintptr_t clntSock)
+{
+	// 리퀘스트를 담을 버퍼를 ServerManager 가 들고 있어야 하나?
+	// 버퍼는 어떤 자료형을 쓰지? clntSock, buf 를 매핑? == map? 아님 그냥 하나의 string?
+}
+void _writeResponse(uintptr_t clntSock) {}

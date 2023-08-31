@@ -26,6 +26,8 @@ private:
 	Server *_setServer(void);
 	void _monitoringEvent(void);
 	void _acceptClient(uintptr_t servSock);
+	void _readRequest(uintptr_t clntSock);
+	void _writeResponse(uintptr_t clntSock);
 };
 
 #endif
