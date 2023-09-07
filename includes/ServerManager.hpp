@@ -21,9 +21,8 @@ public:
 private:
 	Kqueue _kqueue;
 	Config &_conf;
-	std::map<std::string, Server *> _servers;
-	void _addServer(void);
-	Server *_setServer(void);
+	std::map<uintptr_t, Server *> _servers;
+	Server *_addServer(int port);
 	void _monitoringEvent(void);
 	void _acceptClient(uintptr_t servSock);
 	void _readRequest(uintptr_t clntSock);
