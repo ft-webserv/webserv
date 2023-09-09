@@ -9,6 +9,9 @@
 #include "Config.hpp"
 #include "Kqueue.hpp"
 
+// user define value
+#define BUFFERSIZE 1024
+
 class ServerManager
 {
 public:
@@ -21,12 +24,13 @@ public:
 private:
 	Kqueue _kqueue;
 	Config &_conf;
-	std::map<uintptr_t, Server *> _servers;
+	std::map<short, Server *> _servers;
+	std::map<uintptr_t, std::string> _clientBufs;
 	Server *_addServer(int port);
 	void _monitoringEvent(void);
 	void _acceptClient(uintptr_t servSock);
-	void _readRequest(uintptr_t clntSock);
-	void _writeResponse(uintptr_t clntSock);
+	void _readRequest(uintptr_t clntSock, intptr_t data);
+	// void _writeResponse(uintptr_t clntSock);
 };
 
 #endif

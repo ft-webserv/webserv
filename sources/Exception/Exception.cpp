@@ -37,3 +37,13 @@ void Exception::acceptError(const std::string &message)
 {
 	throw std::runtime_error(message);
 }
+
+void Exception::recvError(const std::string &message)
+{
+	throw std::runtime_error(message);
+}
+
+void Exception::disconnectDuringRecvError(const std::string &message)
+{
+	throw std::runtime_error(message);
+}

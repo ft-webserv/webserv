@@ -17,6 +17,8 @@ public:
 	static void kqueueError(const std::string &message);
 	static void keventError(const std::string &message);
 	static void acceptError(const std::string &message);
+	static void recvError(const std::string &message);
+	static void disconnectDuringRecvError(const std::string &message);
 };
 
 #endif

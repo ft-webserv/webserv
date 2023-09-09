@@ -40,9 +40,9 @@ void ServerManager::runServer()
 			Exception::listenError("listen() error!");
 		fcntl(servSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 		_kqueue.addEvent(servSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		_servers.insert(std::pair<uintptr_t, Server *>(servSock, _addServer(*iter)));
+		_servers.insert(std::pair<short, Server *>(*iter, _addServer(*iter)));
 	}
-	// _monitoringEvent();
+	_monitoringEvent();
 }
 
 Server *ServerManager::_addServer(int port)
@@ -59,73 +59,92 @@ Server *ServerManager::_addServer(int port)
 	return (val);
 }
 
-// void ServerManager::_monitoringEvent()
-// {
-// 	int numEvents;
-// 	struct kevent *event;
+void ServerManager::_monitoringEvent()
+{
+	int numEvents;
+	struct kevent *event;
 
-// 	while (true)
-// 	{
-// 		numEvents = _kqueue.doKevent();
-// 		std::cout << numEvents << std::endl;
-// 		for (int i = 0; i < numEvents; i++)
-// 		{
-// 			event = &_kqueue.getEventList()[i];
-// 			eFdType type = _kqueue.getFdType(event->ident);
-// 			if (event->flags & EV_ERROR)
-// 			{
-// 				switch (type)
-// 				{
-// 				case SERVER:
-// 					std::cerr << "server socket error!" << std::endl;
-// 					break;
-// 				case CLIENT:
-// 					_kqueue.deleteEvent(event->ident);
-// 					break;
-// 				default:
-// 					break;
-// 				}
-// 			}
-// 			else if (event->flags & EVFILT_READ)
-// 			{
-// 				switch (type)
-// 				{
-// 				case SERVER:
-// 					_acceptClient(event->ident);
-// 					break;
-// 				case CLIENT:
-// 					_readRequest(event->ident);
-// 					break;
-// 				default:
-// 					break;
-// 				}
-// 			}
-// 			else if (event->flags & EVFILT_WRITE)
-// 			{
-// 				_writeResponse(event->ident);
-// 			}
-// 		}
-// 	}
-// }
+	while (true)
+	{
+		numEvents = _kqueue.doKevent();
+		for (int i = 0; i < numEvents; i++)
+		{
+			event = &_kqueue.getEventList()[i];
+			eFdType type = _kqueue.getFdType(event->ident);
+			if (event->flags & EV_ERROR)
+			{
+				switch (type)
+				{
+				case SERVER:
+					std::cerr << "server socket error!" << std::endl;
+					break;
+				case CLIENT:
+					_kqueue.deleteEvent(event->ident);
+					break;
+				default:
+					break;
+				}
+			}
+			else if (event->flags & EVFILT_READ)
+			{
+				switch (type)
+				{
+				case SERVER:
+					_acceptClient(event->ident);
+					break;
+				case CLIENT:
+					struct sockaddr_in clnt;
+					socklen_t clntSockLen;
+					getsockname(event->ident, (sockaddr *)&clnt, &clntSockLen); ///-------------------------------
+					std::cout << ntohs(clnt.sin_port) << std::endl;
+					_readRequest(event->ident, event->data);
+					break;
+				default:
+					break;
+				}
+			}
+			// else if (event->flags & EVFILT_WRITE)
+			// _writeResponse(event->ident);
+		}
+	}
+}
 
-// void ServerManager::_acceptClient(uintptr_t servSock)
-// {
-// 	uintptr_t clntSock;
-// 	struct sockaddr_in serv;
+void ServerManager::_acceptClient(uintptr_t servSock)
+{
+	uintptr_t clntSock;
+	struct sockaddr_in serv;
 
-// 	if ((clntSock = accept(servSock, NULL, NULL)) == -1)
-// 		Exception::acceptError("accept() error!");
-// 	fcntl(clntSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
-// 	_kqueue.addEvent(clntSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-// 	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-// 	_kqueue.setFdset(clntSock, CLIENT);
-// }
+	if ((clntSock = accept(servSock, NULL, NULL)) == -1)
+		Exception::acceptError("accept() error!");
+	fcntl(clntSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
+	_kqueue.addEvent(clntSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+	_kqueue.setFdset(clntSock, CLIENT);
+	_clientBufs.insert(std::pair<uintptr_t, std::string>(clntSock, ""));
+}
 
-// void _readRequest(uintptr_t clntSock)
-// {
-// 	// 리퀘스트를 담을 버퍼를 ServerManager 가 들고 있어야 하나? -> 서버로 넘겨야 되지 않을까 싶음. 서버 객체들을 서버매니저가 가지고 있고 각 서버 객체가 request를 가지고 있는 식이 좋지 않을까.
-//  // 문제점 하나 더, client socket만 인자로 받는 경우 해당 socket이 어떤 server socket으로 들어왔는지 알 수 가 있나...?
-// // 버퍼는 어떤 자료형을 쓰지? clntSock, buf 를 매핑? == map? 아님 그냥 하나의 string?
-// }
+void ServerManager::_readRequest(uintptr_t clntSock, intptr_t data)
+{
+	ssize_t len;
+	char buf[BUFFERSIZE + 1];
+
+	if ((len = recv(clntSock, buf, BUFFERSIZE, 0)) == -1)
+		Exception::recvError("read() error!");
+	else if (len <= 0)
+		Exception::disconnectDuringRecvError("diconnected during read!");
+	_clientBufs.find(clntSock)->second.append(buf);
+	memset(buf, 0, BUFFERSIZE + 1);
+	struct sockaddr_in clnt;
+	socklen_t clntSockLen;
+	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
+	if (data <= BUFFERSIZE)
+	{
+
+		std::string request = _clientBufs.find(clntSock)->second;
+		// std::cout << clntSock << std::endl;
+		std::cout << ntohs(clnt.sin_port) << std::endl;
+		// (_servers.find(port)->second)->parseRequest(request);
+	}
+}
 
 // void _writeResponse(uintptr_t clntSock) {}

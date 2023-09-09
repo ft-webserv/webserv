@@ -29,6 +29,10 @@ void Server::setHostServer(ServerInfo *serverBlock)
 	}
 }
 
+void parseRequest(std::string request)
+{
+}
+
 std::map<std::string, ServerInfo *> Server::getHostServer()
 {
 	return (_hostServer);
