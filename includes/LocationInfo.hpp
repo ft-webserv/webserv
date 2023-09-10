@@ -5,6 +5,9 @@
 #include <string>
 #include <map>
 
+// user define type
+typedef unsigned short port_t;
+
 class LocationInfo
 {
 public:

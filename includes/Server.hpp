@@ -1,7 +1,7 @@
 #ifndef Server_HPP
 #define Server_HPP
 
-#include "ServerInfo.hpp"
+#include "Config.hpp"
 // socket(), bind(), listen(), accept()
 #include <sys/socket.h>
 // sockaddr_in struct
@@ -15,7 +15,7 @@ class Server
 {
 public:
 	Server(void);
-	Server(int port);
+	Server(port_t port);
 	Server(const Server &src);
 	Server &operator=(Server const &rhs);
 	virtual ~Server(void);

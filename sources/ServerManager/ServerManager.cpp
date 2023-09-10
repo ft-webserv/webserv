@@ -40,12 +40,12 @@ void ServerManager::runServer()
 			Exception::listenError("listen() error!");
 		fcntl(servSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 		_kqueue.addEvent(servSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		_servers.insert(std::pair<short, Server *>(*iter, _addServer(*iter)));
+		_servers.insert(std::pair<port_t, Server *>(*iter, _addServer(*iter)));
 	}
 	_monitoringEvent();
 }
 
-Server *ServerManager::_addServer(int port)
+Server *ServerManager::_addServer(port_t port)
 {
 	Server *val;
 	std::map<std::string, std::string>::iterator it;
@@ -93,10 +93,6 @@ void ServerManager::_monitoringEvent()
 					_acceptClient(event->ident);
 					break;
 				case CLIENT:
-					struct sockaddr_in clnt;
-					socklen_t clntSockLen;
-					getsockname(event->ident, (sockaddr *)&clnt, &clntSockLen); ///-------------------------------
-					std::cout << ntohs(clnt.sin_port) << std::endl;
 					_readRequest(event->ident, event->data);
 					break;
 				default:
@@ -109,7 +105,7 @@ void ServerManager::_monitoringEvent()
 	}
 }
 
-void ServerManager::_acceptClient(uintptr_t servSock)
+void ServerManager::_acceptClient(uintptr_t &servSock)
 {
 	uintptr_t clntSock;
 	struct sockaddr_in serv;
@@ -123,27 +119,28 @@ void ServerManager::_acceptClient(uintptr_t servSock)
 	_clientBufs.insert(std::pair<uintptr_t, std::string>(clntSock, ""));
 }
 
-void ServerManager::_readRequest(uintptr_t clntSock, intptr_t data)
+void ServerManager::_readRequest(uintptr_t &clntSock, intptr_t data)
 {
 	ssize_t len;
 	char buf[BUFFERSIZE + 1];
 
 	if ((len = recv(clntSock, buf, BUFFERSIZE, 0)) == -1)
-		Exception::recvError("read() error!");
+		Exception::recvError("recv() error!");
 	else if (len <= 0)
 		Exception::disconnectDuringRecvError("diconnected during read!");
 	_clientBufs.find(clntSock)->second.append(buf);
 	memset(buf, 0, BUFFERSIZE + 1);
-	struct sockaddr_in clnt;
-	socklen_t clntSockLen;
-	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
 	if (data <= BUFFERSIZE)
 	{
+		struct sockaddr_in clnt;
+		socklen_t clntSockLen = sizeof(clnt);
+		port_t port;
 
+		getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
+		port = ntohs(clnt.sin_port);
 		std::string request = _clientBufs.find(clntSock)->second;
-		// std::cout << clntSock << std::endl;
-		std::cout << ntohs(clnt.sin_port) << std::endl;
-		// (_servers.find(port)->second)->parseRequest(request);
+
+		(_servers.find(port)->second)->parseRequest(request);
 	}
 }
 

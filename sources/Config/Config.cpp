@@ -82,7 +82,7 @@ void Config::parseServerInfo(std::ifstream &file)
 				if (val == "listen")
 				{
 					std::stringstream ss;
-					int port;
+					port_t port;
 					ss << key;
 					ss >> port;
 					_ports.insert(port);

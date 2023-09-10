@@ -1,10 +1,11 @@
+
 #include "Server.hpp"
 
 Server::Server(void)
 {
 }
 
-Server::Server(int port)
+Server::Server(port_t port)
 {
 }
 
@@ -29,8 +30,10 @@ void Server::setHostServer(ServerInfo *serverBlock)
 	}
 }
 
-void parseRequest(std::string request)
+void Server::parseRequest(std::string request)
 {
+	std::cout << _hostServer.begin()->first << std::endl;
+	std::cout << request << std::endl;
 }
 
 std::map<std::string, ServerInfo *> Server::getHostServer()

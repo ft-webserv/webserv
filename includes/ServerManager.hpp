@@ -24,12 +24,12 @@ public:
 private:
 	Kqueue _kqueue;
 	Config &_conf;
-	std::map<short, Server *> _servers;
+	std::map<port_t, Server *> _servers;
 	std::map<uintptr_t, std::string> _clientBufs;
-	Server *_addServer(int port);
+	Server *_addServer(port_t port);
 	void _monitoringEvent(void);
-	void _acceptClient(uintptr_t servSock);
-	void _readRequest(uintptr_t clntSock, intptr_t data);
+	void _acceptClient(uintptr_t &servSock);
+	void _readRequest(uintptr_t &clntSock, intptr_t data);
 	// void _writeResponse(uintptr_t clntSock);
 };
 
