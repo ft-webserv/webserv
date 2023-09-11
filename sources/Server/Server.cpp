@@ -46,14 +46,13 @@ void Server::testPrintRequest(void)
 void Server::parseRequest(std::string request)
 {
 	std::string::size_type pos;
+	std::string::size_type pre = 0;
 	std::string word;
 
 	memset(&_requestInfo, 0, sizeof(_requestInfo));
-	for (pos = 0; pos < request.length();)
+	pos = request.find("\r\n");
+	for (; pos < request.length();)
 	{
-		std::string::size_type pre = pos;
-
-		pos = request.find("\r\n", pos);
 		std::istringstream line(request.substr(pre, pos));
 		line >> word;
 		if (word == "GET" || word == "POST" || word == "DELETE")
@@ -86,7 +85,8 @@ void Server::parseRequest(std::string request)
 			_requestInfo._body = request.substr(pos, request.length());
 		}
 		pos += 2;
-		testPrintRequest();
+		pre = pos;
+		pos = request.find("\r\n", pos);
 	}
 }
 
