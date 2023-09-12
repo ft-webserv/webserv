@@ -8,6 +8,7 @@
 #include "Server.hpp"
 #include "Config.hpp"
 #include "Kqueue.hpp"
+#include "Request.hpp"
 
 // user define value
 #define BUFFERSIZE 1024
@@ -25,7 +26,7 @@ private:
 	Kqueue _kqueue;
 	Config &_conf;
 	std::map<port_t, Server *> _servers;
-	std::map<uintptr_t, std::string> _clientBufs;
+	std::map<uintptr_t, Request *> _clientBufs;
 	Server *_addServer(port_t port);
 	void _monitoringEvent(void);
 	void _acceptClient(uintptr_t &servSock);
