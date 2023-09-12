@@ -1,5 +1,7 @@
 #include <ctime>
 #include <string>
+#include <sstream>
+#include <iostream>
 
 typedef struct s_request
 {
@@ -19,10 +21,12 @@ class Request
 public:
 	Request();
 	~Request();
-	void _readRequest(uintptr_t &clntSock, intptr_t data);
+	void setRequestBufs(std::string buf);
+	void parseRequest(void);
+	void testPrintRequest(void);
 
 private:
-	std::time_t startTime;
-	std::string _requestBufs;
-	t_request parsedRequest;
+	std::time_t _startTime;
+	std::string _requestBuf;
+	t_request _parsedRequest;
 };

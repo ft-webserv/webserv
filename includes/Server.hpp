@@ -21,8 +21,6 @@ public:
 	virtual ~Server(void);
 	void setHostServer(ServerInfo *serverBlock);
 	std::map<std::string, ServerInfo *> getHostServer();
-	void parseRequest(std::string request);
-	void testPrintRequest(void);
 
 private:
 	std::map<std::string, ServerInfo *> _hostServer;

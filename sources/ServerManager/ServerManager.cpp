@@ -117,7 +117,30 @@ void ServerManager::_acceptClient(uintptr_t &servSock)
 	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
 	_kqueue.setFdset(clntSock, CLIENT);
 	Request *tmp = new Request();
-	_clientBufs.insert(std::pair<uintptr_t, Request *>(clntSock, tmp));
+	_requests.insert(std::pair<uintptr_t, Request *>(clntSock, tmp));
+}
+
+void ServerManager::_readRequest(uintptr_t &clntSock, intptr_t data)
+{
+	ssize_t len;
+	char buf[BUFFERSIZE + 1];
+
+	if ((len = recv(clntSock, buf, BUFFERSIZE, 0)) == -1)
+		Exception::recvError("recv() error!");
+	else if (len <= 0)
+		Exception::disconnectDuringRecvError("diconnected during read!");
+	_requests.find(clntSock)->second->setRequestBufs(buf);
+	memset(buf, 0, BUFFERSIZE + 1);
+	if (data <= BUFFERSIZE)
+	{
+		struct sockaddr_in clnt;
+		socklen_t clntSockLen = sizeof(clnt);
+		port_t port;
+
+		getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
+		port = ntohs(clnt.sin_port);
+		_requests.find(port)->second->parseRequest();
+	}
 }
 
 // void _writeResponse(uintptr_t clntSock) {}
