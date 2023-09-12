@@ -52,10 +52,20 @@ Server *ServerManager::_addServer(port_t port)
 
 	val = new Server();
 	for (int i = 0; i < _conf.getServerInfos().size(); i++)
+	{
 		for (it = _conf.getServerInfos()[i]->getServerInfo().begin(); it != _conf.getServerInfos()[i]->getServerInfo().end(); it++)
+		{
 			if (it->second == "listen")
+			{
 				if (atoi((it->first).c_str()) == port)
+				{
+					if (val->getDefaultServer() == NULL)
+						val->setDefaultServer(_conf.getServerInfos()[i]);
 					val->setHostServer(_conf.getServerInfos()[i]);
+				}
+			}
+		}
+	}
 	return (val);
 }
 
@@ -93,14 +103,14 @@ void ServerManager::_monitoringEvent()
 					_acceptClient(event->ident);
 					break;
 				case CLIENT:
-					// _readRequest(event->ident, event->data);
+					_readRequest(event->ident, event->data);
 					break;
 				default:
 					break;
 				}
 			}
-			// else if (event->flags & EVFILT_WRITE)
-			// _writeResponse(event->ident);
+			else if (event->flags & EVFILT_WRITE)
+				_writeResponse(event->ident);
 		}
 	}
 }
@@ -132,15 +142,16 @@ void ServerManager::_readRequest(uintptr_t &clntSock, intptr_t data)
 	_requests.find(clntSock)->second->setRequestBufs(buf);
 	memset(buf, 0, BUFFERSIZE + 1);
 	if (data <= BUFFERSIZE)
-	{
-		struct sockaddr_in clnt;
-		socklen_t clntSockLen = sizeof(clnt);
-		port_t port;
-
-		getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
-		port = ntohs(clnt.sin_port);
-		_requests.find(port)->second->parseRequest();
-	}
+		_requests.find(clntSock)->second->parseRequest();
 }
 
-// void _writeResponse(uintptr_t clntSock) {}
+void ServerManager::_writeResponse(uintptr_t clntSock)
+{
+	struct sockaddr_in clnt;
+	socklen_t clntSockLen = sizeof(clnt);
+	port_t port;
+
+	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
+	port = ntohs(clnt.sin_port);
+	_servers.find(port)->second->makeResponse(_requests.find(clntSock)->second);
+}

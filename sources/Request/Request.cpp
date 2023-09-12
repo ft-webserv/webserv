@@ -2,15 +2,21 @@
 
 Request::Request()
 {
+	_startTime = std::time(NULL);
 }
 
 Request::~Request()
 {
 }
 
-void Request::setRequestBufs(std::string buf)
+void Request::setRequestBufs(const std::string buf)
 {
-	_requestBuf = buf;
+	_requestBuf += buf;
+}
+
+t_request Request::getParsedRequest() const
+{
+	return (_parsedRequest);
 }
 
 void Request::parseRequest(void)
@@ -58,6 +64,7 @@ void Request::parseRequest(void)
 		pre = pos;
 		pos = _requestBuf.find("\r\n", pos);
 	}
+	testPrintRequest();
 }
 
 void Request::testPrintRequest(void)

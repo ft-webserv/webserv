@@ -21,9 +21,12 @@ class Request
 public:
 	Request();
 	~Request();
-	void setRequestBufs(std::string buf);
 	void parseRequest(void);
 	void testPrintRequest(void);
+
+public:
+	void setRequestBufs(const std::string buf);
+	t_request getParsedRequest() const;
 
 private:
 	std::time_t _startTime;

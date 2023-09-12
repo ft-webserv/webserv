@@ -8,7 +8,6 @@
 #include "Server.hpp"
 #include "Config.hpp"
 #include "Kqueue.hpp"
-#include "Request.hpp"
 
 // user define value
 #define BUFFERSIZE 1024
@@ -31,7 +30,7 @@ private:
 	void _monitoringEvent(void);
 	void _acceptClient(uintptr_t &servSock);
 	void _readRequest(uintptr_t &clntSock, intptr_t data);
-	// void _writeResponse(uintptr_t clntSock);
+	void _writeResponse(uintptr_t clntSock);
 };
 
 #endif
