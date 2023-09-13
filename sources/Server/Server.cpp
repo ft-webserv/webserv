@@ -18,16 +18,26 @@ Server::~Server(void)
 {
 }
 
-void Server::makeResponse(Request *request)
+void Server::makeResponse(Request *request, uintptr_t clntSock)
 {
-	ServerInfo *serverInfo;
+	Response response;
+	ServerInfo *servInfo;
 	std::map<std::string, ServerInfo *>::iterator it;
 
 	if ((it = _hostServer.find(request->getParsedRequest()._host)) != _hostServer.end())
-		serverInfo = it->second;
+		servInfo = it->second;
 	else
-		serverInfo = _defaultServer;
-
+		servInfo = _defaultServer;
+	if (request->getParsedRequest()._method == "GET") // http request의 location에 정규표현식이 들어올 수 있는가?
+	{
+		response.handleGet(servInfo, request);
+	}
+	else if (request->getParsedRequest()._method == "POST")
+	{
+	}
+	else if (request->getParsedRequest()._method == "DELETE")
+	{
+	}
 }
 
 void Server::setHostServer(ServerInfo *serverBlock)

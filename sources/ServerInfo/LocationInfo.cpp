@@ -41,3 +41,8 @@ void LocationInfo::getLocationInfo()
 		std::cout << it->first << " : " << it->second << std::endl;
 	}
 }
+
+const std::string LocationInfo::getPath()
+{
+	return (_path);
+}

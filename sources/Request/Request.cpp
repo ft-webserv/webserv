@@ -3,6 +3,7 @@
 Request::Request()
 {
 	_startTime = std::time(NULL);
+	statusCode = 200;
 }
 
 Request::~Request()

@@ -153,5 +153,5 @@ void ServerManager::_writeResponse(uintptr_t clntSock)
 
 	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
 	port = ntohs(clnt.sin_port);
-	_servers.find(port)->second->makeResponse(_requests.find(clntSock)->second);
+	_servers.find(port)->second->makeResponse(_requests.find(clntSock)->second, clntSock);
 }
