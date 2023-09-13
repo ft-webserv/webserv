@@ -17,6 +17,7 @@ void Response::handleGet(ServerInfo *servInfo, Request *req)
 	root = servInfo->getServerInfo().find("root")->second;
 	if (tmp.size() == 0)
 	{
+		req->
 	}
 	else
 	{
