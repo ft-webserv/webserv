@@ -1,5 +1,4 @@
-#ifndef KQUEUE_HPP
-#define KQUEUE_HPP
+#pragma once
 
 #include <vector>
 #include "Exception.hpp"
@@ -50,4 +49,3 @@ private:
     std::vector<struct kevent> _eventList;
     std::vector<struct kevent> _changeList;
 };
-#endif

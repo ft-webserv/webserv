@@ -1,8 +1,8 @@
-#ifndef Server_HPP
-#define Server_HPP
+#pragma once
 
 #include "Config.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 // socket(), bind(), listen(), accept()
 #include <sys/socket.h>
 // sockaddr_in struct
@@ -20,7 +20,7 @@ public:
 	Server(const Server &src);
 	Server &operator=(Server const &rhs);
 	virtual ~Server(void);
-	void makeResponse(Request *request);
+	void makeResponse(Request *request, uintptr_t clntSock);
 
 public:
 	void setHostServer(ServerInfo *serverBlock);
@@ -32,5 +32,3 @@ private:
 	std::map<std::string, ServerInfo *> _hostServer;
 	ServerInfo *_defaultServer;
 };
-
-#endif

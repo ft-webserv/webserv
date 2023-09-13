@@ -1,5 +1,4 @@
-#ifndef ServerManager_HPP
-#define ServerManager_HPP
+#pragma once
 
 // standard header
 #include <cstring>
@@ -32,5 +31,3 @@ private:
 	void _readRequest(uintptr_t &clntSock, intptr_t data);
 	void _writeResponse(uintptr_t clntSock);
 };
-
-#endif

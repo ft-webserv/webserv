@@ -1,5 +1,4 @@
-#ifndef Config_HPP
-#define Config_HPP
+#pragma once
 
 #include "ServerInfo.hpp"
 #include <iostream>
@@ -37,5 +36,3 @@ private:
 	void parseLocationInfo(std::ifstream &file, ServerInfo &target);
 	void parseServerInfo(std::ifstream &file);
 };
-
-#endif

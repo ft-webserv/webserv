@@ -1,5 +1,4 @@
-#ifndef ServerInfo_HPP
-#define ServerInfo_HPP
+#pragma once
 
 #include "LocationInfo.hpp"
 #include <iostream>
@@ -7,7 +6,6 @@
 #include <vector>
 #include <string>
 
- 
 class ServerInfo
 {
 public:
@@ -20,10 +18,9 @@ public:
 
 	// for test no more
 	std::map<std::string, std::string> &getServerInfo();
+	std::vector<LocationInfo *> getLocationInfo();
 
 private:
 	std::map<std::string, std::string> _info;
 	std::vector<LocationInfo *> _locationInfos;
 };
-
-#endif

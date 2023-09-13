@@ -1,5 +1,4 @@
-#ifndef LocationInfo_HPP
-#define LocationInfo_HPP
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -20,10 +19,9 @@ public:
 
 	// for test
 	void getLocationInfo();
+	const std::string getPath();
 
 private:
 	std::string _path;
 	std::map<std::string, std::string> _info;
 };
-
-#endif

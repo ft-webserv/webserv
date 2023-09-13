@@ -1,5 +1,4 @@
-#ifndef Exception_HPP
-#define Exception_HPP
+#pragma once
 
 #include <exception>
 #include <string>
@@ -20,5 +19,3 @@ public:
 	static void recvError(const std::string &message);
 	static void disconnectDuringRecvError(const std::string &message);
 };
-
-#endif

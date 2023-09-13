@@ -1,3 +1,5 @@
+#pragma once
+
 #include <ctime>
 #include <string>
 #include <sstream>
@@ -32,4 +34,5 @@ private:
 	std::time_t _startTime;
 	std::string _requestBuf;
 	t_request _parsedRequest;
+	int statusCode;
 };
