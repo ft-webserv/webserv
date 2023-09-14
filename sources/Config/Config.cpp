@@ -37,7 +37,7 @@ void Config::parseConfigFile(const std::string &fileName)
 			break;
 		if (word == "server")
 			parseServerInfo(file);
-		if (word == "include")
+		else if (word == "include")
 			parseInclude(file);
 		else
 		{
@@ -54,6 +54,8 @@ void Config::parseConfigFile(const std::string &fileName)
 		}
 		file >> word;
 	}
+	// for (auto i = _mimeType.begin(); i != _mimeType.end(); i++)
+	// 	std::cout << i->first << "     " << i->second << std::endl;
 	for (int i = 0; i < _serverInfos.size(); i++)
 		_serverInfos[i]->getServerInfo();
 }
@@ -144,9 +146,12 @@ void Config::parseInclude(std::ifstream &file)
 	std::ifstream mimeFile;
 
 	file >> word;
+	word.erase(std::find(word.begin(), word.end(), ';'));
 	if (word.find("mime.types") == std::string::npos)
 		return;
 	mimeFile.open(word);
+	if (mimeFile.is_open() == false)
+		throw FileOpenFailException();
 	mimeFile >> val;
 	while (true)
 	{
@@ -155,10 +160,13 @@ void Config::parseInclude(std::ifstream &file)
 		while (true)
 		{
 			mimeFile >> key;
-			key.erase(std::find(key.begin(), key.end(), ';'));
 			_mimeType.insert(std::pair<std::string, std::string>(key, val));
 			if (std::find(key.begin(), key.end(), ';') != key.end())
+			{
+				key.erase(std::find(key.begin(), key.end(), ';'));
+				_mimeType.insert(std::pair<std::string, std::string>(key, val));
 				break;
+			}
 		}
 		mimeFile >> val;
 	}
