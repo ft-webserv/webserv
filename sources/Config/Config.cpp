@@ -37,6 +37,8 @@ void Config::parseConfigFile(const std::string &fileName)
 			break;
 		if (word == "server")
 			parseServerInfo(file);
+		if (word == "include")
+			parseInclude(file);
 		else
 		{
 			val = word;
@@ -133,6 +135,32 @@ void Config::parseLocationInfo(std::ifstream &file, ServerInfo &target)
 			target.addLocationInfo(new LocationInfo(tmp));
 			return;
 		}
+	}
+}
+
+void Config::parseInclude(std::ifstream &file)
+{
+	std::string word, key, val;
+	std::ifstream mimeFile;
+
+	file >> word;
+	if (word.find("mime.types") == std::string::npos)
+		return;
+	mimeFile.open(word);
+	mimeFile >> val;
+	while (true)
+	{
+		if (mimeFile.eof() == true)
+			break;
+		while (true)
+		{
+			mimeFile >> key;
+			key.erase(std::find(key.begin(), key.end(), ';'));
+			_mimeType.insert(std::pair<std::string, std::string>(key, val));
+			if (std::find(key.begin(), key.end(), ';') != key.end())
+				break;
+		}
+		mimeFile >> val;
 	}
 }
 

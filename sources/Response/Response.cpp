@@ -17,7 +17,7 @@ void Response::handleGet(ServerInfo *servInfo, Request *req)
 	root = servInfo->getServerInfo().find("root")->second;
 	if (tmp.size() == 0)
 	{
-		req->
+		findFile(root + req->getParsedRequest()._location);
 	}
 	else
 	{
@@ -37,4 +37,22 @@ void Response::handlePost()
 
 void Response::handleDelete()
 {
+}
+
+void Response::findFile(std::string path)
+{
+	struct stat buf;
+
+	if (stat(path.c_str(), &buf) == -1)
+		throw(statusCode = _404_NOT_FOUND);
+	switch (buf.st_mode & S_IFMT)
+	{
+	case S_IFREG:
+		// addContentType();
+		break;
+	case S_IFDIR:
+		break;
+	default:
+		break;
+	}
 }

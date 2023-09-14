@@ -31,8 +31,10 @@ private:
 	std::map<std::string, std::string> _generalInfo;
 	std::vector<ServerInfo *> _serverInfos;
 	std::set<int> _ports;
+	std::map<std::string, std::string> _mimeType;
 
 	void parseConfigFile(const std::string &fileName);
 	void parseLocationInfo(std::ifstream &file, ServerInfo &target);
 	void parseServerInfo(std::ifstream &file);
+	void parseInclude(std::ifstream &file);
 };

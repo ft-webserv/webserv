@@ -109,8 +109,8 @@ void ServerManager::_monitoringEvent()
 					break;
 				}
 			}
-			else if (event->flags & EVFILT_WRITE)
-				_writeResponse(event->ident);
+			// else if (event->flags & EVFILT_WRITE)
+			// 	_writeResponse(event->ident);
 		}
 	}
 }

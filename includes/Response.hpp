@@ -2,9 +2,11 @@
 
 #include <map>
 #include <string>
+#include <sys/stat.h>
 
 #include "ServerInfo.hpp"
 #include "Request.hpp"
+#include "Status.hpp"
 
 class Response
 {
@@ -16,12 +18,12 @@ public:
 	void handleDelete();
 
 private:
-	void setHeaderFields();
-	void setStatusLine();
-	void setResponse();
+	void findFile(std::string path);
+	void addContentType();
 
 private:
+	eStatus statusCode;
 	std::map<std::string, std::string> headerFields;
-	std::string statusLine;
+	std::string body;
 	std::string response;
 };

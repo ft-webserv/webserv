@@ -3,6 +3,7 @@
 #include "Config.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+#include "Status.hpp"
 // socket(), bind(), listen(), accept()
 #include <sys/socket.h>
 // sockaddr_in struct
