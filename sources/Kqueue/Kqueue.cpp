@@ -1,4 +1,5 @@
 #include "Kqueue.hpp"
+#include <iostream>
 
 Kqueue::Kqueue()
 {
@@ -7,7 +8,7 @@ Kqueue::Kqueue()
 		Exception::kqueueError("kqueue() error!");
 	}
 	_eventList.resize(EVENTSIZE);
-	FD_ZERO(&_clients);
+	FD_ZERO(&_servers);
 	FD_ZERO(&_clients);
 }
 

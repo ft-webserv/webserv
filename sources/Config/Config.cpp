@@ -54,10 +54,7 @@ void Config::parseConfigFile(const std::string &fileName)
 		}
 		file >> word;
 	}
-	// for (auto i = _mimeType.begin(); i != _mimeType.end(); i++)
-	// 	std::cout << i->first << "     " << i->second << std::endl;
-	for (int i = 0; i < _serverInfos.size(); i++)
-		_serverInfos[i]->getServerInfo();
+	file.close();
 }
 
 void Config::parseServerInfo(std::ifstream &file)

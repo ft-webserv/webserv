@@ -97,20 +97,23 @@ void ServerManager::_monitoringEvent()
 			}
 			else if (event->flags & EVFILT_READ)
 			{
+				std::cout << "aaaa" << std::endl;
 				switch (type)
 				{
 				case SERVER:
+					std::cout << "cccc" << std::endl;
 					_acceptClient(event->ident);
 					break;
 				case CLIENT:
+					std::cout << "bbbb" << std::endl;
 					_readRequest(event->ident, event->data);
 					break;
 				default:
 					break;
 				}
 			}
-			// else if (event->flags & EVFILT_WRITE)
-			// 	_writeResponse(event->ident);
+			else if (event->flags & EVFILT_WRITE)
+				_writeResponse(event->ident);
 		}
 	}
 }
@@ -118,17 +121,14 @@ void ServerManager::_monitoringEvent()
 void ServerManager::_acceptClient(uintptr_t &servSock)
 {
 	uintptr_t clntSock;
-	struct sockaddr_in serv;
 
-  socklen_t len = sizeof(serv);
-  getsockname(servSock, (struct sockaddr *)&serv, &len);
-  std::cout << ntohs(serv.sin_port) << std::endl;
 	if ((clntSock = accept(servSock, NULL, NULL)) == -1)
 		Exception::acceptError("accept() error!");
 	fcntl(clntSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 	_kqueue.addEvent(clntSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
 	_kqueue.setFdset(clntSock, CLIENT);
+	int res = _kqueue.doKevent();
 	Request *tmp = new Request();
 	_requests.insert(std::pair<uintptr_t, Request *>(clntSock, tmp));
 }
