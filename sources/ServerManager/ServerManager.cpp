@@ -120,6 +120,9 @@ void ServerManager::_acceptClient(uintptr_t &servSock)
 	uintptr_t clntSock;
 	struct sockaddr_in serv;
 
+  socklen_t len = sizeof(serv);
+  getsockname(servSock, (struct sockaddr *)&serv, &len);
+  std::cout << ntohs(serv.sin_port) << std::endl;
 	if ((clntSock = accept(servSock, NULL, NULL)) == -1)
 		Exception::acceptError("accept() error!");
 	fcntl(clntSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);

@@ -2,6 +2,7 @@
 
 // standard header
 #include <cstring>
+#include <sys/socket.h>
 
 // user define header
 #include "Server.hpp"

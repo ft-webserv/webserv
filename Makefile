@@ -80,7 +80,7 @@ clean:
 		@printf "$(BLUE)[$(NAME)] obj. files$(DEF_COLOR)$(GREEN)	=> Cleaned!\n$(DEF_COLOR)"
 
 fclean:
-		@$(RM) -r $(BUILD_DIR) $(NAME) $(JSON)
+		@$(RM) -r $(BUILD_DIR) $(NAME)
 		@printf "$(BLUE)[$(NAME)] obj. files$(DEF_COLOR)$(GREEN)	=> Cleaned!\n$(DEF_COLOR)"
 		@printf "$(CYAN)[$(NAME)] exec. files$(DEF_COLOR)$(GREEN)	=> Cleaned!\n$(DEF_COLOR)"
 
