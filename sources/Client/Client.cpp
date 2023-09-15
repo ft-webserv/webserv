@@ -1,16 +1,19 @@
 #include "Client.hpp"
 
 Client::Client(uintptr_t socket)
-  : _socket(socket) {}
+	: _socket(socket) {}
 
-Client::Client(const Client& src)
-  : _socket(src._socket) {}
+Client::Client(const Client &src)
+	: _socket(src._socket) {}
 
-Client& Client::operator=(const Client& src)
-{}
+Client &Client::operator=(const Client &src)
+{
+	return (*this);
+}
 
 Client::~Client()
-{}
+{
+}
 
 void Client::readRequest(intptr_t data)
 {

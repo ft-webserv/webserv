@@ -28,8 +28,8 @@ public:
     Kqueue &operator=(const Kqueue &copy);
     ~Kqueue();
     void addEvent(uintptr_t ident, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
-    void enableEvent(const uintptr_t socket);
-    void disableEvent(const uintptr_t socket);
+    void enableEvent(const uintptr_t socket, int16_t filter, void *udata);
+    void disableEvent(const uintptr_t socket, int16_t filter, void *udata);
     void deleteEvent(const uintptr_t socket);
     int &getKq();
     std::vector<struct kevent> &getEventList();

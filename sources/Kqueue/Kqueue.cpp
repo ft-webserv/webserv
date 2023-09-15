@@ -33,19 +33,25 @@ void Kqueue::addEvent(uintptr_t ident, int16_t filter, uint16_t flags, uint32_t 
 	_changeList.push_back(tempEvent);
 }
 
-// void Kqueue::enableEvent(uintptr_t ident, int16_t filter)
-// {
-// 	struct kevent tempEvent;
+void Kqueue::enableEvent(uintptr_t ident, int16_t filter, void *udata)
+{
+	struct kevent tempEvent;
 
-// 	EV_SET(&tempEvent, ident, filter, flags, fflags, data, udata);
-// }
+	EV_SET(&tempEvent, ident, filter, EV_ENABLE, 0, 0, udata);
+	int res = kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
+	if (res == -1)
+		Exception::keventError("kevent() error in enable Event!");
+}
 
-// void Kqueue::disableEvent(uintptr_t ident, int16_t filter)
-// {
-// 	struct kevent tempEvent;
+void Kqueue::disableEvent(uintptr_t ident, int16_t filter, void *udata)
+{
+	struct kevent tempEvent;
 
-// 	EV_SET(&tempEvent, ident, filter, flags, fflags, data, udata);
-// }
+	EV_SET(&tempEvent, ident, filter, EV_DISABLE, 0, 0, udata);
+	int res = kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
+	if (res == -1)
+		Exception::keventError("kevent() error in disable Event!");
+}
 
 void Kqueue::deleteEvent(const uintptr_t Socket)
 {

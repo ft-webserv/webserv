@@ -78,15 +78,19 @@ void ServerManager::_monitoringEvent()
 					_acceptClient(event->ident);
 					break;
 				case CLIENT:
-          static_cast<Client*>(event->udata)->readRequest(event->data); // 추후 참조자에 담아서 사용할 예정
-            // readRequest 안에서 읽은 길이가 content-length를 만족하면, read event disable & write evnet enable
+					static_cast<Client *>(event->udata)->readRequest(event->data); // 추후 참조자에 담아서 사용할 예정
+					// _kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
+					// _kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata); // readRequest 안에서 읽은 길이가 content-length를 만족하면, read event disable & write evnet enable
 					break;
 				default:
 					break;
 				}
 			}
 			else if (event->flags & EVFILT_WRITE)
-				_writeResponse(event->ident);
+			{
+				std::cout << "hello world" << std::endl;
+				// _writeResponse(event->ident);
+			}
 		}
 	}
 }
@@ -94,12 +98,12 @@ void ServerManager::_monitoringEvent()
 void ServerManager::_acceptClient(uintptr_t &servSock)
 {
 	uintptr_t clntSock;
-  Client* client;
+	Client *client;
 
 	if ((clntSock = accept(servSock, NULL, NULL)) == -1)
 		Exception::acceptError("accept() error!");
 	fcntl(clntSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
-  client = new Client(clntSock);
+	client = new Client(clntSock);
 	_kqueue.addEvent(clntSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(client));
 	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, static_cast<void *>(client));
 	_kqueue.setFdset(clntSock, CLIENT);

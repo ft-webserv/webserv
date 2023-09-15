@@ -3,7 +3,7 @@
 Server::Server(port_t port)
 {
 	std::map<std::string, std::string>::iterator it;
-  Config& _conf = Config::getInstance();
+	Config &_conf = Config::getInstance();
 
 	_defaultServer = NULL;
 	for (int i = 0; i < _conf.getServerInfos().size(); i++)
