@@ -78,8 +78,8 @@ void ServerManager::_monitoringEvent()
 					_acceptClient(event->ident);
 					break;
 				case CLIENT:
-					_readRequest(event->ident, event->data);
-					// _kqueue.disableEvent(event);
+          static_cast<Client*>(event->udata)->readRequest(event->data); // 추후 참조자에 담아서 사용할 예정
+            // readRequest 안에서 읽은 길이가 content-length를 만족하면, read event disable & write evnet enable
 					break;
 				default:
 					break;
@@ -94,40 +94,25 @@ void ServerManager::_monitoringEvent()
 void ServerManager::_acceptClient(uintptr_t &servSock)
 {
 	uintptr_t clntSock;
+  Client* client;
 
 	if ((clntSock = accept(servSock, NULL, NULL)) == -1)
 		Exception::acceptError("accept() error!");
 	fcntl(clntSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
-	_kqueue.addEvent(clntSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+  client = new Client(clntSock);
+	_kqueue.addEvent(clntSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(client));
+	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, static_cast<void *>(client));
 	_kqueue.setFdset(clntSock, CLIENT);
 	int res = _kqueue.doKevent();
-	Request *tmp = new Request();
-	_requests.insert(std::pair<uintptr_t, Request *>(clntSock, tmp));
 }
 
-void ServerManager::_readRequest(uintptr_t &clntSock, intptr_t data)
-{
-	ssize_t len;
-	char buf[BUFFERSIZE + 1];
+// void ServerManager::_writeResponse(uintptr_t clntSock)
+// {
+// 	struct sockaddr_in clnt;
+// 	socklen_t clntSockLen = sizeof(clnt);
+// 	port_t port;
 
-	if ((len = recv(clntSock, buf, BUFFERSIZE, 0)) == -1)
-		Exception::recvError("recv() error!");
-	else if (len <= 0)
-		Exception::disconnectDuringRecvError("diconnected during read!");
-	_requests.find(clntSock)->second->setRequestBufs(buf);
-	memset(buf, 0, BUFFERSIZE + 1);
-	if (data <= BUFFERSIZE)
-		_requests.find(clntSock)->second->parseRequest();
-}
-
-void ServerManager::_writeResponse(uintptr_t clntSock)
-{
-	struct sockaddr_in clnt;
-	socklen_t clntSockLen = sizeof(clnt);
-	port_t port;
-
-	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
-	port = ntohs(clnt.sin_port);
-	_servers.find(port)->second->makeResponse(_requests.find(clntSock)->second, clntSock);
-}
+// 	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
+// 	port = ntohs(clnt.sin_port);
+// 	_servers.find(port)->second->makeResponse(_requests.find(clntSock)->second, clntSock);
+// }
