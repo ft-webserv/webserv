@@ -1,13 +1,26 @@
 #include "Server.hpp"
 
-Server::Server(void)
-{
-	_defaultServer = NULL;
-}
-
 Server::Server(port_t port)
 {
+	std::map<std::string, std::string>::iterator it;
+  Config& _conf = Config::getInstance();
+
 	_defaultServer = NULL;
+	for (int i = 0; i < _conf.getServerInfos().size(); i++)
+	{
+		for (it = _conf.getServerInfos()[i]->getServerInfo().begin(); it != _conf.getServerInfos()[i]->getServerInfo().end(); it++)
+		{
+			if (it->second == "listen")
+			{
+				if (atoi((it->first).c_str()) == port)
+				{
+					if (_defaultServer == NULL)
+						_defaultServer = _conf.getServerInfos()[i];
+					setHostServer(_conf.getServerInfos()[i]);
+				}
+			}
+		}
+	}
 }
 
 Server::Server(const Server &src)

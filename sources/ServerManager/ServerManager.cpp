@@ -1,12 +1,10 @@
 #include "ServerManager.hpp"
 
-ServerManager::ServerManager(Config &conf)
-	: _conf(conf)
+ServerManager::ServerManager()
 {
 }
 
 ServerManager::ServerManager(const ServerManager &src)
-	: _conf(src._conf)
 {
 }
 
@@ -24,6 +22,7 @@ void ServerManager::runServer()
 	std::set<int>::iterator iter;
 	struct sockaddr_in servAddr;
 	int servSock;
+	Config &_conf = Config::getInstance();
 
 	for (iter = _conf.getPorts().begin(); iter != _conf.getPorts().end(); iter++)
 	{
@@ -40,33 +39,9 @@ void ServerManager::runServer()
 			Exception::listenError("listen() error!");
 		fcntl(servSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 		_kqueue.addEvent(servSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		_servers.insert(std::pair<port_t, Server *>(*iter, _addServer(*iter)));
+		_servers.insert(std::pair<port_t, Server *>(*iter, new Server(*iter)));
 	}
 	_monitoringEvent();
-}
-
-Server *ServerManager::_addServer(port_t port)
-{
-	Server *val;
-	std::map<std::string, std::string>::iterator it;
-
-	val = new Server();
-	for (int i = 0; i < _conf.getServerInfos().size(); i++)
-	{
-		for (it = _conf.getServerInfos()[i]->getServerInfo().begin(); it != _conf.getServerInfos()[i]->getServerInfo().end(); it++)
-		{
-			if (it->second == "listen")
-			{
-				if (atoi((it->first).c_str()) == port)
-				{
-					if (val->getDefaultServer() == NULL)
-						val->setDefaultServer(_conf.getServerInfos()[i]);
-					val->setHostServer(_conf.getServerInfos()[i]);
-				}
-			}
-		}
-	}
-	return (val);
 }
 
 void ServerManager::_monitoringEvent()
@@ -97,16 +72,14 @@ void ServerManager::_monitoringEvent()
 			}
 			else if (event->flags & EVFILT_READ)
 			{
-				std::cout << "aaaa" << std::endl;
 				switch (type)
 				{
 				case SERVER:
-					std::cout << "cccc" << std::endl;
 					_acceptClient(event->ident);
 					break;
 				case CLIENT:
-					std::cout << "bbbb" << std::endl;
 					_readRequest(event->ident, event->data);
+					// _kqueue.disableEvent(event);
 					break;
 				default:
 					break;

@@ -34,3 +34,5 @@
 .vscode
 .cache
 .DS_store
+webserv
+build

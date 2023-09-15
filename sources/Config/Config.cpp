@@ -9,13 +9,24 @@ Config::Config(const std::string &fileName)
 	parseConfigFile(fileName);
 }
 
+Config::Config(const Config &source)
+{
+	(void)source;
+}
+
 Config::~Config()
 {
 }
 
-Config::Config(const Config &source)
+Config& Config::getInstance(const std::string &fileName)
 {
-	(void)source;
+    static Config instance(fileName);
+    return (instance);
+}
+
+Config& Config::getInstance()
+{
+    return (getInstance("shy.config"));
 }
 
 void Config::parseConfigFile(const std::string &fileName)

@@ -34,7 +34,6 @@ void ServerInfo::addLocationInfo(LocationInfo *tmp)
 
 std::map<std::string, std::string> &ServerInfo::getServerInfo()
 {
-	return (_info);
 	// std::map<std::string, std::string>::iterator it = _info.begin();
 	// for (; it != _info.end(); it++)
 	// {
@@ -44,6 +43,7 @@ std::map<std::string, std::string> &ServerInfo::getServerInfo()
 	// {
 	// 	_locationInfos[i]->getLocationInfo();
 	// }
+	return (_info);
 }
 
 std::vector<LocationInfo *> ServerInfo::getLocationInfo()

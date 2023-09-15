@@ -30,8 +30,8 @@ int main(int argc, char *argv[])
 	try
 	{
 		(void)argc;
-		Config configTest(argv[1]);
-		ServerManager testManager(configTest);
+    Config::getInstance(argv[1]);
+		ServerManager testManager;
 		testManager.runServer();
 	}
 	catch (const std::exception &e)

@@ -15,18 +15,16 @@
 class ServerManager
 {
 public:
-	ServerManager(Config &conf);
+	ServerManager();
 	ServerManager(const ServerManager &src);
 	ServerManager &operator=(ServerManager const &rhs);
-	virtual ~ServerManager(void);
+	~ServerManager(void);
 	void runServer();
 
 private:
 	Kqueue _kqueue;
-	Config &_conf;
 	std::map<port_t, Server *> _servers;
 	std::map<uintptr_t, Request *> _requests;
-	Server *_addServer(port_t port);
 	void _monitoringEvent(void);
 	void _acceptClient(uintptr_t &servSock);
 	void _readRequest(uintptr_t &clntSock, intptr_t data);

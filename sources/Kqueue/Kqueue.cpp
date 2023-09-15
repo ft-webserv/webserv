@@ -33,13 +33,19 @@ void Kqueue::addEvent(uintptr_t ident, int16_t filter, uint16_t flags, uint32_t 
 	_changeList.push_back(tempEvent);
 }
 
-void Kqueue::enableEvent(const uintptr_t Socket)
-{
-}
+// void Kqueue::enableEvent(uintptr_t ident, int16_t filter)
+// {
+// 	struct kevent tempEvent;
 
-void Kqueue::disableEvent(const uintptr_t Socket)
-{
-}
+// 	EV_SET(&tempEvent, ident, filter, flags, fflags, data, udata);
+// }
+
+// void Kqueue::disableEvent(uintptr_t ident, int16_t filter)
+// {
+// 	struct kevent tempEvent;
+
+// 	EV_SET(&tempEvent, ident, filter, flags, fflags, data, udata);
+// }
 
 void Kqueue::deleteEvent(const uintptr_t Socket)
 {

@@ -9,23 +9,27 @@
 #include <exception>
 #include <set>
 #include <sstream>
-// 싱글톤 보류
 
 class Config
 {
 public:
-	Config();
-	Config(const std::string &fileName);
-	Config(const Config &source);
-	~Config();
+  static Config& getInstance(const std::string&fileName);
+  static Config& getInstance();
 	std::map<std::string, std::string> &getgeneralInfo(void);
 	std::vector<ServerInfo *> &getServerInfos(void);
 	std::set<int> &getPorts(void);
+  // it will be die
 	class FileOpenFailException : public std::exception
 	{
 	public:
 		virtual const char *what() const throw();
 	};
+
+private:
+	Config();
+	Config(const std::string &fileName);
+	Config(const Config &source);
+	~Config();
 
 private:
 	std::map<std::string, std::string> _generalInfo;
