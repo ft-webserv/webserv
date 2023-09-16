@@ -53,6 +53,9 @@ void ServerManager::_monitoringEvent()
 	{
 		numEvents = _kqueue.doKevent();
 		for (int i = 0; i < numEvents; i++)
+			std::cout << "Event list : " << _kqueue.getEventList()[i].ident << std::endl;
+		std::cout << std::endl;
+		for (int i = 0; i < numEvents; i++)
 		{
 			event = &_kqueue.getEventList()[i];
 			eFdType type = _kqueue.getFdType(event->ident);
@@ -79,8 +82,8 @@ void ServerManager::_monitoringEvent()
 					break;
 				case CLIENT:
 					static_cast<Client *>(event->udata)->readRequest(event->data); // 추후 참조자에 담아서 사용할 예정
-					// _kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
-					// _kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata); // readRequest 안에서 읽은 길이가 content-length를 만족하면, read event disable & write evnet enable
+					_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
+					_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata); // readRequest 안에서 읽은 길이가 content-length를 만족하면, read event disable & write evnet enable
 					break;
 				default:
 					break;
@@ -88,7 +91,6 @@ void ServerManager::_monitoringEvent()
 			}
 			else if (event->flags & EVFILT_WRITE)
 			{
-				std::cout << "hello world" << std::endl;
 				// _writeResponse(event->ident);
 			}
 		}
@@ -108,6 +110,8 @@ void ServerManager::_acceptClient(uintptr_t &servSock)
 	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, static_cast<void *>(client));
 	_kqueue.setFdset(clntSock, CLIENT);
 	int res = _kqueue.doKevent();
+	if (res == -1)
+		Exception::keventError("kevent() error Event!");
 }
 
 // void ServerManager::_writeResponse(uintptr_t clntSock)

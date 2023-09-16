@@ -4,9 +4,7 @@
 Kqueue::Kqueue()
 {
 	if ((_kq = kqueue()) == -1)
-	{
 		Exception::kqueueError("kqueue() error!");
-	}
 	_eventList.resize(EVENTSIZE);
 	FD_ZERO(&_servers);
 	FD_ZERO(&_clients);
