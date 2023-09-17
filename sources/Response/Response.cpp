@@ -1,41 +1,44 @@
 #include "Response.hpp"
 
 Response::Response()
-{
-}
+	: _serverInfo(NULL), _locationInfo(NULL) {}
 
 Response::~Response()
 {
 }
 
-void Response::handleGet(ServerInfo *servInfo, Request *req)
+ServerInfo *Response::getServerInfo() { return (_serverInfo); }
+LocationInfo *Response::getLocationInfo() { return (_locationInfo); }
+void Response::setServerInfo(ServerInfo *serverBlock) { _serverInfo = serverBlock; }
+void Response::setLocationInfo(LocationInfo *locationBlock) { _locationInfo = locationBlock; }
+
+void Response::handleGet(Request &rqs)
 {
 	std::string root;
-	std::vector<LocationInfo *> tmp = servInfo->getLocationInfo();
-	LocationInfo *loc = NULL;
+	std::map<std::string, std::string> tmp;
+	std::map<std::string, std::string>::iterator it;
 
-	root = servInfo->getServerInfo().find("root")->second;
-	if (tmp.size() == 0)
-	{
-		findFile(root + req->getParsedRequest()._location);
-	}
+	tmp = _serverInfo->getServerInfo();
+	it = tmp.find("root");
+	if (it != tmp.end())
+		root = it->second;
 	else
+		root = "/html";
+	if (_locationInfo != NULL)
 	{
-		for (int i = 0; i < tmp.size(); i++) // LocationInfo 의 _path와 요청의 URL이 같은 location 블록 찾는 부분
-		{
-			if (tmp[i]->getPath() == req->getParsedRequest()._location)
-				loc = tmp[i];
-		}
-		if (loc == NULL && tmp[0]) // 만약 못찾았고, server block에 location block이 하나라도 있으면 첫번째 location블록으로 설정
-			loc = tmp[0];
+		tmp = _locationInfo->getLocationInfo();
+		it = tmp.find("root");
+		if (it != tmp.end())
+			root = it->second;
 	}
+	findFile(root + rqs.getParsedRequest()._location);
 }
 
-void Response::handlePost()
+void Response::handlePost(Request &rqs)
 {
 }
 
-void Response::handleDelete()
+void Response::handleDelete(Request &rqs)
 {
 }
 
@@ -44,15 +47,32 @@ void Response::findFile(std::string path)
 	struct stat buf;
 
 	if (stat(path.c_str(), &buf) == -1)
-		throw(statusCode = _404_NOT_FOUND);
+		throw(_statusCode = _404_NOT_FOUND);
 	switch (buf.st_mode & S_IFMT)
 	{
 	case S_IFREG:
-		// addContentType();
+		_addContentType(path);
 		break;
 	case S_IFDIR:
 		break;
 	default:
 		break;
+	}
+}
+
+void Response::_addContentType(std::string path)
+{
+	Config &conf = Config::getInstance();
+	std::string::size_type pos;
+
+	pos = path.find(".");
+	if (pos == std::string::npos)
+		_headerFields.insert(std::pair<std::string, std::string>("Conent-Type", "application/octet-stream"));
+	else
+	{
+		pos += 1;
+		std::string extension = path.substr(pos, path.length() - pos);
+
+		_headerFields.insert(std::pair<std::string, std::string>("Conent-Type", conf.getMimeType().find(extension)->second));
 	}
 }

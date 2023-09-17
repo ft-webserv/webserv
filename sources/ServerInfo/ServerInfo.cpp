@@ -46,7 +46,7 @@ std::map<std::string, std::string> &ServerInfo::getServerInfo()
 	return (_info);
 }
 
-std::vector<LocationInfo *> ServerInfo::getLocationInfo()
+std::vector<LocationInfo *> ServerInfo::getLocationInfos()
 {
 	return (_locationInfos);
 }

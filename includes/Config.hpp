@@ -13,12 +13,13 @@
 class Config
 {
 public:
-  static Config& getInstance(const std::string&fileName);
-  static Config& getInstance();
-	std::map<std::string, std::string> &getgeneralInfo(void);
-	std::vector<ServerInfo *> &getServerInfos(void);
-	std::set<int> &getPorts(void);
-  // it will be die
+	static Config &getInstance(const std::string &fileName);
+	static Config &getInstance();
+	std::map<std::string, std::string> &getGeneralInfo();
+	std::vector<ServerInfo *> &getServerInfos();
+	std::set<int> &getPorts();
+	std::map<std::string, std::string> &getMimeType();
+	// it will be die
 	class FileOpenFailException : public std::exception
 	{
 	public:

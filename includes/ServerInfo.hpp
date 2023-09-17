@@ -18,7 +18,7 @@ public:
 
 	// for test no more
 	std::map<std::string, std::string> &getServerInfo();
-	std::vector<LocationInfo *> getLocationInfo();
+	std::vector<LocationInfo *> getLocationInfos();
 
 private:
 	std::map<std::string, std::string> _info;

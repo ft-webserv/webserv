@@ -18,8 +18,8 @@ public:
 	void setLocationInfo(std::pair<std::string, std::string> pair);
 
 	// for test
-	void getLocationInfo();
-	const std::string getPath();
+	const std::map<std::string, std::string> getLocationInfo() const;
+	const std::string getPath() const;
 
 private:
 	std::string _path;

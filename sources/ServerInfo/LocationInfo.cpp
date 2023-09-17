@@ -32,17 +32,18 @@ void LocationInfo::setLocationInfo(std::pair<std::string, std::string> pair)
 	_info.insert(pair);
 }
 
-void LocationInfo::getLocationInfo()
+const std::map<std::string, std::string> LocationInfo::getLocationInfo() const
 {
-	std::cout << _path << " " << std::endl;
-	std::map<std::string, std::string>::iterator it = _info.begin();
-	for (; it != _info.end(); it++)
-	{
-		std::cout << it->first << " : " << it->second << std::endl;
-	}
+	// std::cout << _path << " " << std::endl;
+	// std::map<std::string, std::string>::iterator it = _info.begin();
+	// for (; it != _info.end(); it++)
+	// {
+	// 	std::cout << it->first << " : " << it->second << std::endl;
+	// }
+	return (_info);
 }
 
-const std::string LocationInfo::getPath()
+const std::string LocationInfo::getPath() const
 {
 	return (_path);
 }

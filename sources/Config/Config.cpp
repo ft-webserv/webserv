@@ -18,15 +18,15 @@ Config::~Config()
 {
 }
 
-Config& Config::getInstance(const std::string &fileName)
+Config &Config::getInstance(const std::string &fileName)
 {
-    static Config instance(fileName);
-    return (instance);
+	static Config instance(fileName);
+	return (instance);
 }
 
-Config& Config::getInstance()
+Config &Config::getInstance()
 {
-    return (getInstance("shy.config"));
+	return (getInstance("shy.config"));
 }
 
 void Config::parseConfigFile(const std::string &fileName)
@@ -185,9 +185,14 @@ std::vector<ServerInfo *> &Config::getServerInfos()
 	return (_serverInfos);
 }
 
-std::map<std::string, std::string> &Config::getgeneralInfo()
+std::map<std::string, std::string> &Config::getGeneralInfo()
 {
 	return (_generalInfo);
+}
+
+std::map<std::string, std::string> &Config::getMimeType()
+{
+	return (_mimeType);
 }
 
 std::set<int> &Config::getPorts(void)

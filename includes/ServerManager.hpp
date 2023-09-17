@@ -21,8 +21,7 @@ public:
 
 private:
 	Kqueue _kqueue;
-	std::map<port_t, Server *> _servers;
 	void _monitoringEvent(void);
 	void _acceptClient(uintptr_t &servSock);
-	void _writeResponse(uintptr_t clntSock);
+	void _findServerBlock(Client *client);
 };

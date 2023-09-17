@@ -17,19 +17,7 @@ class Server
 {
 public:
 	Server(void);
-	Server(port_t port);
 	Server(const Server &src);
 	Server &operator=(Server const &rhs);
 	virtual ~Server(void);
-	void makeResponse(Request *request, uintptr_t clntSock);
-
-public:
-	void setHostServer(ServerInfo *serverBlock);
-	std::map<std::string, ServerInfo *> getHostServer();
-	void setDefaultServer(ServerInfo *serverBlock);
-	ServerInfo *getDefaultServer();
-
-private:
-	std::map<std::string, ServerInfo *> _hostServer;
-	ServerInfo *_defaultServer;
 };

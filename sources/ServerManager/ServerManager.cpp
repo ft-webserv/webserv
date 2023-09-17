@@ -39,7 +39,6 @@ void ServerManager::runServer()
 			Exception::listenError("listen() error!");
 		fcntl(servSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 		_kqueue.addEvent(servSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		_servers.insert(std::pair<port_t, Server *>(*iter, new Server(*iter)));
 	}
 	_monitoringEvent();
 }
@@ -52,9 +51,6 @@ void ServerManager::_monitoringEvent()
 	while (true)
 	{
 		numEvents = _kqueue.doKevent();
-		for (int i = 0; i < numEvents; i++)
-			std::cout << "Event list : " << _kqueue.getEventList()[i].ident << std::endl;
-		std::cout << std::endl;
 		for (int i = 0; i < numEvents; i++)
 		{
 			event = &_kqueue.getEventList()[i];
@@ -73,7 +69,7 @@ void ServerManager::_monitoringEvent()
 					break;
 				}
 			}
-			else if (event->flags & EVFILT_READ)
+			else if (event->filter == EVFILT_READ)
 			{
 				switch (type)
 				{
@@ -89,9 +85,11 @@ void ServerManager::_monitoringEvent()
 					break;
 				}
 			}
-			else if (event->flags & EVFILT_WRITE)
+			else if (event->filter == EVFILT_WRITE)
 			{
-				// _writeResponse(event->ident);
+				Client *client = static_cast<Client *>(event->udata);
+				_findServerBlock(client);
+				client->writeResponse();
 			}
 		}
 	}
@@ -114,13 +112,13 @@ void ServerManager::_acceptClient(uintptr_t &servSock)
 		Exception::keventError("kevent() error Event!");
 }
 
-// void ServerManager::_writeResponse(uintptr_t clntSock)
-// {
-// 	struct sockaddr_in clnt;
-// 	socklen_t clntSockLen = sizeof(clnt);
-// 	port_t port;
+void ServerManager::_findServerBlock(Client *client)
+{
+	struct sockaddr_in clnt;
+	socklen_t clntSockLen = sizeof(clnt);
+	port_t port;
 
-// 	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
-// 	port = ntohs(clnt.sin_port);
-// 	_servers.find(port)->second->makeResponse(_requests.find(clntSock)->second, clntSock);
-// }
+	getsockname(client->getSocket(), (sockaddr *)&clnt, &clntSockLen);
+	port = ntohs(clnt.sin_port);
+	client->setServerBlock(port);
+}
