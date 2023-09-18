@@ -3,10 +3,12 @@
 #include <map>
 #include <string>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "Config.hpp"
 #include "Request.hpp"
 #include "Status.hpp"
+#include "Exception.hpp"
 
 class Response
 {
@@ -20,10 +22,12 @@ public:
 	LocationInfo *getLocationInfo();
 	void setServerInfo(ServerInfo *serverBlock);
 	void setLocationInfo(LocationInfo *locationBlock);
+	std::string &getResponse();
 
 private:
-	void findFile(std::string path);
-	void _addContentType(std::string path);
+	void _findFile(std::string path);
+	void _setResponse(std::string path, off_t size);
+	void _setBody(std::string path, off_t size);
 
 private:
 	eStatus _statusCode;

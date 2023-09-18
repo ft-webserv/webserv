@@ -10,6 +10,8 @@
 #include <set>
 #include <sstream>
 
+#define ABSOLUTE_PATH "/Users/youngmch/Webserv"
+
 class Config
 {
 public:

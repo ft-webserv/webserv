@@ -5,6 +5,8 @@
 #include <sstream>
 #include <iostream>
 
+#include "Status.hpp"
+
 typedef struct s_request
 {
 	std::string _method;
@@ -34,5 +36,5 @@ private:
 	std::time_t _startTime;
 	std::string _requestBuf;
 	t_request _parsedRequest;
-	int statusCode;
+	eStatus statusCode;
 };

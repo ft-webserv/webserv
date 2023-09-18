@@ -19,19 +19,27 @@ void Response::handleGet(Request &rqs)
 	std::map<std::string, std::string>::iterator it;
 
 	tmp = _serverInfo->getServerInfo();
-	it = tmp.find("root");
-	if (it != tmp.end())
-		root = it->second;
-	else
-		root = "/html";
+	it = tmp.begin();
+	for (; it != tmp.end(); it++)
+	{
+		if (it->second == "root")
+			root += it->first;
+		else
+			root += "/html";
+	}
 	if (_locationInfo != NULL)
 	{
 		tmp = _locationInfo->getLocationInfo();
-		it = tmp.find("root");
-		if (it != tmp.end())
-			root = it->second;
+		it = tmp.begin();
+		for (; it != tmp.end(); it++)
+		{
+			if (it->second == "root")
+				root = it->second;
+			else
+				root = rqs.getParsedRequest()._location;
+		}
 	}
-	findFile(root + rqs.getParsedRequest()._location);
+	_findFile(root);
 }
 
 void Response::handlePost(Request &rqs)
@@ -42,17 +50,17 @@ void Response::handleDelete(Request &rqs)
 {
 }
 
-void Response::findFile(std::string path)
+void Response::_findFile(std::string path)
 {
 	struct stat buf;
 
+	path = "." + path;
 	if (stat(path.c_str(), &buf) == -1)
-		std::cerr << "ERROR!" << std::endl;
-	// throw(_statusCode = _404_NOT_FOUND);
+		_statusCode = _404_NOT_FOUND;
 	switch (buf.st_mode & S_IFMT)
 	{
 	case S_IFREG:
-		_addContentType(path);
+		_setResponse(path, buf.st_size);
 		break;
 	case S_IFDIR:
 		break;
@@ -61,19 +69,46 @@ void Response::findFile(std::string path)
 	}
 }
 
-void Response::_addContentType(std::string path)
+void Response::_setResponse(std::string path, off_t size)
 {
 	Config &conf = Config::getInstance();
 	std::string::size_type pos;
+	std::stringstream length;
 
-	pos = path.find(".");
+	length << size;
+	_headerFields.insert(std::pair<std::string, std::string>("Conent-Length:", length.str()));
+	pos = path.rfind(".");
 	if (pos == std::string::npos)
-		_headerFields.insert(std::pair<std::string, std::string>("Conent-Type", "application/octet-stream"));
+		_headerFields.insert(std::pair<std::string, std::string>("Conent-Type:", "application/octet-stream"));
 	else
 	{
 		pos += 1;
 		std::string extension = path.substr(pos, path.length() - pos);
-
-		_headerFields.insert(std::pair<std::string, std::string>("Conent-Type", conf.getMimeType().find(extension)->second));
+		_headerFields.insert(std::pair<std::string, std::string>("Conent-Type:", conf.getMimeType().find(extension)->second));
 	}
+	_setBody(path, size);
+}
+
+void Response::_setBody(std::string path, off_t size)
+{
+	std::ifstream file(path.c_str());
+
+	_body.resize(size);
+	if (file.is_open() == false)
+		Exception::fileOpenError("file open error!");
+	file.read(&_body[0], size);
+	file.close();
+}
+
+std::string &Response::getResponse()
+{
+	std::stringstream status;
+	std::map<std::string, std::string>::iterator it;
+
+	status << _statusCode;
+	_response = "HTTP/1.1 " + status.str() + " OK\r\n";
+	for (it = _headerFields.begin(); it != _headerFields.end(); it++)
+		_response += it->first + " " + it->second + "\r\n";
+	_response += "\r\n" + _body;
+	return (_response);
 }

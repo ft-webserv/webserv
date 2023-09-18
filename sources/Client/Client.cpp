@@ -1,5 +1,4 @@
 #include "Client.hpp"
-#include <unistd.h>
 
 Client::Client(uintptr_t socket)
 	: _socket(socket) {}
@@ -33,7 +32,8 @@ void Client::readRequest(intptr_t data)
 
 void Client::writeResponse()
 {
-
+	if (chdir(ABSOLUTE_PATH) == -1)
+		Exception::listenError("chdir() error!");
 	if (_request.getParsedRequest()._method == "GET") // http request의 location에 정규표현식이 들어올 수 있는가?
 	{
 		_response.handleGet(_request);
@@ -46,6 +46,8 @@ void Client::writeResponse()
 	{
 		_response.handleDelete(_request);
 	}
+	std::string &response = _response.getResponse();
+	send(_socket, static_cast<void *>(&response[0]), response.size(), 0);
 }
 
 uintptr_t Client::getSocket()

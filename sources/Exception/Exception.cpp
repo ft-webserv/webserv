@@ -8,6 +8,11 @@ Exception::~Exception()
 {
 }
 
+void Exception::fileOpenError(const std::string &message)
+{
+	throw std::runtime_error(message);
+}
+
 void Exception::socketError(const std::string &message)
 {
 	throw std::runtime_error(message);
@@ -44,6 +49,11 @@ void Exception::recvError(const std::string &message)
 }
 
 void Exception::disconnectDuringRecvError(const std::string &message)
+{
+	throw std::runtime_error(message);
+}
+
+static void chdirError(const std::string &message)
 {
 	throw std::runtime_error(message);
 }
