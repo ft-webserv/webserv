@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include <unistd.h>
 
 Client::Client(uintptr_t socket)
 	: _socket(socket) {}
@@ -55,19 +56,25 @@ uintptr_t Client::getSocket()
 void Client::setServerBlock(port_t port)
 {
 	std::map<std::string, std::string>::iterator it;
+	std::map<std::string, std::string>::iterator end;
 	Config &conf = Config::getInstance();
 
 	for (int i = 0; i < conf.getServerInfos().size(); i++)
 	{
 		int flag = 0;
-		for (it = conf.getServerInfos()[i]->getServerInfo().begin(); it != conf.getServerInfos()[i]->getServerInfo().end(); it++)
+		it = conf.getServerInfos()[i]->getServerInfo().begin();
+		end = conf.getServerInfos()[i]->getServerInfo().end();
+		for (; it != end; it++)
 		{
 			if (it->second == "listen")
 			{
 				if (atoi((it->first).c_str()) == port)
 				{
 					if (_response.getServerInfo() == NULL)
+					{
 						_response.setServerInfo(conf.getServerInfos()[i]);
+						setLocationBlock();
+					}
 					flag = 1;
 				}
 			}
@@ -86,13 +93,16 @@ void Client::setServerBlock(port_t port)
 
 void Client::setLocationBlock()
 {
-	std::vector<LocationInfo *>::iterator it = _response.getServerInfo()->getLocationInfos().begin();
-	std::vector<LocationInfo *>::iterator end = _response.getServerInfo()->getLocationInfos().end();
+	std::vector<LocationInfo *>::iterator it;
+	std::vector<LocationInfo *>::iterator end;
 	std::string token;
 	std::string path;
 	std::string::size_type pos = 0;
+	std::string::size_type pathLength;
 	std::string::size_type tokenLength;
 
+	it = _response.getServerInfo()->getLocationInfos().begin();
+	end = _response.getServerInfo()->getLocationInfos().end();
 	while (true)
 	{
 		pos = getNextPos(pos);
@@ -103,9 +113,12 @@ void Client::setLocationBlock()
 		for (; it != end; it++)
 		{
 			path = (*it)->getPath();
-			if (path.length() + 1 == tokenLength && token[tokenLength - 1] == '/')
+			pathLength = path.length();
+			if (pathLength > 1 && path[pathLength - 1] == '/')
+				pathLength -= 1;
+			if (tokenLength > 1 && token[tokenLength - 1] == '/')
 				tokenLength -= 1;
-			if (path.compare(0, token.length(), token) == 0)
+			if (pathLength == tokenLength && path.compare(0, pathLength, token) == 0)
 				_response.setLocationInfo(*it);
 		}
 	}
@@ -116,9 +129,11 @@ std::string::size_type Client::getNextPos(std::string::size_type currPos)
 	std::string location = _request.getParsedRequest()._location;
 	std::string::size_type nextPos;
 
-	nextPos = location.find("/", currPos) + 1;
+	nextPos = location.find("/", currPos);
 	if (nextPos == std::string::npos)
 		nextPos = location.length();
+	else
+		nextPos += 1;
 	if (currPos == nextPos)
 		return (std::string::npos);
 	return (nextPos);

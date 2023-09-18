@@ -47,7 +47,8 @@ void Response::findFile(std::string path)
 	struct stat buf;
 
 	if (stat(path.c_str(), &buf) == -1)
-		throw(_statusCode = _404_NOT_FOUND);
+		std::cerr << "ERROR!" << std::endl;
+	// throw(_statusCode = _404_NOT_FOUND);
 	switch (buf.st_mode & S_IFMT)
 	{
 	case S_IFREG:

@@ -16,9 +16,11 @@ public:
 	void setServerInfo(std::pair<std::string, std::string> pair);
 	void addLocationInfo(LocationInfo *tmp);
 
-	// for test no more
 	std::map<std::string, std::string> &getServerInfo();
-	std::vector<LocationInfo *> getLocationInfos();
+	std::vector<LocationInfo *> &getLocationInfos();
+
+	// for test
+	void printServerInfo();
 
 private:
 	std::map<std::string, std::string> _info;

@@ -17,9 +17,11 @@ public:
 	void setPath(std::string);
 	void setLocationInfo(std::pair<std::string, std::string> pair);
 
+	std::map<std::string, std::string> &getLocationInfo();
+	std::string getPath() const;
+
 	// for test
-	const std::map<std::string, std::string> getLocationInfo() const;
-	const std::string getPath() const;
+	void printLocationInfo();
 
 private:
 	std::string _path;

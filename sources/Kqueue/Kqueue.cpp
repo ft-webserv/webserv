@@ -12,10 +12,12 @@ Kqueue::Kqueue()
 
 Kqueue::Kqueue(const Kqueue &copy)
 {
+	(void)copy;
 }
 
 Kqueue &Kqueue::operator=(const Kqueue &copy)
 {
+	(void)copy;
 	return (*this);
 }
 

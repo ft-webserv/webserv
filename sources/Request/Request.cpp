@@ -79,4 +79,9 @@ void Request::testPrintRequest(void)
 	std::cout << "ContentType: " << _parsedRequest._contentType << std::endl;
 	std::cout << "ContentLength: " << _parsedRequest._contentLength << std::endl;
 	std::cout << "Body: " << _parsedRequest._body << std::endl;
+	std::cout << "-------------------------------------------" << std::endl;
+	std::cout << "-------------------------------------------" << std::endl;
+	std::cout << "-------------------------------------------" << std::endl;
+	std::cout << "-------------------------------------------" << std::endl;
+	std::cout << "-------------------------------------------" << std::endl;
 }

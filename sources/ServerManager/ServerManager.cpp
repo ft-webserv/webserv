@@ -90,6 +90,7 @@ void ServerManager::_monitoringEvent()
 				Client *client = static_cast<Client *>(event->udata);
 				_findServerBlock(client);
 				client->writeResponse();
+				sleep(1000);
 			}
 		}
 	}

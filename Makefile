@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------- #
 
 CC					:= c++
-#  CFLAGS				:= -Wall -Wextra -Werror -std=c++98
+CFLAGS				:= -Wall -Wextra -std=c++98 #-Werror
 CPPFLAGS			= -I includes
 MJ					= -MJ $(patsubst $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(BUILD_DIR)/$(JSON_DIR)/%.part.json, $@)
 
