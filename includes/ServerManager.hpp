@@ -24,4 +24,7 @@ private:
 	void _monitoringEvent(void);
 	void _acceptClient(uintptr_t &servSock);
 	void _findServerBlock(Client *client);
+	void _setKeepAliveTimeOut(Client *client);
+	port_t _findOutPort(uintptr_t clntsock);
+	void _disconnectClient(struct kevent *event);
 };

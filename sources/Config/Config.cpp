@@ -1,10 +1,12 @@
 #include "Config.hpp"
 
 Config::Config()
+	: _keepAliveTime(-1)
 {
 }
 
 Config::Config(const std::string &fileName)
+	: _keepAliveTime(-1)
 {
 	parseConfigFile(fileName);
 }
@@ -50,6 +52,14 @@ void Config::parseConfigFile(const std::string &fileName)
 			parseServerInfo(file);
 		else if (word == "include")
 			parseInclude(file);
+		else if (word == "keepalive_timeout")
+		{
+			std::stringstream ss;
+
+			file >> word;
+			ss << word;
+			ss >> _keepAliveTime;
+		}
 		else
 		{
 			val = word;
@@ -65,6 +75,8 @@ void Config::parseConfigFile(const std::string &fileName)
 		}
 		file >> word;
 	}
+	if (_keepAliveTime == -1)
+		_keepAliveTime = 10;
 	file.close();
 }
 
@@ -195,9 +207,14 @@ std::map<std::string, std::string> &Config::getMimeType()
 	return (_mimeType);
 }
 
-std::set<int> &Config::getPorts(void)
+std::set<int> &Config::getPorts()
 {
 	return (_ports);
+}
+
+int &Config::getKeepAliveTime()
+{
+	return (_keepAliveTime);
 }
 
 const char *Config::FileOpenFailException::what() const throw()

@@ -14,6 +14,7 @@ void Response::setLocationInfo(LocationInfo *locationBlock) { _locationInfo = lo
 
 void Response::handleGet(Request &rqs)
 {
+	_statusCode = _200_OK;
 	std::string root;
 	std::map<std::string, std::string> tmp;
 	std::map<std::string, std::string>::iterator it;
@@ -44,10 +45,12 @@ void Response::handleGet(Request &rqs)
 
 void Response::handlePost(Request &rqs)
 {
+	_statusCode = _201_CREATED;
 }
 
 void Response::handleDelete(Request &rqs)
 {
+	_statusCode = _204_NO_CONTENT;
 }
 
 void Response::_findFile(std::string path)

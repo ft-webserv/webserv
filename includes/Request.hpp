@@ -1,6 +1,5 @@
 #pragma once
 
-#include <ctime>
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -16,7 +15,7 @@ typedef struct s_request
 	std::string _accept;
 	std::string _connection;
 	std::string _contentType;
-	unsigned int _contentLength;
+	unsigned int _contentLength = 0;
 	std::string _body;
 } t_request;
 
@@ -33,8 +32,8 @@ public:
 	t_request getParsedRequest() const;
 
 private:
-	std::time_t _startTime;
 	std::string _requestBuf;
 	t_request _parsedRequest;
-	eStatus statusCode;
+	eStatus _statusCode;
+	bool _isBody;
 };

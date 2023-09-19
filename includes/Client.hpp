@@ -2,6 +2,7 @@
 
 #include <sys/socket.h>
 
+#include "Kqueue.hpp"
 #include "Config.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
@@ -9,6 +10,16 @@
 
 // user define value
 #define BUFFERSIZE 1024
+
+enum eClientStatus
+{
+  START,
+  READHEADER,
+  READBODY,
+  FINREAD,
+  WRITE,
+  FINWRITE
+};
 
 class Client
 {
@@ -19,15 +30,21 @@ public:
   ~Client();
   void readRequest(intptr_t data);
   void writeResponse();
+
+public:
   uintptr_t getSocket();
+  int getKeepAliveTime();
   void setServerBlock(port_t port);
   void setLocationBlock();
+  void setKeepAliveTime();
 
 private:
   std::string::size_type getNextPos(std::string::size_type currPos);
 
 private:
+  eClientStatus _status;
   uintptr_t _socket;
   Request _request;
   Response _response;
+  int _keepAliveTime;
 };

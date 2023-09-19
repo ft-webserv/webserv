@@ -1,10 +1,10 @@
 #include "Client.hpp"
 
 Client::Client(uintptr_t socket)
-	: _socket(socket) {}
+	: _socket(socket), _status(START) {}
 
 Client::Client(const Client &src)
-	: _socket(src._socket) {}
+	: _socket(src._socket), _status(START) {}
 
 Client &Client::operator=(const Client &src)
 {
@@ -15,11 +15,28 @@ Client::~Client()
 {
 }
 
+void Client::setKeepAliveTime()
+{
+	Config &conf = Config::getInstance();
+
+	_keepAliveTime = conf.getKeepAliveTime();
+}
+
+int Client::getKeepAliveTime()
+{
+	return (_keepAliveTime);
+}
+
 void Client::readRequest(intptr_t data)
 {
 	ssize_t len;
 	char buf[BUFFERSIZE + 1];
 
+	if (data == 0)
+	{
+		close(_socket);
+		return;
+	}
 	if ((len = recv(_socket, buf, BUFFERSIZE, 0)) == -1)
 		Exception::recvError("recv() error!");
 	else if (len <= 0)
@@ -28,11 +45,13 @@ void Client::readRequest(intptr_t data)
 	memset(buf, 0, BUFFERSIZE + 1);
 	if (data <= BUFFERSIZE)
 		_request.parseRequest();
+	if (_request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.size())
+		_status = FINREAD;
 }
 
 void Client::writeResponse()
 {
-	if (chdir(ABSOLUTE_PATH) == -1)
+	if (chdir(WORK_PATH) == -1)
 		Exception::listenError("chdir() error!");
 	if (_request.getParsedRequest()._method == "GET") // http request의 location에 정규표현식이 들어올 수 있는가?
 	{

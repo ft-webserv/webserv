@@ -10,7 +10,7 @@
 #include <set>
 #include <sstream>
 
-#define ABSOLUTE_PATH "/Users/youngmch/Webserv"
+#define WORK_PATH "/Users/youngmch/Webserv"
 
 class Config
 {
@@ -21,6 +21,7 @@ public:
 	std::vector<ServerInfo *> &getServerInfos();
 	std::set<int> &getPorts();
 	std::map<std::string, std::string> &getMimeType();
+	int &getKeepAliveTime();
 	// it will be die
 	class FileOpenFailException : public std::exception
 	{
@@ -33,6 +34,9 @@ private:
 	Config(const std::string &fileName);
 	Config(const Config &source);
 	~Config();
+
+private:
+	int _keepAliveTime;
 
 private:
 	std::map<std::string, std::string> _generalInfo;

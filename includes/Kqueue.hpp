@@ -39,6 +39,7 @@ public:
 public:
     void setFdset(const uintptr_t socket, eFdType flag);
     eFdType getFdType(const uintptr_t socket);
+    void _deleteFdType(const uintptr_t socket);
 
 private:
     fd_set _servers;

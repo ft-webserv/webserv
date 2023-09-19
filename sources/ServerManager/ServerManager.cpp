@@ -50,48 +50,63 @@ void ServerManager::_monitoringEvent()
 
 	while (true)
 	{
-		numEvents = _kqueue.doKevent();
-		for (int i = 0; i < numEvents; i++)
+		try
 		{
-			event = &_kqueue.getEventList()[i];
-			eFdType type = _kqueue.getFdType(event->ident);
-			if (event->flags & EV_ERROR)
+			numEvents = _kqueue.doKevent();
+			// std::cout << "Events num : " << numEvents << std::endl;
+			for (int i = 0; i < numEvents; i++)
 			{
-				switch (type)
+				event = &_kqueue.getEventList()[i];
+				eFdType type = _kqueue.getFdType(event->ident);
+				// std::cout << ((type == SERVER) ? "Server : " : "Client : ");
+				// std::cout << ((event->filter == EVFILT_READ) ? "read" : "write") << std::endl;
+				if (event->flags & EV_ERROR)
 				{
-				case SERVER:
-					std::cerr << "server socket error!" << std::endl;
-					break;
-				case CLIENT:
-					_kqueue.deleteEvent(event->ident);
-					break;
-				default:
-					break;
+					switch (type)
+					{
+					case SERVER:
+						std::cerr << "server socket error!" << std::endl;
+						break;
+					case CLIENT:
+						_kqueue.deleteEvent(event->ident);
+						break;
+					default:
+						break;
+					}
+				}
+				else if (event->filter == EVFILT_READ)
+				{
+					switch (type)
+					{
+					case SERVER:
+						_acceptClient(event->ident);
+						break;
+					case CLIENT:
+						static_cast<Client *>(event->udata)->readRequest(event->data); // 추후 참조자에 담아서 사용할 예정
+						_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
+						_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata); // readRequest 안에서 읽은 길이가 content-length를 만족하면, read event disable & write evnet enable
+						break;
+					default:
+						break;
+					}
+				}
+				else if (event->filter == EVFILT_WRITE)
+				{
+					Client *client = static_cast<Client *>(event->udata);
+					_findServerBlock(client);
+					client->writeResponse();
+					_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
+					_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
+				}
+				else if (event->filter == EVFILT_TIMER)
+				{
+					_disconnectClient(event);
 				}
 			}
-			else if (event->filter == EVFILT_READ)
-			{
-				switch (type)
-				{
-				case SERVER:
-					_acceptClient(event->ident);
-					break;
-				case CLIENT:
-					static_cast<Client *>(event->udata)->readRequest(event->data); // 추후 참조자에 담아서 사용할 예정
-					_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
-					_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata); // readRequest 안에서 읽은 길이가 content-length를 만족하면, read event disable & write evnet enable
-					break;
-				default:
-					break;
-				}
-			}
-			else if (event->filter == EVFILT_WRITE)
-			{
-				Client *client = static_cast<Client *>(event->udata);
-				_findServerBlock(client);
-				client->writeResponse();
-				sleep(1000);
-			}
+		}
+		catch (const std::exception &e)
+		{
+			std::cerr << e.what() << '\n';
 		}
 	}
 }
@@ -108,18 +123,37 @@ void ServerManager::_acceptClient(uintptr_t &servSock)
 	_kqueue.addEvent(clntSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(client));
 	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, static_cast<void *>(client));
 	_kqueue.setFdset(clntSock, CLIENT);
-	int res = _kqueue.doKevent();
-	if (res == -1)
-		Exception::keventError("kevent() error Event!");
+	client->setKeepAliveTime();
+	_setKeepAliveTimeOut(client);
 }
 
-void ServerManager::_findServerBlock(Client *client)
+void ServerManager::_setKeepAliveTimeOut(Client *client)
+{
+	_kqueue.addEvent(client->getSocket(), EVFILT_TIMER,
+					 EV_ADD | EV_ONESHOT, NOTE_SECONDS,
+					 client->getKeepAliveTime(), static_cast<void *>(client));
+}
+
+port_t ServerManager::_findOutPort(uintptr_t clntsock)
 {
 	struct sockaddr_in clnt;
 	socklen_t clntSockLen = sizeof(clnt);
 	port_t port;
 
-	getsockname(client->getSocket(), (sockaddr *)&clnt, &clntSockLen);
+	getsockname(clntsock, (sockaddr *)&clnt, &clntSockLen);
 	port = ntohs(clnt.sin_port);
-	client->setServerBlock(port);
+	return (port);
+}
+
+void ServerManager::_findServerBlock(Client *client)
+{
+	client->setServerBlock(_findOutPort(client->getSocket()));
+}
+
+void ServerManager::_disconnectClient(struct kevent *event)
+{
+	Client *client = static_cast<Client *>(event->udata);
+	_kqueue._deleteFdType(event->ident);
+	close(client->getSocket());
+	delete client;
 }

@@ -38,9 +38,7 @@ void Kqueue::enableEvent(uintptr_t ident, int16_t filter, void *udata)
 	struct kevent tempEvent;
 
 	EV_SET(&tempEvent, ident, filter, EV_ENABLE, 0, 0, udata);
-	int res = kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
-	if (res == -1)
-		Exception::keventError("kevent() error in enable Event!");
+	_changeList.push_back(tempEvent);
 }
 
 void Kqueue::disableEvent(uintptr_t ident, int16_t filter, void *udata)
@@ -48,9 +46,7 @@ void Kqueue::disableEvent(uintptr_t ident, int16_t filter, void *udata)
 	struct kevent tempEvent;
 
 	EV_SET(&tempEvent, ident, filter, EV_DISABLE, 0, 0, udata);
-	int res = kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
-	if (res == -1)
-		Exception::keventError("kevent() error in disable Event!");
+	_changeList.push_back(tempEvent);
 }
 
 void Kqueue::deleteEvent(const uintptr_t Socket)
@@ -105,4 +101,19 @@ eFdType Kqueue::getFdType(const uintptr_t socket)
 		return (CLIENT);
 	else
 		return (DEFAULT);
+}
+
+void Kqueue::_deleteFdType(const uintptr_t socket)
+{
+	switch (getFdType(socket))
+	{
+	case SERVER:
+		FD_CLR(socket, &_servers);
+		break;
+	case CLIENT:
+		FD_CLR(socket, &_clients);
+		break;
+	default:
+		break;
+	}
 }
