@@ -82,9 +82,15 @@ void ServerManager::_monitoringEvent()
 						_acceptClient(event->ident);
 						break;
 					case CLIENT:
-						static_cast<Client *>(event->udata)->readRequest(event->data); // 추후 참조자에 담아서 사용할 예정
-						_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
-						_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata); // readRequest 안에서 읽은 길이가 content-length를 만족하면, read event disable & write evnet enable
+						Client *client;
+						client = static_cast<Client *>(event->udata);
+						_setRequestTimeOut(client);
+						client->readRequest();
+						if (client->getClientStatus() == FINREAD)
+						{
+							_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
+							_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata);
+						}
 						break;
 					default:
 						break;
@@ -95,12 +101,20 @@ void ServerManager::_monitoringEvent()
 					Client *client = static_cast<Client *>(event->udata);
 					_findServerBlock(client);
 					client->writeResponse();
-					_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
-					_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
+					if (client->getRequest().getParsedRequest()._contentType == "close")
+						_disconnectClient(event);
+					else
+					{
+						_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
+						_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
+					}
 				}
 				else if (event->filter == EVFILT_TIMER)
 				{
-					_disconnectClient(event);
+					Client *client = static_cast<Client *>(event->udata);
+					if (client->getClientStatus() < FINREAD)
+						// Error page;
+						_disconnectClient(event);
 				}
 			}
 		}
@@ -132,6 +146,15 @@ void ServerManager::_setKeepAliveTimeOut(Client *client)
 	_kqueue.addEvent(client->getSocket(), EVFILT_TIMER,
 					 EV_ADD | EV_ONESHOT, NOTE_SECONDS,
 					 client->getKeepAliveTime(), static_cast<void *>(client));
+}
+
+void ServerManager::_setRequestTimeOut(Client *client)
+{
+	Config &conf = Config::getInstance();
+
+	_kqueue.addEvent(client->getSocket(), EVFILT_TIMER,
+					 EV_ADD | EV_ONESHOT, NOTE_SECONDS,
+					 conf.getRequestTime(), static_cast<void *>(client));
 }
 
 port_t ServerManager::_findOutPort(uintptr_t clntsock)

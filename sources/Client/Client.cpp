@@ -22,31 +22,57 @@ void Client::setKeepAliveTime()
 	_keepAliveTime = conf.getKeepAliveTime();
 }
 
-int Client::getKeepAliveTime()
+int &Client::getKeepAliveTime()
 {
 	return (_keepAliveTime);
 }
 
-void Client::readRequest(intptr_t data)
+eClientStatus &Client::getClientStatus()
+{
+	return (_status);
+}
+
+uintptr_t &Client::getSocket()
+{
+	return (_socket);
+}
+
+Request &Client::getRequest()
+{
+	return (_request);
+}
+
+Response &Client::getResponse()
+{
+	return (_response);
+}
+
+void Client::readRequest()
 {
 	ssize_t len;
 	char buf[BUFFERSIZE + 1];
 
-	if (data == 0)
-	{
-		close(_socket);
-		return;
-	}
+	if (_status == START)
+		_status = READHEADER;
+	else if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
+		_status = FINREAD;
+
+	memset(buf, 0, BUFFERSIZE + 1);
 	if ((len = recv(_socket, buf, BUFFERSIZE, 0)) == -1)
 		Exception::recvError("recv() error!");
 	else if (len <= 0)
 		Exception::disconnectDuringRecvError("diconnected during read!");
-	_request.setRequestBufs(buf);
-	memset(buf, 0, BUFFERSIZE + 1);
-	if (data <= BUFFERSIZE)
+
+	if (_status == READHEADER)
+		_request.setHeaderBuf(buf);
+	else if (_status == READBODY)
+		_request.setBodyBuf(buf);
+
+	if (_request.getIsBody() == true && _status != READBODY)
+	{
+		_status = READBODY;
 		_request.parseRequest();
-	if (_request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.size())
-		_status = FINREAD;
+	}
 }
 
 void Client::writeResponse()
@@ -67,11 +93,6 @@ void Client::writeResponse()
 	}
 	std::string &response = _response.getResponse();
 	send(_socket, static_cast<void *>(&response[0]), response.size(), 0);
-}
-
-uintptr_t Client::getSocket()
-{
-	return (_socket);
 }
 
 void Client::setServerBlock(port_t port)

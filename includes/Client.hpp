@@ -17,7 +17,8 @@ enum eClientStatus
   READHEADER,
   READBODY,
   FINREAD,
-  WRITE,
+  RESPONSE_START,
+  WRITTING,
   FINWRITE
 };
 
@@ -28,12 +29,15 @@ public:
   Client(const Client &src);
   Client &operator=(const Client &src);
   ~Client();
-  void readRequest(intptr_t data);
+  void readRequest();
   void writeResponse();
 
 public:
-  uintptr_t getSocket();
-  int getKeepAliveTime();
+  uintptr_t &getSocket();
+  int &getKeepAliveTime();
+  eClientStatus &getClientStatus();
+  Request &getRequest();
+  Response &getResponse();
   void setServerBlock(port_t port);
   void setLocationBlock();
   void setKeepAliveTime();

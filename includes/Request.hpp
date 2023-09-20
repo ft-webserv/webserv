@@ -15,7 +15,7 @@ typedef struct s_request
 	std::string _accept;
 	std::string _connection;
 	std::string _contentType;
-	unsigned int _contentLength = 0;
+	unsigned int _contentLength;
 	std::string _body;
 } t_request;
 
@@ -28,11 +28,14 @@ public:
 	void testPrintRequest(void);
 
 public:
-	void setRequestBufs(const std::string buf);
+	void setHeaderBuf(const std::string buf);
+	void setBodyBuf(const std::string buf);
 	t_request getParsedRequest() const;
+	bool getIsBody();
 
 private:
-	std::string _requestBuf;
+	std::string _headerBuf;
+	std::string _bodyBuf;
 	t_request _parsedRequest;
 	eStatus _statusCode;
 	bool _isBody;

@@ -9,14 +9,32 @@ Request::~Request()
 {
 }
 
-void Request::setRequestBufs(const std::string buf)
+void Request::setHeaderBuf(const std::string buf)
 {
-	_requestBuf = buf;
+	std::string::size_type newLinePos;
+
+	_headerBuf += buf;
+	if (newLinePos = _headerBuf.find("\r\n\r\n") != std::string ::npos)
+	{
+		_isBody = true;
+		_bodyBuf = _headerBuf.substr(newLinePos + 4, _headerBuf.length());
+		_headerBuf = _headerBuf.substr(0, newLinePos);
+	}
+}
+
+void Request::setHeaderBuf(const std::string buf)
+{
+	_bodyBuf += buf;
 }
 
 t_request Request::getParsedRequest() const
 {
 	return (_parsedRequest);
+}
+
+bool Request::getIsBody()
+{
+	return (_isBody);
 }
 
 void Request::parseRequest(void)
@@ -25,12 +43,12 @@ void Request::parseRequest(void)
 	std::string::size_type pre = 0;
 	std::string word;
 
-	if (_isBody == false)
+	if (_isBody == true)
 	{
-		pos = _requestBuf.find("\r\n");
-		for (; pos < _requestBuf.length();)
+		pos = _headerBuf.find("\r\n");
+		for (; pos < _headerBuf.length();)
 		{
-			std::istringstream line(_requestBuf.substr(pre, pos));
+			std::istringstream line(_headerBuf.substr(pre, pos));
 			line >> word;
 			if (word == "GET" || word == "POST" || word == "DELETE")
 			{
@@ -57,22 +75,12 @@ void Request::parseRequest(void)
 			{
 				line >> _parsedRequest._contentLength;
 			}
-
 			pos += 2;
 			pre = pos;
-			pos = _requestBuf.find("\r\n", pos);
-			if (_requestBuf.find("\r\n\r\n", pos) != std::string::npos)
-			{
-				_isBody = true;
-				break;
-			}
+			pos = _headerBuf.find("\r\n", pos);
 		}
 	}
-	if (_isBody == true)
-	{
-		_parsedRequest._body += _requestBuf.substr(pos, _requestBuf.length());
-	}
-	testPrintRequest();
+	// testPrintRequest();
 }
 
 void Request::testPrintRequest(void)

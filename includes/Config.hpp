@@ -22,6 +22,7 @@ public:
 	std::set<int> &getPorts();
 	std::map<std::string, std::string> &getMimeType();
 	int &getKeepAliveTime();
+	int &getRequestTime();
 	// it will be die
 	class FileOpenFailException : public std::exception
 	{
@@ -37,6 +38,7 @@ private:
 
 private:
 	int _keepAliveTime;
+	int _requestTime;
 
 private:
 	std::map<std::string, std::string> _generalInfo;

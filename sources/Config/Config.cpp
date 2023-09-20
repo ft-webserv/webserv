@@ -1,12 +1,12 @@
 #include "Config.hpp"
 
 Config::Config()
-	: _keepAliveTime(-1)
+	: _keepAliveTime(-1), _requestTime(-1)
 {
 }
 
 Config::Config(const std::string &fileName)
-	: _keepAliveTime(-1)
+	: _keepAliveTime(-1), _requestTime(-1)
 {
 	parseConfigFile(fileName);
 }
@@ -60,6 +60,14 @@ void Config::parseConfigFile(const std::string &fileName)
 			ss << word;
 			ss >> _keepAliveTime;
 		}
+		else if (word == "request_timeout")
+		{
+			std::stringstream ss;
+
+			file >> word;
+			ss << word;
+			ss >> _requestTime;
+		}
 		else
 		{
 			val = word;
@@ -76,7 +84,9 @@ void Config::parseConfigFile(const std::string &fileName)
 		file >> word;
 	}
 	if (_keepAliveTime == -1)
-		_keepAliveTime = 10;
+		_keepAliveTime = 75;
+	if (_requestTime == -1)
+		_keepAliveTime = 60;
 	file.close();
 }
 
@@ -215,6 +225,11 @@ std::set<int> &Config::getPorts()
 int &Config::getKeepAliveTime()
 {
 	return (_keepAliveTime);
+}
+
+int &Config::getRequestTime()
+{
+	return (_requestTime);
 }
 
 const char *Config::FileOpenFailException::what() const throw()
