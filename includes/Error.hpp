@@ -2,7 +2,9 @@
 
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <sys/stat.h>
+#include <sys/socket.h>
 
 #include "Status.hpp"
 
@@ -32,7 +34,9 @@ protected:
 	// void _505httpVersionNotSupported(uintptr_t socket, std::string errorPagePath);
 
 private:
-	std::string _getDefaultPath(eStatus statusCode);
+	std::string _findDefaultPath(eStatus statusCode);
+	std::string _findStatusInfo(eStatus statusCode);
 	std::string _defaultPath[2][13];
+	std::string _statusInfo[2][13];
 	std::string _response;
 };
