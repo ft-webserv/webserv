@@ -79,7 +79,7 @@ void Client::writeResponse()
 {
 	if (chdir(WORK_PATH) == -1)
 		Exception::listenError("chdir() error!");
-	if (_request.getParsedRequest()._method == "GET") // http request의 location에 정규표현식이 들어올 수 있는가?
+	if (_request.getParsedRequest()._method == "GET")
 	{
 		_response.handleGet(_request);
 	}

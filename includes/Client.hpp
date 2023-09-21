@@ -7,6 +7,7 @@
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Exception.hpp"
+#include "Error.hpp"
 
 // user define value
 #define BUFFERSIZE 1024
@@ -22,7 +23,7 @@ enum eClientStatus
   FINWRITE
 };
 
-class Client
+class Client : public Error
 {
 public:
   Client(uintptr_t socket);
