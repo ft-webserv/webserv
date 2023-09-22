@@ -113,7 +113,7 @@ void ServerManager::_monitoringEvent()
 				{
 					Client *client = static_cast<Client *>(event->udata);
 					if (client->getClientStatus() < FINREAD)
-						// Error page;
+						; // Request time out Error page;
 					_disconnectClient(event);
 				}
 			}

@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 
 #include "Status.hpp"
+#include "Utils.hpp"
 
 class Error
 {

@@ -79,20 +79,37 @@ void Client::writeResponse()
 {
 	if (chdir(WORK_PATH) == -1)
 		Exception::listenError("chdir() error!");
-	if (_request.getParsedRequest()._method == "GET")
+	try
 	{
-		_response.handleGet(_request);
+		if (_request.getParsedRequest()._method == "GET")
+		{
+			_response.handleGet(_request);
+		}
+		else if (_request.getParsedRequest()._method == "POST")
+		{
+			_response.handlePost(_request);
+		}
+		else if (_request.getParsedRequest()._method == "DELETE")
+		{
+			_response.handleDelete(_request);
+		}
+		else
+		{
+			throw(_501_NOT_IMPLEMENTED);
+		}
+		std::string &response = _response.getResponse();
+		send(_socket, static_cast<void *>(&response[0]), response.size(), 0);
 	}
-	else if (_request.getParsedRequest()._method == "POST")
+	catch (const eStatus &e)
 	{
-		_response.handlePost(_request);
+		std::map<std::string, std::string> tmp = _response.getServerInfo()->getServerInfo();
+		std::string errorPagePath = DEFAULTERRORPAGE;
+		std::string findResult = mapFind(tmp, "errorpage");
+
+		if (findResult != "")
+			errorPagePath = "." + findResult;
+		_sendErrorPage(_socket, errorPagePath, e);
 	}
-	else if (_request.getParsedRequest()._method == "DELETE")
-	{
-		_response.handleDelete(_request);
-	}
-	std::string &response = _response.getResponse();
-	send(_socket, static_cast<void *>(&response[0]), response.size(), 0);
 }
 
 void Client::setServerBlock(port_t port)
@@ -116,8 +133,8 @@ void Client::setServerBlock(port_t port)
 					{
 						_response.setServerInfo(conf.getServerInfos()[i]);
 						setLocationBlock();
+						flag = 1;
 					}
-					flag = 1;
 				}
 			}
 			if (flag == 1 && it->second == "server_name")

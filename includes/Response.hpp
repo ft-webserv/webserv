@@ -9,6 +9,9 @@
 #include "Request.hpp"
 #include "Status.hpp"
 #include "Exception.hpp"
+#include "Utils.hpp"
+
+#define DEFAULT_ROOT "/html"
 
 class Response
 {
@@ -25,9 +28,11 @@ public:
 	std::string &getResponse();
 
 private:
-	void _findFile(std::string path);
+	void _findFile(std::string root, std::string location);
 	void _setResponse(std::string path, off_t size);
 	void _setBody(std::string path, off_t size);
+	void _showFileList(std::string path, std::string location);
+	bool _isAutoIndex();
 
 private:
 	eStatus _statusCode;

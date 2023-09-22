@@ -11,6 +11,7 @@
 
 // user define value
 #define BUFFERSIZE 1024
+#define DEFAULTERRORPAGE "./error_page/html"
 
 enum eClientStatus
 {

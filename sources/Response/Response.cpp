@@ -15,32 +15,25 @@ void Response::setLocationInfo(LocationInfo *locationBlock) { _locationInfo = lo
 void Response::handleGet(Request &rqs)
 {
 	_statusCode = _200_OK;
+	std::string location = rqs.getParsedRequest()._location;
 	std::string root;
 	std::map<std::string, std::string> tmp;
 	std::map<std::string, std::string>::iterator it;
 
 	tmp = _serverInfo->getServerInfo();
-	it = tmp.begin();
-	for (; it != tmp.end(); it++)
-	{
-		if (it->second == "root")
-			root += it->first;
-		else
-			root += "/html";
-	}
+	root = mapFind(tmp, "root");
 	if (_locationInfo != NULL)
 	{
 		tmp = _locationInfo->getLocationInfo();
-		it = tmp.begin();
-		for (; it != tmp.end(); it++)
-		{
-			if (it->second == "root")
-				root = it->second;
-			else
-				root = rqs.getParsedRequest()._location;
-		}
+		if (tmp.find("GET") == tmp.end())
+			throw(_405_METHOD_NOT_ALLOWED);
+		root = mapFind(tmp, "root");
 	}
-	_findFile(root);
+	if (root[root.length() - 1] == '/')
+		root.pop_back();
+	if (location[location.length() - 1] == '/')
+		location.pop_back();
+	_findFile(root, location);
 }
 
 void Response::handlePost(Request &rqs)
@@ -53,22 +46,57 @@ void Response::handleDelete(Request &rqs)
 	_statusCode = _204_NO_CONTENT;
 }
 
-void Response::_findFile(std::string path)
+void Response::_findFile(std::string root, std::string location)
 {
+	std::string path;
 	struct stat buf;
 
-	path = "." + path;
-	if (stat(path.c_str(), &buf) == -1)
-		_statusCode = _404_NOT_FOUND;
-	switch (buf.st_mode & S_IFMT)
+	if (_locationInfo->getPath() == location)
 	{
-	case S_IFREG:
-		_setResponse(path, buf.st_size);
-		break;
-	case S_IFDIR:
-		break;
-	default:
-		break;
+		std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
+		std::map<std::string, std::string>::iterator it;
+		it = tmp.begin();
+		for (; it != tmp.end(); it++)
+		{
+			if (it->second == "index")
+			{
+				path = "." + root + location + "/" + it->first;
+				if (stat(path.c_str(), &buf) != -1)
+				{
+					_setResponse(path, buf.st_size);
+					return;
+				}
+			}
+		}
+		if (_isAutoIndex() == true)
+		{
+			_showFileList(path, location);
+		}
+		else
+			throw(_404_NOT_FOUND);
+	}
+	/////찢어야함.
+	else
+	{
+		path = "." + root + location;
+		if (stat(path.c_str(), &buf) == -1)
+			throw(_404_NOT_FOUND);
+		switch (buf.st_mode & S_IFMT)
+		{
+		case S_IFREG:
+			_setResponse(path, buf.st_size);
+			break;
+		case S_IFDIR:
+			if (_isAutoIndex() == true)
+			{
+				_showFileList(path, location);
+			}
+			else
+				throw(_404_NOT_FOUND);
+			break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -78,6 +106,7 @@ void Response::_setResponse(std::string path, off_t size)
 	std::string::size_type pos;
 	std::stringstream length;
 
+	//_setHeader로 빼기.
 	length << size;
 	_headerFields.insert(std::pair<std::string, std::string>("Conent-Length:", length.str()));
 	pos = path.rfind(".");
@@ -114,4 +143,19 @@ std::string &Response::getResponse()
 		_response += it->first + " " + it->second + "\r\n";
 	_response += "\r\n" + _body;
 	return (_response);
+}
+
+void Response::_showFileList(std::string path, std::string location)
+{
+	if (path[path.length() - 1] != '/')
+		path[path.length() - 1] += '/';
+}
+
+bool Response::_isAutoIndex()
+{
+	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
+	std::map<std::string, std::string>::iterator it;
+	if (mapFind(tmp, "autoindex") == "on")
+		return (true);
+	return (false);
 }
