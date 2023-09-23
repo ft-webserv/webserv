@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 
+#include "Config.hpp"
+#include "Exception.hpp"
 #include "Status.hpp"
 #include "Utils.hpp"
 
@@ -36,8 +38,8 @@ protected:
 
 private:
 	std::string _findDefaultPath(eStatus statusCode);
-	std::string _findStatusInfo(eStatus statusCode);
+	std::string _findStatusText(eStatus statusCode);
 	std::string _defaultPath[2][13];
-	std::string _statusInfo[2][13];
+	std::string _statusText[2][13];
 	std::string _response;
 };

@@ -13,17 +13,19 @@ Error::Error()
 	_defaultPath[1][0] = "./error_page/501.html";
 	_defaultPath[1][1] = "./error_page/501.html";
 	_defaultPath[1][5] = "./error_page/505.html";
-	_statusInfo[0][0] = "BAD REQUEST";
-	_statusInfo[0][1] = "UNAUTHORIZED";
-	_statusInfo[0][3] = "FORBIDDEN";
-	_statusInfo[0][4] = "NOT FOUND";
-	_statusInfo[0][5] = "METHOD NOT ALLOWED";
-	_statusInfo[0][6] = "NOT ACCEPTABLE";
-	_statusInfo[0][8] = "REQUEST TIMEOUT";
-	_statusInfo[0][13] = "REQUEST ENTITY TOO LARGE";
-	_statusInfo[1][0] = "INTERNAL SERVER ERROR";
-	_statusInfo[1][1] = "NOT IMPLEMENTED";
-	_statusInfo[1][5] = "HTTP VERSION NOT SUPPORTED";
+
+	_statusText[0][0] = "BAD REQUEST";
+	_statusText[0][1] = "UNAUTHORIZED";
+	_statusText[0][3] = "FORBIDDEN";
+	_statusText[0][4] = "NOT FOUND";
+	_statusText[0][5] = "METHOD NOT ALLOWED";
+	_statusText[0][6] = "NOT ACCEPTABLE";
+	_statusText[0][8] = "REQUEST TIMEOUT";
+	_statusText[0][13] = "REQUEST ENTITY TOO LARGE";
+
+	_statusText[1][0] = "INTERNAL SERVER ERROR";
+	_statusText[1][1] = "NOT IMPLEMENTED";
+	_statusText[1][5] = "HTTP VERSION NOT SUPPORTED";
 }
 
 Error::~Error()
@@ -42,23 +44,26 @@ std::string Error::_findDefaultPath(eStatus statusCode)
 	return ("");
 }
 
-std::string Error::_findStatusInfo(eStatus statusCode)
+std::string Error::_findStatusText(eStatus statusCode)
 {
 	int type = statusCode / 100;
 	int detail = statusCode % 100;
 
 	if (type == 4 || type == 5)
 	{
-		return (_statusInfo[type - 4][detail]);
+		return (_statusText[type - 4][detail]);
 	}
 	return ("");
 }
 
 void Error::_sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus statusCode)
 {
+	std::string extension;
+	std::string::size_type pos;
 	std::stringstream ss;
 	std::ifstream errorPage;
 	struct stat buf;
+	Config &conf = Config::getInstance();
 
 	if (errorPagePath.empty() == true || stat(errorPagePath.c_str(), &buf) == -1)
 	{
@@ -68,7 +73,19 @@ void Error::_sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus 
 	if (errorPage.is_open() == false)
 		; // Log 만 찍기;
 	ss << statusCode;
-	_response = "HTTP/1.1" + ss.str() + _findStatusInfo(statusCode);
+	_response = "HTTP/1.1" + ss.str() + _findStatusText(statusCode) + "/r/n";
+	pos = errorPagePath.rfind(".");
+	if (pos == std::string::npos)
+		_response += "Content-Type: application/octet-stream/r/n";
+	else
+	{
+		pos += 1;
+		std::string extension = errorPagePath.substr(pos, errorPagePath.length() - pos);
+		_response += "Content-Type: " + conf.getMimeType().find(extension)->second + "/r/n";
+	}
+	ss.clear();
+	ss << buf.st_size;
+	_response += "Content-Length: " + ss.str() + "/r/n/r/n";
 	errorPage.read(&(*_response.end()), buf.st_size);
 	send(socket, static_cast<void *>(&_response[0]), _response.size(), 0);
 }

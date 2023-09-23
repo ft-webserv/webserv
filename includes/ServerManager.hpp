@@ -10,7 +10,7 @@
 #include "Client.hpp"
 #include "Kqueue.hpp"
 
-class ServerManager
+class ServerManager : public Error
 {
 public:
 	ServerManager();

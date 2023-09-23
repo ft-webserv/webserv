@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 enum eStatus
 {
 	_100_CONTINUE = 100,

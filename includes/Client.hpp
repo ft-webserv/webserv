@@ -36,13 +36,13 @@ public:
 
 public:
   uintptr_t &getSocket();
-  int &getKeepAliveTime();
   eClientStatus &getClientStatus();
   Request &getRequest();
   Response &getResponse();
   void setServerBlock(port_t port);
   void setLocationBlock();
-  void setKeepAliveTime();
+
+  // delete keep alive time
 
 private:
   std::string::size_type getNextPos(std::string::size_type currPos);
@@ -52,5 +52,4 @@ private:
   uintptr_t _socket;
   Request _request;
   Response _response;
-  int _keepAliveTime;
 };

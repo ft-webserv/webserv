@@ -86,7 +86,7 @@ void Config::parseConfigFile(const std::string &fileName)
 	if (_keepAliveTime == -1)
 		_keepAliveTime = 75;
 	if (_requestTime == -1)
-		_keepAliveTime = 60;
+		_requestTime = 60;
 	file.close();
 }
 

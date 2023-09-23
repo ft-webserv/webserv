@@ -112,8 +112,15 @@ void ServerManager::_monitoringEvent()
 				else if (event->filter == EVFILT_TIMER)
 				{
 					Client *client = static_cast<Client *>(event->udata);
-					if (client->getClientStatus() < FINREAD)
-						; // Request time out Error page;
+					std::string findResult;
+					if (client->getResponse().getServerInfo() != NULL)
+					{
+						std::map<std::string, std::string> tmp = client->getResponse().getServerInfo()->getServerInfo();
+						findResult = mapFind(tmp, "errorpage");
+					}
+					if (findResult.empty() == false)
+						findResult = "." + findResult;
+					_sendErrorPage(event->ident, findResult, _408_REQUEST_TIMEOUT);
 					_disconnectClient(event);
 				}
 			}
@@ -137,15 +144,16 @@ void ServerManager::_acceptClient(uintptr_t &servSock)
 	_kqueue.addEvent(clntSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(client));
 	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, static_cast<void *>(client));
 	_kqueue.setFdset(clntSock, CLIENT);
-	client->setKeepAliveTime();
 	_setKeepAliveTimeOut(client);
 }
 
 void ServerManager::_setKeepAliveTimeOut(Client *client)
 {
+	Config &conf = Config::getInstance();
+
 	_kqueue.addEvent(client->getSocket(), EVFILT_TIMER,
 					 EV_ADD | EV_ONESHOT, NOTE_SECONDS,
-					 client->getKeepAliveTime(), static_cast<void *>(client));
+					 conf.getRequestTime(), static_cast<void *>(client));
 }
 
 void ServerManager::_setRequestTimeOut(Client *client)

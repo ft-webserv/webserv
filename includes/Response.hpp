@@ -25,7 +25,7 @@ public:
 	LocationInfo *getLocationInfo();
 	void setServerInfo(ServerInfo *serverBlock);
 	void setLocationInfo(LocationInfo *locationBlock);
-	std::string &getResponse();
+	std::string &getResponse(); // 굳이 client에서 response를 보내야하는가 ? 그냥 response에서 보내면 되지 않나 ?
 
 private:
 	void _findFile(std::string root, std::string location);
@@ -33,12 +33,14 @@ private:
 	void _setBody(std::string path, off_t size);
 	void _showFileList(std::string path, std::string location);
 	bool _isAutoIndex();
+	void _makeResponse();
 
 private:
 	eStatus _statusCode;
 	std::map<std::string, std::string> _headerFields;
 	std::string _body;
 	std::string _response;
+	std::string _statusText[2][13];
 	ServerInfo *_serverInfo;
 	LocationInfo *_locationInfo;
 };

@@ -1,16 +1,51 @@
 #include "Response.hpp"
 
 Response::Response()
-	: _serverInfo(NULL), _locationInfo(NULL) {}
+	: _serverInfo(NULL), _locationInfo(NULL)
+{
+	_statusText[0][0] = "OK";
+	_statusText[0][1] = "CREATED";
+	_statusText[0][2] = "ACCEPTED";
+	_statusText[0][4] = "NO CONTENT";
+
+	_statusText[1][1] = "MOVED PERMANENTLY";
+	_statusText[1][2] = "FOUND";
+	_statusText[1][3] = "SEE OTHER";
+	_statusText[1][4] = "NOT MODIFIED";
+	_statusText[1][7] = "TEMPORARY REDIRECT";
+	_statusText[1][8] = "PERMANENT REDIRECT";
+}
 
 Response::~Response()
 {
 }
 
+std::string &Response::getResponse() { return (_response); };
 ServerInfo *Response::getServerInfo() { return (_serverInfo); }
 LocationInfo *Response::getLocationInfo() { return (_locationInfo); }
 void Response::setServerInfo(ServerInfo *serverBlock) { _serverInfo = serverBlock; }
-void Response::setLocationInfo(LocationInfo *locationBlock) { _locationInfo = locationBlock; }
+void Response::setLocationInfo(LocationInfo *locationBlock)
+{
+	_locationInfo = locationBlock;
+	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
+	if (mapFind(tmp, "return").empty() == false)
+	{
+		std::stringstream ss;
+		std::map<std::string, std::string>::iterator it = tmp.begin();
+		std::string location;
+		int statusCode;
+
+		for (; it != tmp.end(); it++)
+		{
+			if (it->second == "return")
+				ss << it->first;
+		}
+		ss >> statusCode >> location;
+		_statusCode = static_cast<eStatus>(statusCode);
+		_headerFields.insert(std::pair<std::string, std::string>("Location:", location));
+		_makeResponse();
+	}
+}
 
 void Response::handleGet(Request &rqs)
 {
@@ -34,6 +69,7 @@ void Response::handleGet(Request &rqs)
 	if (location[location.length() - 1] == '/')
 		location.pop_back();
 	_findFile(root, location);
+	_makeResponse();
 }
 
 void Response::handlePost(Request &rqs)
@@ -132,17 +168,18 @@ void Response::_setBody(std::string path, off_t size)
 	file.close();
 }
 
-std::string &Response::getResponse()
+void Response::_makeResponse()
 {
 	std::stringstream status;
 	std::map<std::string, std::string>::iterator it;
+	int type = _statusCode / 100 - 2;
+	int detail = _statusCode / 100 - 2;
 
 	status << _statusCode;
-	_response = "HTTP/1.1 " + status.str() + " OK\r\n";
+	_response = "HTTP/1.1 " + status.str() + _statusText[type][detail];
 	for (it = _headerFields.begin(); it != _headerFields.end(); it++)
 		_response += it->first + " " + it->second + "\r\n";
 	_response += "\r\n" + _body;
-	return (_response);
 }
 
 void Response::_showFileList(std::string path, std::string location)

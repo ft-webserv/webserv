@@ -15,18 +15,6 @@ Client::~Client()
 {
 }
 
-void Client::setKeepAliveTime()
-{
-	Config &conf = Config::getInstance();
-
-	_keepAliveTime = conf.getKeepAliveTime();
-}
-
-int &Client::getKeepAliveTime()
-{
-	return (_keepAliveTime);
-}
-
 eClientStatus &Client::getClientStatus()
 {
 	return (_status);
@@ -103,12 +91,11 @@ void Client::writeResponse()
 	catch (const eStatus &e)
 	{
 		std::map<std::string, std::string> tmp = _response.getServerInfo()->getServerInfo();
-		std::string errorPagePath = DEFAULTERRORPAGE;
 		std::string findResult = mapFind(tmp, "errorpage");
 
-		if (findResult != "")
-			errorPagePath = "." + findResult;
-		_sendErrorPage(_socket, errorPagePath, e);
+		if (findResult.empty() == false)
+			findResult = "." + findResult;
+		_sendErrorPage(_socket, findResult, e);
 	}
 }
 
@@ -133,8 +120,8 @@ void Client::setServerBlock(port_t port)
 					{
 						_response.setServerInfo(conf.getServerInfos()[i]);
 						setLocationBlock();
-						flag = 1;
 					}
+					flag = 1;
 				}
 			}
 			if (flag == 1 && it->second == "server_name")

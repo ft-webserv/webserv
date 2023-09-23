@@ -6,12 +6,7 @@ std::string mapFind(std::map<std::string, std::string> tmp, std::string word)
 
 	it = tmp.begin();
 	for (; it != tmp.end(); it++)
-	{
 		if (it->second == word)
-		{
 			return (it->first);
-			break;
-		}
-	}
 	return ("");
 }
