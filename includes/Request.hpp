@@ -16,6 +16,7 @@ typedef struct s_request
 	std::string _accept;
 	std::string _connection;
 	std::string _contentType;
+	std::string _transferEncoding;
 	unsigned int _contentLength;
 	std::string _body;
 } t_request;
@@ -31,6 +32,7 @@ public:
 public:
 	void setHeaderBuf(const std::string buf);
 	void setBodyBuf(const std::string buf);
+	void setChunkedBodyBuf(const std::string buf);
 	t_request getParsedRequest() const;
 	bool getIsBody();
 

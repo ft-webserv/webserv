@@ -5,15 +5,10 @@
 
 int main()
 {
-    std::string tmp = "301";
-    std::string tmp1 = "adfasdfasdf";
-    std::stringstream ss;
-    int sc;
-    std::string s;
+    int s = 100;
+    std::string tmp = "asdf ";
 
-    ss << tmp;
-    ss << tmp1;
-    ss >> sc >> s;
-    std::cout << sc << " " << s << std::endl;
+    tmp += s;
+    std::cout << tmp << std::endl;
     return 0;
 }

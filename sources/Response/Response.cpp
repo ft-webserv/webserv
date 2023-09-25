@@ -75,6 +75,7 @@ void Response::handleGet(Request &rqs)
 void Response::handlePost(Request &rqs)
 {
 	_statusCode = _201_CREATED;
+	// content-type이 없을 시 octet-stream이 content-type이 됨.
 }
 
 void Response::handleDelete(Request &rqs)
@@ -195,4 +196,24 @@ bool Response::_isAutoIndex()
 	if (mapFind(tmp, "autoindex") == "on")
 		return (true);
 	return (false);
+}
+
+std::string &Response::getErrorPage()
+{
+	std::string findResult;
+	std::stringstream ss;
+
+	if (_serverInfo != NULL)
+	{
+		std::map<std::string, std::string> tmp = _serverInfo->getServerInfo();
+		findResult = mapFind(tmp, "errorpage");
+	}
+	if (findResult.empty() == false)
+		findResult = "." + findResult;
+	if (findResult[findResult.length() - 1] == '/')
+	{
+		ss << _statusCode;
+		findResult += ss.str() + ".html";
+	}
+	return (findResult);
 }

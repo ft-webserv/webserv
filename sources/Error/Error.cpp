@@ -10,6 +10,7 @@ Error::Error()
 	_defaultPath[0][6] = "./error_page/406.html";
 	_defaultPath[0][8] = "./error_page/408.html";
 	_defaultPath[0][13] = "./error_page/413.html";
+	_defaultPath[0][15] = "./error_page/415.html";
 	_defaultPath[1][0] = "./error_page/501.html";
 	_defaultPath[1][1] = "./error_page/501.html";
 	_defaultPath[1][5] = "./error_page/505.html";
@@ -22,6 +23,7 @@ Error::Error()
 	_statusText[0][6] = "NOT ACCEPTABLE";
 	_statusText[0][8] = "REQUEST TIMEOUT";
 	_statusText[0][13] = "REQUEST ENTITY TOO LARGE";
+	_statusText[0][15] = "UNSUPPORTED MEDIA TYPE";
 
 	_statusText[1][0] = "INTERNAL SERVER ERROR";
 	_statusText[1][1] = "NOT IMPLEMENTED";
@@ -56,7 +58,7 @@ std::string Error::_findStatusText(eStatus statusCode)
 	return ("");
 }
 
-void Error::_sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus statusCode)
+void Error::sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus statusCode)
 {
 	std::string extension;
 	std::string::size_type pos;

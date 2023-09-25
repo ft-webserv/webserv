@@ -58,76 +58,83 @@ void ServerManager::_monitoringEvent()
 			{
 				event = &_kqueue.getEventList()[i];
 				eFdType type = _kqueue.getFdType(event->ident);
-				// std::cout << ((type == SERVER) ? "Server : " : "Client : ");
-				// std::cout << ((event->filter == EVFILT_READ) ? "read" : "write") << std::endl;
-				if (event->flags & EV_ERROR)
+				try
 				{
-					switch (type)
+					// std::cout << ((type == SERVER) ? "Server : " : "Client : ");
+					// std::cout << ((event->filter == EVFILT_READ) ? "read" : "write") << std::endl;
+					if (event->flags & EV_ERROR)
 					{
-					case SERVER:
-						std::cerr << "server socket error!" << std::endl;
-						break;
-					case CLIENT:
-						_kqueue.deleteEvent(event->ident);
-						break;
-					default:
-						break;
-					}
-				}
-				else if (event->filter == EVFILT_READ)
-				{
-					switch (type)
-					{
-					case SERVER:
-						_acceptClient(event->ident);
-						break;
-					case CLIENT:
-						Client *client;
-						client = static_cast<Client *>(event->udata);
-						_setRequestTimeOut(client);
-						client->readRequest();
-						if (client->getClientStatus() == FINREAD)
+						switch (type)
 						{
-							_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
-							_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata);
+						case SERVER:
+							std::cerr << "server socket error!" << std::endl;
+							break;
+						case CLIENT:
+							_kqueue.deleteEvent(event->ident);
+							break;
+						default:
+							break;
 						}
-						break;
-					default:
-						break;
 					}
-				}
-				else if (event->filter == EVFILT_WRITE)
-				{
-					Client *client = static_cast<Client *>(event->udata);
-					_findServerBlock(client);
-					client->writeResponse();
-					if (client->getRequest().getParsedRequest()._contentType == "close")
+					else if (event->filter == EVFILT_READ)
+					{
+						switch (type)
+						{
+						case SERVER:
+							_acceptClient(event->ident);
+							break;
+						case CLIENT:
+							Client *client;
+							client = static_cast<Client *>(event->udata);
+							_setRequestTimeOut(client);
+							client->readRequest();
+							if (client->getClientStatus() == READBODY || client->getClientStatus() == READCHUNKEDBODY)
+							{
+								_findServerBlock(client);
+							}
+							else if (client->getClientStatus() == FINREAD)
+							{
+								_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
+								_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata);
+							}
+							break;
+						default:
+							break;
+						}
+					}
+					else if (event->filter == EVFILT_WRITE)
+					{
+						Client *client = static_cast<Client *>(event->udata);
+						client->writeResponse();
+						if (client->getRequest().getParsedRequest()._contentType == "close")
+							_disconnectClient(event);
+						else if (client->getClientStatus() == FINWRITE)
+						{
+							_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
+							_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
+						}
+					}
+					else if (event->filter == EVFILT_TIMER)
+					{
+						Client *client = static_cast<Client *>(event->udata);
+						std::string errorPagePath = client->getResponse().getErrorPage();
+
+						client->sendErrorPage(event->ident, errorPagePath, _408_REQUEST_TIMEOUT);
 						_disconnectClient(event);
-					else
-					{
-						_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
-						_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
 					}
 				}
-				else if (event->filter == EVFILT_TIMER)
+				catch (const eStatus &e)
 				{
 					Client *client = static_cast<Client *>(event->udata);
-					std::string findResult;
-					if (client->getResponse().getServerInfo() != NULL)
-					{
-						std::map<std::string, std::string> tmp = client->getResponse().getServerInfo()->getServerInfo();
-						findResult = mapFind(tmp, "errorpage");
-					}
-					if (findResult.empty() == false)
-						findResult = "." + findResult;
-					_sendErrorPage(event->ident, findResult, _408_REQUEST_TIMEOUT);
-					_disconnectClient(event);
+					std::string errorPagePath = client->getResponse().getErrorPage();
+
+					client->sendErrorPage(event->ident, errorPagePath, e);
 				}
 			}
 		}
-		catch (const std::exception &e)
+		catch (std::exception &e)
 		{
-			std::cerr << e.what() << '\n';
+			std::cerr << e.what() << std::endl;
 		}
 	}
 }

@@ -16,9 +16,7 @@ class Error
 public:
 	Error();
 	~Error();
-
-protected:
-	void _sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus statusCode);
+	void sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus statusCode);
 	// void _400badRequest(uintptr_t socket, std::string errorPagePath);
 	// void _401unauthorized(uintptr_t socket, std::string errorPagePath);
 	// void _403forbidden(uintptr_t socket, std::string errorPagePath);
@@ -39,7 +37,7 @@ protected:
 private:
 	std::string _findDefaultPath(eStatus statusCode);
 	std::string _findStatusText(eStatus statusCode);
-	std::string _defaultPath[2][13];
-	std::string _statusText[2][13];
+	std::string _defaultPath[2][16];
+	std::string _statusText[2][16];
 	std::string _response;
 };

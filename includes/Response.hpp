@@ -26,6 +26,7 @@ public:
 	void setServerInfo(ServerInfo *serverBlock);
 	void setLocationInfo(LocationInfo *locationBlock);
 	std::string &getResponse(); // 굳이 client에서 response를 보내야하는가 ? 그냥 response에서 보내면 되지 않나 ?
+	std::string &getErrorPage();
 
 private:
 	void _findFile(std::string root, std::string location);

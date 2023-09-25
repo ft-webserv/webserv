@@ -3,6 +3,7 @@
 Request::Request()
 	: _isBody(false), _statusCode(_200_OK)
 {
+	_parsedRequest._contentLength = 0;
 }
 
 Request::~Request()
@@ -22,8 +23,17 @@ void Request::setHeaderBuf(const std::string buf)
 	}
 }
 
-void Request::setHeaderBuf(const std::string buf)
+void Request::setBodyBuf(const std::string buf)
 {
+	_bodyBuf += buf;
+}
+
+void Request::setChunkedBodyBuf(const std::string buf)
+{
+	Config &conf = Config::getInstance();
+
+	if (_bodyBuf.size() > conf.getClientMaxBodySize())
+		throw(_413_REQUEST_ENTITY_TOO_LARGE);
 	_bodyBuf += buf;
 }
 
@@ -57,6 +67,8 @@ void Request::parseRequest(void)
 			}
 			else if (word == "Host:")
 			{
+				if (_parsedRequest._host.empty() != 0)
+					throw(_400_BAD_REQUEST);
 				line >> _parsedRequest._host;
 			}
 			else if (word == "Accept:")
@@ -73,7 +85,13 @@ void Request::parseRequest(void)
 			}
 			else if (word == "Content-Length:")
 			{
+				if (_parsedRequest._contentLength != 0)
+					throw(_400_BAD_REQUEST);
 				line >> _parsedRequest._contentLength;
+			}
+			else if (word == "Transfer-Encoding:")
+			{
+				line >> _parsedRequest._transferEncoding;
 			}
 			pos += 2;
 			pre = pos;
@@ -105,5 +123,13 @@ void Request::testPrintRequest(void)
 void Request::_checkValidHeader()
 {
 	Config &conf = Config::getInstance();
+
 	if (_parsedRequest._location.size() > conf.getClientHeadBufferSize())
+		throw(_414_URI_TOO_LONG);
+	if (_parsedRequest._transferEncoding != "" && _parsedRequest._contentLength != 0)
+		throw(_400_BAD_REQUEST);
+	if (_parsedRequest._contentLength > conf.getClientMaxBodySize())
+		throw(_413_REQUEST_ENTITY_TOO_LARGE);
+	if (_headerBuf.find("Content-Encoding") != std::string::npos)
+		throw(_415_UNSUPPORTED_MEDIA_TYPE);
 }

@@ -39,27 +39,56 @@ void Client::readRequest()
 {
 	Config &conf = Config::getInstance();
 	ssize_t len;
-	char buf[conf.getClientHeadBufferSize() + 1];
+	char buf[BUFFERSIZE + 1];
 
 	if (_status == START)
 		_status = READHEADER;
 	else if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
 		_status = FINREAD;
 
-	memset(buf, 0, conf.getClientHeadBufferSize() + 1);
-	if ((len = recv(_socket, buf, conf.getClientHeadBufferSize(), 0)) == -1)
-		Exception::recvError("recv() error!");
-	else if (len <= 0)
-		Exception::disconnectDuringRecvError("diconnected during read!");
+	memset(buf, 0, BUFFERSIZE + 1);
+	if (_request.getParsedRequest()._transferEncoding != "chunked")
+	{
+		if ((len = recv(_socket, buf, BUFFERSIZE, 0)) == -1)
+			Exception::recvError("recv() error!");
+		else if (len <= 0)
+			Exception::disconnectDuringRecvError("disconnected during read!");
+	}
+	else
+	{
+		std::stringstream ss;
+		int size;
 
+		if ((len = recv(_socket, buf, BUFFERSIZE, 0)) == -1)
+			Exception::recvError("recv() error!");
+		else if (len < 0)
+			Exception::disconnectDuringRecvError("disconnected during read!");
+	}
 	if (_status == READHEADER)
 		_request.setHeaderBuf(buf);
 	else if (_status == READBODY)
 		_request.setBodyBuf(buf);
-
-	if (_request.getIsBody() == true && _status != READBODY)
+	else if (_status == READCHUNKEDBODY)
 	{
-		_status = READBODY;
+		std::stringstream ss;
+		int size;
+
+		ss << buf;
+		ss >> size;
+		if (size == 0)
+		{
+			_status = FINREAD;
+			return;
+		}
+		_request.setChunkedBodyBuf(buf);
+	}
+
+	if (_request.getIsBody() == true && (_status != READBODY || _status != READCHUNKEDBODY))
+	{
+		if (_request.getParsedRequest()._transferEncoding == "chunked")
+			_status = READCHUNKEDBODY;
+		else
+			_status = READBODY;
 		_request.parseRequest();
 	}
 }
@@ -87,6 +116,7 @@ void Client::writeResponse()
 			throw(_501_NOT_IMPLEMENTED);
 		}
 		std::string &response = _response.getResponse();
+		_status = FINWRITE;
 		send(_socket, static_cast<void *>(&response[0]), response.size(), 0);
 	}
 	catch (const eStatus &e)
@@ -96,7 +126,7 @@ void Client::writeResponse()
 
 		if (findResult.empty() == false)
 			findResult = "." + findResult;
-		_sendErrorPage(_socket, findResult, e);
+		sendErrorPage(_socket, findResult, e);
 	}
 }
 
