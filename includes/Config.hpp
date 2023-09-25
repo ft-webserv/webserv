@@ -11,6 +11,7 @@
 #include <sstream>
 
 #define WORK_PATH "/Users/youngmch/Webserv"
+#define BUFFERSIZE 1024
 
 class Config
 {
@@ -23,6 +24,7 @@ public:
 	std::map<std::string, std::string> &getMimeType();
 	int &getKeepAliveTime();
 	int &getRequestTime();
+	int &getClientHeadBufferSize();
 	// it will be die
 	class FileOpenFailException : public std::exception
 	{
@@ -39,6 +41,7 @@ private:
 private:
 	int _keepAliveTime;
 	int _requestTime;
+	int _clientHeaderBufferSize;
 
 private:
 	std::map<std::string, std::string> _generalInfo;

@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "Status.hpp"
+#include "Config.hpp"
 
 typedef struct s_request
 {
@@ -39,4 +40,5 @@ private:
 	t_request _parsedRequest;
 	eStatus _statusCode;
 	bool _isBody;
+	void _checkValidHeader();
 };

@@ -79,6 +79,7 @@ void Request::parseRequest(void)
 			pre = pos;
 			pos = _headerBuf.find("\r\n", pos);
 		}
+		_checkValidHeader();
 	}
 	// testPrintRequest();
 }
@@ -99,4 +100,10 @@ void Request::testPrintRequest(void)
 	std::cout << "-------------------------------------------" << std::endl;
 	std::cout << "-------------------------------------------" << std::endl;
 	std::cout << "-------------------------------------------" << std::endl;
+}
+
+void Request::_checkValidHeader()
+{
+	Config &conf = Config::getInstance();
+	if (_parsedRequest._location.size() > conf.getClientHeadBufferSize())
 }

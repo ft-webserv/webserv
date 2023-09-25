@@ -1,12 +1,12 @@
 #include "Config.hpp"
 
 Config::Config()
-	: _keepAliveTime(-1), _requestTime(-1)
+	: _keepAliveTime(-1), _requestTime(-1), _clientHeaderBufferSize(BUFFERSIZE)
 {
 }
 
 Config::Config(const std::string &fileName)
-	: _keepAliveTime(-1), _requestTime(-1)
+	: _keepAliveTime(-1), _requestTime(-1), _clientHeaderBufferSize(BUFFERSIZE)
 {
 	parseConfigFile(fileName);
 }
@@ -67,6 +67,14 @@ void Config::parseConfigFile(const std::string &fileName)
 			file >> word;
 			ss << word;
 			ss >> _requestTime;
+		}
+		else if (word == "client_header_buffer_size")
+		{
+			std::stringstream ss;
+
+			file >> word;
+			ss << word;
+			ss >> _clientHeaderBufferSize;
 		}
 		else
 		{
@@ -230,6 +238,11 @@ int &Config::getKeepAliveTime()
 int &Config::getRequestTime()
 {
 	return (_requestTime);
+}
+
+int &Config::getClientHeadBufferSize()
+{
+	return (_clientHeaderBufferSize);
 }
 
 const char *Config::FileOpenFailException::what() const throw()

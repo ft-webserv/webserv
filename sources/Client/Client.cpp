@@ -37,16 +37,17 @@ Response &Client::getResponse()
 
 void Client::readRequest()
 {
+	Config &conf = Config::getInstance();
 	ssize_t len;
-	char buf[BUFFERSIZE + 1];
+	char buf[conf.getClientHeadBufferSize() + 1];
 
 	if (_status == START)
 		_status = READHEADER;
 	else if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
 		_status = FINREAD;
 
-	memset(buf, 0, BUFFERSIZE + 1);
-	if ((len = recv(_socket, buf, BUFFERSIZE, 0)) == -1)
+	memset(buf, 0, conf.getClientHeadBufferSize() + 1);
+	if ((len = recv(_socket, buf, conf.getClientHeadBufferSize(), 0)) == -1)
 		Exception::recvError("recv() error!");
 	else if (len <= 0)
 		Exception::disconnectDuringRecvError("diconnected during read!");
