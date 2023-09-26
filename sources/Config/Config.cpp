@@ -2,7 +2,7 @@
 
 Config::Config()
 	: _keepAliveTime(-1), _requestTime(-1), _clientHeaderBufferSize(BUFFERSIZE),
-	  _clientMaxBodySize(BUFFERSIZE * BUFFERSIZE)
+	  _clientMaxBodySize(pow(BUFFERSIZE, 2))
 {
 }
 
@@ -53,37 +53,25 @@ void Config::parseConfigFile(const std::string &fileName)
 			parseInclude(file);
 		else if (word == "keepalive_timeout")
 		{
-			std::stringstream ss;
-
 			file >> word;
-			ss << word;
-			ss >> _keepAliveTime;
+			_keepAliveTime = ft_stoi(word);
 		}
 		else if (word == "request_timeout")
 		{
-			std::stringstream ss;
-
 			file >> word;
-			ss << word;
-			ss >> _requestTime;
+			_requestTime = ft_stoi(word);
 		}
 		else if (word == "client_header_buffer_size")
 		{
-			std::stringstream ss;
-
 			file >> word;
-			ss << word;
-			ss >> _clientHeaderBufferSize;
+			_clientHeaderBufferSize = ft_stoi(word);
 			_clientHeaderBufferSize *= BUFFERSIZE;
 		}
-		else if (word == "client_header_buffer_size")
+		else if (word == "client_max_body_size")
 		{
-			std::stringstream ss;
-
 			file >> word;
-			ss << word;
-			ss >> _clientMaxBodySize;
-			_clientHeaderBufferSize *= pow(BUFFERSIZE, 2);
+			_clientMaxBodySize = ft_stoi(word);
+			_clientMaxBodySize *= pow(BUFFERSIZE, 2);
 		}
 		else
 		{
@@ -223,10 +211,10 @@ std::vector<ServerInfo *> &Config::getServerInfos() { return (_serverInfos); }
 std::map<std::string, std::string> &Config::getGeneralInfo() { return (_generalInfo); }
 std::map<std::string, std::string> &Config::getMimeType() { return (_mimeType); }
 std::set<int> &Config::getPorts() { return (_ports); }
-int &Config::getKeepAliveTime() { return (_keepAliveTime); }
-int &Config::getRequestTime() { return (_requestTime); }
-int &Config::getClientHeadBufferSize() { return (_clientHeaderBufferSize); }
-int &Config::getClientMaxBodySize() { return (_clientMaxBodySize); }
+size_t &Config::getKeepAliveTime() { return (_keepAliveTime); }
+size_t &Config::getRequestTime() { return (_requestTime); }
+size_t &Config::getClientHeadBufferSize() { return (_clientHeaderBufferSize); }
+size_t &Config::getClientMaxBodySize() { return (_clientMaxBodySize); }
 
 const char *Config::FileOpenFailException::what() const throw()
 {

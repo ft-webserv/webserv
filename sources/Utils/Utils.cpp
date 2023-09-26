@@ -10,3 +10,14 @@ std::string mapFind(std::map<std::string, std::string> tmp, std::string word)
 			return (it->first);
 	return ("");
 }
+
+size_t ft_stoi(std::string num)
+{
+	std::stringstream ss;
+	size_t result;
+
+	ss << num;
+	ss >> result;
+
+	return (result);
+}

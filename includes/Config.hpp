@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ServerInfo.hpp"
 #include <iostream>
 #include <map>
 #include <vector>
@@ -10,8 +9,11 @@
 #include <set>
 #include <sstream>
 
+#include "ServerInfo.hpp"
+#include "Utils.hpp"
+
 #define WORK_PATH "/Users/youngmch/Webserv"
-#define BUFFERSIZE 1460
+#define BUFFERSIZE 1024
 
 class Config
 {
@@ -22,10 +24,10 @@ public:
 	std::vector<ServerInfo *> &getServerInfos();
 	std::set<int> &getPorts();
 	std::map<std::string, std::string> &getMimeType();
-	int &getKeepAliveTime();
-	int &getRequestTime();
-	int &getClientHeadBufferSize();
-	int &getClientMaxBodySize();
+	size_t &getKeepAliveTime();
+	size_t &getRequestTime();
+	size_t &getClientHeadBufferSize();
+	size_t &getClientMaxBodySize();
 	// it will be die
 	class FileOpenFailException : public std::exception
 	{
@@ -40,10 +42,10 @@ private:
 	~Config();
 
 private:
-	int _keepAliveTime;
-	int _requestTime;
-	int _clientHeaderBufferSize;
-	int _clientMaxBodySize;
+	size_t _keepAliveTime;
+	size_t _requestTime;
+	size_t _clientHeaderBufferSize;
+	size_t _clientMaxBodySize;
 
 private:
 	std::map<std::string, std::string> _generalInfo;

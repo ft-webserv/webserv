@@ -39,48 +39,37 @@ void Client::readRequest()
 {
 	Config &conf = Config::getInstance();
 	ssize_t len;
-	char buf[BUFFERSIZE + 1];
+	std::string buf;
 
 	if (_status == START)
 		_status = READHEADER;
 	else if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
 		_status = FINREAD;
 
-	memset(buf, 0, BUFFERSIZE + 1);
-	if (_request.getParsedRequest()._transferEncoding != "chunked")
-	{
-		if ((len = recv(_socket, buf, BUFFERSIZE, 0)) == -1)
-			Exception::recvError("recv() error!");
-		else if (len <= 0)
-			Exception::disconnectDuringRecvError("disconnected during read!");
-	}
-	else
-	{
-		std::stringstream ss;
-		int size;
+	buf.clear();
+	buf.resize(conf.getClientHeadBufferSize());
 
-		if ((len = recv(_socket, buf, BUFFERSIZE, 0)) == -1)
-			Exception::recvError("recv() error!");
-		else if (len < 0)
-			Exception::disconnectDuringRecvError("disconnected during read!");
-	}
+	if ((len = recv(_socket, &buf[0], conf.getClientHeadBufferSize(), 0)) == -1)
+		Exception::recvError("recv() error!");
+	else if (len <= 0)
+		Exception::disconnectDuringRecvError("disconnected during read!");
+
 	if (_status == READHEADER)
 		_request.setHeaderBuf(buf);
 	else if (_status == READBODY)
 		_request.setBodyBuf(buf);
 	else if (_status == READCHUNKEDBODY)
 	{
-		std::stringstream ss;
-		int size;
+		size_t size = ft_stoi(buf);
+		std::string::size_type pos;
 
-		ss << buf;
-		ss >> size;
 		if (size == 0)
 		{
 			_status = FINREAD;
 			return;
 		}
-		_request.setChunkedBodyBuf(buf);
+		pos = buf.find("\r\n");
+		_request.setChunkedBodyBuf(buf.substr(pos + 2));
 	}
 
 	if (_request.getIsBody() == true && (_status != READBODY || _status != READCHUNKEDBODY))

@@ -47,7 +47,7 @@ bool Request::getIsBody()
 	return (_isBody);
 }
 
-void Request::parseRequest(void)
+void Request::parseRequest()
 {
 	std::string::size_type pos = 0;
 	std::string::size_type pre = 0;
@@ -56,16 +56,13 @@ void Request::parseRequest(void)
 	if (_isBody == true)
 	{
 		pos = _headerBuf.find("\r\n");
+		_parseStartLine(pre, pos);
 		for (; pos < _headerBuf.length();)
 		{
 			std::istringstream line(_headerBuf.substr(pre, pos));
+
 			line >> word;
-			if (word == "GET" || word == "POST" || word == "DELETE")
-			{
-				_parsedRequest._method = word;
-				line >> _parsedRequest._location >> _parsedRequest._httpVersion;
-			}
-			else if (word == "Host:")
+			if (word == "Host:")
 			{
 				if (_parsedRequest._host.empty() != 0)
 					throw(_400_BAD_REQUEST);
@@ -85,13 +82,36 @@ void Request::parseRequest(void)
 			}
 			else if (word == "Content-Length:")
 			{
-				if (_parsedRequest._contentLength != 0)
+				std::string tmp;
+
+				line >> tmp;
+				if (_parsedRequest._contentLengthStr != "")
+					_parsedRequest._contentLengthStr = tmp;
+				else if (_parsedRequest._contentLengthStr != tmp)
 					throw(_400_BAD_REQUEST);
-				line >> _parsedRequest._contentLength;
+				if (_parsedRequest._contentLengthStr.find_first_not_of("0123456789") != std::string::npos)
+					throw(_400_BAD_REQUEST);
+				else if (_parsedRequest._contentLengthStr.length() >= 10)
+					throw(_413_REQUEST_ENTITY_TOO_LARGE);
+				_parsedRequest._contentLength = ft_stoi(_parsedRequest._contentLengthStr);
 			}
 			else if (word == "Transfer-Encoding:")
 			{
-				line >> _parsedRequest._transferEncoding;
+				int num = 0;
+				while (1)
+				{
+					num++;
+					line >> _parsedRequest._transferEncoding;
+					if (num > 1)
+						throw(_501_NOT_IMPLEMENTED);
+					if (line.eof() == true)
+						break;
+				}
+			}
+			else
+			{
+				if (word.find(":") == std::string::npos)
+					throw(_400_BAD_REQUEST);
 			}
 			pos += 2;
 			pre = pos;
@@ -100,6 +120,16 @@ void Request::parseRequest(void)
 		_checkValidHeader();
 	}
 	// testPrintRequest();
+}
+
+void Request::_parseStartLine(std::string::size_type pos, std::string::size_type pre)
+{
+	std::istringstream line(_headerBuf.substr(pre, pos));
+	std::string word;
+
+	line >> word;
+	_parsedRequest._method = word;
+	line >> _parsedRequest._location >> _parsedRequest._httpVersion;
 }
 
 void Request::testPrintRequest(void)
@@ -132,4 +162,28 @@ void Request::_checkValidHeader()
 		throw(_413_REQUEST_ENTITY_TOO_LARGE);
 	if (_headerBuf.find("Content-Encoding") != std::string::npos)
 		throw(_415_UNSUPPORTED_MEDIA_TYPE);
+	if (_parsedRequest._transferEncoding != "chunked")
+		throw(_400_BAD_REQUEST);
+	// Check Method
+	if (_parsedRequest._method != "GET" && _parsedRequest._method != "POST" && _parsedRequest._method != "DELETE")
+		throw(_501_NOT_IMPLEMENTED);
+	// Check HTTP Version
+	if (_parsedRequest._httpVersion.compare(0, 5, "HTTP/") != 0 || _parsedRequest._httpVersion.length() != 8)
+		throw(_400_BAD_REQUEST);
+
+	char *endPtr;
+	double version;
+
+	std::strtod(_parsedRequest._httpVersion.c_str(), &endPtr);
+	if (*endPtr != '\0')
+		throw(_400_BAD_REQUEST);
+	if (version > 1.1 || version < 1.0)
+		throw(_505_HTTP_VERSION_NOT_SUPPORTED);
+	// Host grammar is not correct
+	for (size_t i = 0; i < _parsedRequest._host.length(); i++)
+	{
+		char c = _parsedRequest._host[i];
+		if (!std::isalnum(c) && c != '-' && c != '.')
+			throw(_400_BAD_REQUEST);
+	}
 }

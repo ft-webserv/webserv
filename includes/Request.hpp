@@ -6,6 +6,7 @@
 
 #include "Status.hpp"
 #include "Config.hpp"
+#include "Utils.hpp"
 
 typedef struct s_request
 {
@@ -17,7 +18,8 @@ typedef struct s_request
 	std::string _connection;
 	std::string _contentType;
 	std::string _transferEncoding;
-	unsigned int _contentLength;
+	std::string _contentLengthStr;
+	size_t _contentLength;
 	std::string _body;
 } t_request;
 
@@ -26,8 +28,8 @@ class Request
 public:
 	Request();
 	~Request();
-	void parseRequest(void);
-	void testPrintRequest(void);
+	void parseRequest();
+	void testPrintRequest();
 
 public:
 	void setHeaderBuf(const std::string buf);
@@ -42,5 +44,6 @@ private:
 	t_request _parsedRequest;
 	eStatus _statusCode;
 	bool _isBody;
+	void _parseStartLine(std::string::size_type pos, std::string::size_type pre);
 	void _checkValidHeader();
 };
