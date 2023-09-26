@@ -134,6 +134,7 @@ void Config::parseServerInfo(std::ifstream &file)
 		if (flag == 0)
 		{
 			_serverInfos.push_back(new ServerInfo(tmp));
+			file >> word;
 			return;
 		}
 	}
@@ -170,6 +171,7 @@ void Config::parseLocationInfo(std::ifstream &file, ServerInfo &target)
 		if (flag == 0)
 		{
 			target.addLocationInfo(new LocationInfo(tmp));
+			file >> word;
 			return;
 		}
 	}
