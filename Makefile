@@ -44,7 +44,7 @@ SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERINFO_DIR)/, ServerInfo.cpp LocationInf
 SRCS				+= $(addprefix $(SRC_DIR)/$(EXCEPTION_DIR)/, Exception.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(CLIENT_DIR)/, Client.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(ERROR_DIR)/, Error.cpp)
-SRCS				+= $(addprefix $(SRC_DIR)/$(UTILS_DIR_DIR)/, Utils.cpp)
+SRCS				+= $(addprefix $(SRC_DIR)/$(UTILS_DIR)/, Utils.cpp)
 
 OBJS				:= $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(SRCS))
 
