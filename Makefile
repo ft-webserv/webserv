@@ -22,6 +22,8 @@ RESPONSE_DIR		:= Response
 SERVERINFO_DIR		:= ServerInfo
 EXCEPTION_DIR		:= Exception
 CLIENT_DIR			:= Client
+ERROR_DIR			:= Error
+UTILS_DIR			:= Utils
 
 BUILD_DIR			:= build
 OBJ_DIR				:= obj
@@ -41,6 +43,8 @@ SRCS				+= $(addprefix $(SRC_DIR)/$(RESPONSE_DIR)/, Response.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERINFO_DIR)/, ServerInfo.cpp LocationInfo.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(EXCEPTION_DIR)/, Exception.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(CLIENT_DIR)/, Client.cpp)
+SRCS				+= $(addprefix $(SRC_DIR)/$(ERROR_DIR)/, Error.cpp)
+SRCS				+= $(addprefix $(SRC_DIR)/$(UTILS_DIR_DIR)/, Utils.cpp)
 
 OBJS				:= $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(SRCS))
 
@@ -96,8 +100,8 @@ json:
 		@(echo '[' && find . -name "*.part.json" | xargs cat && echo ']') > $(JSON)
 
 dir_guard:
-		@mkdir -p $(addprefix $(BUILD_DIR)/$(OBJ_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(KQUEUE_DIR) $(SERVERMANAGER_DIR) $(REQUEST_DIR) $(RESPONSE_DIR) $(SERVERINFO_DIR) $(EXCEPTION_DIR) $(CLIENT_DIR))\
-			$(addprefix $(BUILD_DIR)/$(JSON_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(KQUEUE_DIR) $(SERVERMANAGER_DIR) $(REQUEST_DIR) $(RESPONSE_DIR) $(SERVERINFO_DIR) $(EXCEPTION_DIR) $(CLIENT_DIR))
+		@mkdir -p $(addprefix $(BUILD_DIR)/$(OBJ_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(KQUEUE_DIR) $(SERVERMANAGER_DIR) $(REQUEST_DIR) $(RESPONSE_DIR) $(SERVERINFO_DIR) $(EXCEPTION_DIR) $(CLIENT_DIR) $(ERROR_DIR) $(UTILS_DIR))\
+			$(addprefix $(BUILD_DIR)/$(JSON_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(KQUEUE_DIR) $(SERVERMANAGER_DIR) $(REQUEST_DIR) $(RESPONSE_DIR) $(SERVERINFO_DIR) $(EXCEPTION_DIR) $(CLIENT_DIR) $(ERROR_DIR) $(UTILS_DIR))
 
 .PHONY: all clean fclean re dir_guard
 
