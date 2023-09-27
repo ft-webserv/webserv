@@ -55,10 +55,8 @@ void Response::handleGet(Request &rqs)
 	std::map<std::string, std::string> tmp;
 	std::map<std::string, std::string>::iterator it;
 
-	_serverInfo->printServerInfo();
 	tmp = _serverInfo->getServerInfo();
 	root = mapFind(tmp, "root");
-	std::cout << "================" << std::endl;
 	if (_locationInfo != NULL)
 	{
 		tmp = _locationInfo->getLocationInfo();
@@ -66,14 +64,8 @@ void Response::handleGet(Request &rqs)
 			throw(_405_METHOD_NOT_ALLOWED);
 		root = mapFind(tmp, "root");
 	}
-	if (root[root.length() - 1] == '/')
-		root.pop_back();
-	if (location[location.length() - 1] == '/')
-		location.pop_back();
-	std::cout << root << std::endl;
-	std::cout << location << std::endl;
-	// _findFile(root, location);
-	// _makeResponse();
+	_findFile(root, location);
+	_makeResponse();
 }
 
 void Response::handlePost(Request &rqs)
@@ -101,7 +93,7 @@ void Response::_findFile(std::string root, std::string location)
 		{
 			if (it->second == "index")
 			{
-				path = "." + root + location + "/" + it->first;
+				path = _makePath(root, location) + it->first;
 				if (stat(path.c_str(), &buf) != -1)
 				{
 					_setResponse(path, buf.st_size);
@@ -119,7 +111,7 @@ void Response::_findFile(std::string root, std::string location)
 	/////찢어야함.
 	else
 	{
-		path = "." + root + location;
+		path = _makePath(root, location);
 		if (stat(path.c_str(), &buf) == -1)
 			throw(_404_NOT_FOUND);
 		switch (buf.st_mode & S_IFMT)
@@ -139,6 +131,18 @@ void Response::_findFile(std::string root, std::string location)
 			break;
 		}
 	}
+}
+
+std::string Response::_makePath(std::string root, std::string location)
+{
+	std::string path;
+
+	path = "." + root + location;
+	for (std::string::size_type i = path.find("//"); i != std::string::npos; i = path.find("//"))
+		path.erase(i + 1, 1);
+	if (*path.rbegin() != '/')
+		path += "/";
+	return (path);
 }
 
 void Response::_setResponse(std::string path, off_t size)
@@ -164,9 +168,10 @@ void Response::_setResponse(std::string path, off_t size)
 
 void Response::_setBody(std::string path, off_t size)
 {
-	std::ifstream file(path.c_str());
+	std::ifstream file;
 
 	_body.resize(size);
+	file.open(path);
 	if (file.is_open() == false)
 		Exception::fileOpenError("file open error!");
 	file.read(&_body[0], size);
@@ -181,7 +186,7 @@ void Response::_makeResponse()
 	int detail = _statusCode / 100 - 2;
 
 	status << _statusCode;
-	_response = "HTTP/1.1 " + status.str() + _statusText[type][detail];
+	_response = "HTTP/1.1 " + status.str() + " " + _statusText[type][detail] + "\r\n";
 	for (it = _headerFields.begin(); it != _headerFields.end(); it++)
 		_response += it->first + " " + it->second + "\r\n";
 	_response += "\r\n" + _body;

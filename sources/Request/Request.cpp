@@ -119,7 +119,7 @@ void Request::parseRequest()
 		}
 		_checkValidHeader();
 	}
-	testPrintRequest();
+	// testPrintRequest();
 }
 
 void Request::_parseStartLine(std::string::size_type &pre, std::string::size_type &pos)

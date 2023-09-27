@@ -70,25 +70,30 @@ void Error::sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus s
 	if (errorPagePath.empty() == true || stat(errorPagePath.c_str(), &buf) == -1)
 	{
 		errorPagePath = _findDefaultPath(statusCode);
+		stat(errorPagePath.c_str(), &buf);
 	}
 	errorPage.open(errorPagePath);
 	if (errorPage.is_open() == false)
 		; // Log 만 찍기;
 	ss << statusCode;
-	_response = "HTTP/1.1" + ss.str() + _findStatusText(statusCode) + "/r/n";
+	_response = "HTTP/1.1 " + ss.str() + " " + _findStatusText(statusCode) + "\r\n";
 	pos = errorPagePath.rfind(".");
 	if (pos == std::string::npos)
-		_response += "Content-Type: application/octet-stream/r/n";
+		_response += "Content-Type: application/octet-stream\r\n";
 	else
 	{
 		pos += 1;
 		std::string extension = errorPagePath.substr(pos, errorPagePath.length() - pos);
-		_response += "Content-Type: " + conf.getMimeType().find(extension)->second + "/r/n";
+		_response += "Content-Type: " + conf.getMimeType().find(extension)->second + "\r\n";
 	}
 	ss.clear();
 	ss << buf.st_size;
-	_response += "Content-Length: " + ss.str() + "/r/n/r/n";
-	errorPage.read(&(*_response.end()), buf.st_size);
+	_response += "Content-Length: " + ss.str() + "\r\n\r\n";
+
+	char *pageBuf = new char[buf.st_size];
+	errorPage.read(pageBuf, buf.st_size);
+	_response += pageBuf;
+	delete[] pageBuf;
 	send(socket, static_cast<void *>(&_response[0]), _response.size(), 0);
 }
 

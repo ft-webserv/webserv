@@ -28,6 +28,9 @@ void ServerManager::runServer()
 	{
 		if ((servSock = socket(PF_INET, SOCK_STREAM, 0)) == -1)
 			Exception::socketError("socket() error!");
+		int reuse = 1;
+		if (setsockopt(servSock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)) == -1)
+			Exception::socketError("setsockopt() error!");
 		_kqueue.setFdset(servSock, SERVER);
 		memset(&servAddr, 0, sizeof(servAddr));
 		servAddr.sin_family = AF_INET;
@@ -86,13 +89,14 @@ void ServerManager::_monitoringEvent()
 						case CLIENT:
 							Client *client;
 							client = static_cast<Client *>(event->udata);
-							_setRequestTimeOut(client);
+							if (client->getClientStatus() == START)
+								_setRequestTimeOut(client);
 							client->readRequest();
 							if (client->getClientStatus() == READBODY || client->getClientStatus() == READCHUNKEDBODY || client->getClientStatus() == FINREAD)
 							{
 								_findServerBlock(client);
 							}
-							else if (client->getClientStatus() == FINREAD)
+							if (client->getClientStatus() == FINREAD)
 							{
 								_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
 								_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata);
@@ -129,6 +133,11 @@ void ServerManager::_monitoringEvent()
 					std::string errorPagePath = client->getResponse().getErrorPage();
 
 					client->sendErrorPage(event->ident, errorPagePath, e);
+				}
+				catch (std::exception &e)
+				{
+					std::cerr << e.what() << std::endl;
+					_disconnectClient(event);
 				}
 			}
 		}

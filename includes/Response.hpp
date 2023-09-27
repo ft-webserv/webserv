@@ -30,6 +30,7 @@ public:
 
 private:
 	void _findFile(std::string root, std::string location);
+	std::string _makePath(std::string root, std::string location);
 	void _setResponse(std::string path, off_t size);
 	void _setBody(std::string path, off_t size);
 	void _showFileList(std::string path, std::string location);
