@@ -93,6 +93,14 @@ void Config::parseConfigFile(const std::string &fileName)
 	if (_requestTime == -1)
 		_requestTime = 60;
 	file.close();
+  for (int i = 0; i < _serverInfos.size(); i++)
+      {
+          for (std::map<std::string, std::string>::iterator it = _serverInfos[i]->getServerInfo().begin(); it != _serverInfos[i]->getServerInfo().end(); it++)
+              std::cout << "ServInfo Key: " << it->first << ", ServInfo Val: " << it->second << std::endl;
+          for (int j = 0; j < _serverInfos[i]->getLocationInfos().size(); j++)
+              for (std::map<std::string, std::string>::iterator it2 = _serverInfos[i]->getLocationInfos()[j]->getLocationInfo().begin(); it2 != _serverInfos[i]->getLocationInfos()[j]->getLocationInfo().end(); it2++)
+                  std::cout << "  LocInfo Key: " << it2->first << ", LocInfo Val: " << it2->second << std::endl;
+      }
 }
 
 void Config::parseServerInfo(std::ifstream &file)
@@ -134,7 +142,6 @@ void Config::parseServerInfo(std::ifstream &file)
 		if (flag == 0)
 		{
 			_serverInfos.push_back(new ServerInfo(tmp));
-			file >> word;
 			return;
 		}
 	}
@@ -171,7 +178,6 @@ void Config::parseLocationInfo(std::ifstream &file, ServerInfo &target)
 		if (flag == 0)
 		{
 			target.addLocationInfo(new LocationInfo(tmp));
-			file >> word;
 			return;
 		}
 	}
