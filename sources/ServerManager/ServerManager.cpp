@@ -88,7 +88,7 @@ void ServerManager::_monitoringEvent()
 							client = static_cast<Client *>(event->udata);
 							_setRequestTimeOut(client);
 							client->readRequest();
-							if (client->getClientStatus() == READBODY || client->getClientStatus() == READCHUNKEDBODY)
+							if (client->getClientStatus() == READBODY || client->getClientStatus() == READCHUNKEDBODY || client->getClientStatus() == FINREAD)
 							{
 								_findServerBlock(client);
 							}

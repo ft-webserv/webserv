@@ -43,8 +43,6 @@ void Client::readRequest()
 
 	if (_status == START)
 		_status = READHEADER;
-	else if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
-		_status = FINREAD;
 
 	buf.clear();
 	buf.resize(conf.getClientHeadBufferSize());
@@ -71,8 +69,7 @@ void Client::readRequest()
 		pos = buf.find("\r\n");
 		_request.setChunkedBodyBuf(buf.substr(pos + 2));
 	}
-
-	if (_request.getIsBody() == true && (_status != READBODY || _status != READCHUNKEDBODY))
+	if (_request.getIsBody() == true && _status == READHEADER)
 	{
 		if (_request.getParsedRequest()._transferEncoding == "chunked")
 			_status = READCHUNKEDBODY;
@@ -80,6 +77,8 @@ void Client::readRequest()
 			_status = READBODY;
 		_request.parseRequest();
 	}
+	if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
+		_status = FINREAD;
 }
 
 void Client::writeResponse()

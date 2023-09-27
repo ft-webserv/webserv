@@ -15,7 +15,7 @@ void Request::setHeaderBuf(const std::string buf)
 	std::string::size_type newLinePos;
 
 	_headerBuf += buf;
-	if (newLinePos = _headerBuf.find("\r\n\r\n") != std::string ::npos)
+	if ((newLinePos = _headerBuf.find("\r\n\r\n")) != std::string ::npos)
 	{
 		_isBody = true;
 		_bodyBuf = _headerBuf.substr(newLinePos + 4, _headerBuf.length());
@@ -64,7 +64,7 @@ void Request::parseRequest()
 			line >> word;
 			if (word == "Host:")
 			{
-				if (_parsedRequest._host.empty() != 0)
+				if (_parsedRequest._host.empty() == false)
 					throw(_400_BAD_REQUEST);
 				line >> _parsedRequest._host;
 			}
@@ -119,17 +119,19 @@ void Request::parseRequest()
 		}
 		_checkValidHeader();
 	}
-	// testPrintRequest();
+	testPrintRequest();
 }
 
-void Request::_parseStartLine(std::string::size_type pos, std::string::size_type pre)
+void Request::_parseStartLine(std::string::size_type &pre, std::string::size_type &pos)
 {
 	std::istringstream line(_headerBuf.substr(pre, pos));
-	std::string word;
 
-	line >> word;
-	_parsedRequest._method = word;
+	line >> _parsedRequest._method;
 	line >> _parsedRequest._location >> _parsedRequest._httpVersion;
+
+	pos += 2;
+	pre = pos;
+	pos = _headerBuf.find("\r\n", pos);
 }
 
 void Request::testPrintRequest(void)
@@ -162,7 +164,7 @@ void Request::_checkValidHeader()
 		throw(_413_REQUEST_ENTITY_TOO_LARGE);
 	if (_headerBuf.find("Content-Encoding") != std::string::npos)
 		throw(_415_UNSUPPORTED_MEDIA_TYPE);
-	if (_parsedRequest._transferEncoding != "chunked")
+	if (_parsedRequest._transferEncoding.empty() == false && _parsedRequest._transferEncoding != "chunked")
 		throw(_400_BAD_REQUEST);
 	// Check Method
 	if (_parsedRequest._method != "GET" && _parsedRequest._method != "POST" && _parsedRequest._method != "DELETE")
@@ -172,9 +174,10 @@ void Request::_checkValidHeader()
 		throw(_400_BAD_REQUEST);
 
 	char *endPtr;
+	std::string versionStr = _parsedRequest._httpVersion.substr(5);
 	double version;
 
-	std::strtod(_parsedRequest._httpVersion.c_str(), &endPtr);
+	version = std::strtod(versionStr.c_str(), &endPtr);
 	if (*endPtr != '\0')
 		throw(_400_BAD_REQUEST);
 	if (version > 1.1 || version < 1.0)
@@ -183,7 +186,7 @@ void Request::_checkValidHeader()
 	for (size_t i = 0; i < _parsedRequest._host.length(); i++)
 	{
 		char c = _parsedRequest._host[i];
-		if (!std::isalnum(c) && c != '-' && c != '.')
+		if (!std::isalnum(c) && c != '-' && c != '.' && c != ':')
 			throw(_400_BAD_REQUEST);
 	}
 }

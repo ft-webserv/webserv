@@ -44,6 +44,6 @@ private:
 	t_request _parsedRequest;
 	eStatus _statusCode;
 	bool _isBody;
-	void _parseStartLine(std::string::size_type pos, std::string::size_type pre);
+	void _parseStartLine(std::string::size_type &pos, std::string::size_type &pre);
 	void _checkValidHeader();
 };

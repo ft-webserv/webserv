@@ -55,8 +55,10 @@ void Response::handleGet(Request &rqs)
 	std::map<std::string, std::string> tmp;
 	std::map<std::string, std::string>::iterator it;
 
+	_serverInfo->printServerInfo();
 	tmp = _serverInfo->getServerInfo();
 	root = mapFind(tmp, "root");
+	std::cout << "================" << std::endl;
 	if (_locationInfo != NULL)
 	{
 		tmp = _locationInfo->getLocationInfo();
@@ -68,8 +70,10 @@ void Response::handleGet(Request &rqs)
 		root.pop_back();
 	if (location[location.length() - 1] == '/')
 		location.pop_back();
-	_findFile(root, location);
-	_makeResponse();
+	std::cout << root << std::endl;
+	std::cout << location << std::endl;
+	// _findFile(root, location);
+	// _makeResponse();
 }
 
 void Response::handlePost(Request &rqs)
