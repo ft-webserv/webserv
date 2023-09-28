@@ -1,13 +1,31 @@
 #include "Request.hpp"
 
 Request::Request()
-	: _isBody(false), _statusCode(_200_OK)
+	: _isBody(false)
 {
 	_parsedRequest._contentLength = 0;
 }
 
 Request::~Request()
 {
+}
+
+void Request::initRequest()
+{
+	_headerBuf.clear();
+	_bodyBuf.clear();
+	_isBody = false;
+	_parsedRequest._method.clear();
+	_parsedRequest._location.clear();
+	_parsedRequest._httpVersion.clear();
+	_parsedRequest._host.clear();
+	_parsedRequest._accept.clear();
+	_parsedRequest._connection.clear();
+	_parsedRequest._contentType.clear();
+	_parsedRequest._transferEncoding.clear();
+	_parsedRequest._contentLengthStr.clear();
+	_parsedRequest._body.clear();
+	_parsedRequest._contentLength = 0;
 }
 
 void Request::setHeaderBuf(const std::string buf)
@@ -59,8 +77,7 @@ void Request::parseRequest()
 		_parseStartLine(pre, pos);
 		for (; pos < _headerBuf.length();)
 		{
-			std::istringstream line(_headerBuf.substr(pre, pos));
-
+			std::istringstream line(_headerBuf.substr(pre, pos - pre));
 			line >> word;
 			if (word == "Host:")
 			{
@@ -100,12 +117,12 @@ void Request::parseRequest()
 				int num = 0;
 				while (1)
 				{
-					num++;
 					line >> _parsedRequest._transferEncoding;
-					if (num > 1)
-						throw(_501_NOT_IMPLEMENTED);
 					if (line.eof() == true)
 						break;
+					num++;
+					if (num > 1)
+						throw(_501_NOT_IMPLEMENTED);
 				}
 			}
 			else
@@ -124,7 +141,7 @@ void Request::parseRequest()
 
 void Request::_parseStartLine(std::string::size_type &pre, std::string::size_type &pos)
 {
-	std::istringstream line(_headerBuf.substr(pre, pos));
+	std::istringstream line(_headerBuf.substr(pre, pos - pre));
 
 	line >> _parsedRequest._method;
 	line >> _parsedRequest._location >> _parsedRequest._httpVersion;

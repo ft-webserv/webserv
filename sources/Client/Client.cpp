@@ -1,13 +1,14 @@
 #include "Client.hpp"
 
 Client::Client(uintptr_t socket)
-	: _socket(socket), _status(START) {}
+	: _status(START), _socket(socket) {}
 
 Client::Client(const Client &src)
-	: _socket(src._socket), _status(START) {}
+	: _status(START), _socket(src._socket) {}
 
 Client &Client::operator=(const Client &src)
 {
+	(void)src;
 	return (*this);
 }
 
@@ -51,6 +52,8 @@ void Client::readRequest()
 		Exception::recvError("recv() error!");
 	else if (len <= 0)
 		Exception::disconnectDuringRecvError("disconnected during read!");
+
+	// std::cout << "BUF : " << buf << std::endl;
 
 	if (_status == READHEADER)
 		_request.setHeaderBuf(buf);
@@ -114,6 +117,7 @@ void Client::writeResponse()
 
 		if (findResult.empty() == false)
 			findResult = "." + findResult;
+		_status = FINWRITE;
 		sendErrorPage(_socket, findResult, e);
 	}
 }
@@ -124,7 +128,7 @@ void Client::setServerBlock(port_t port)
 	std::map<std::string, std::string>::iterator end;
 	Config &conf = Config::getInstance();
 
-	for (int i = 0; i < conf.getServerInfos().size(); i++)
+	for (size_t i = 0; i < conf.getServerInfos().size(); i++)
 	{
 		int flag = 0;
 		it = conf.getServerInfos()[i]->getServerInfo().begin();
@@ -187,6 +191,13 @@ void Client::setLocationBlock()
 				_response.setLocationInfo(*it);
 		}
 	}
+}
+
+void Client::initClient()
+{
+	_status = START;
+	_request.initRequest();
+	_response.initResponse();
 }
 
 std::string::size_type Client::getNextPos(std::string::size_type currPos)

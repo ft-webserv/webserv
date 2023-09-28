@@ -6,10 +6,12 @@ ServerManager::ServerManager()
 
 ServerManager::ServerManager(const ServerManager &src)
 {
+	(void)src;
 }
 
 ServerManager &ServerManager::operator=(ServerManager const &rhs)
 {
+	(void)rhs;
 	return (*this);
 }
 
@@ -64,7 +66,10 @@ void ServerManager::_monitoringEvent()
 				try
 				{
 					// std::cout << ((type == SERVER) ? "Server : " : "Client : ");
-					// std::cout << ((event->filter == EVFILT_READ) ? "read" : "write") << std::endl;
+					// std::cout << event->ident << std::endl;
+					// std::cout << ((event->filter == EVFILT_READ) ? "read" : (event->filter == EVFILT_WRITE) ? "write"
+					// 																						: "timmer")
+					// 		  << std::endl;
 					if (event->flags & EV_ERROR)
 					{
 						switch (type)
@@ -110,20 +115,26 @@ void ServerManager::_monitoringEvent()
 					{
 						Client *client = static_cast<Client *>(event->udata);
 						client->writeResponse();
-						if (client->getRequest().getParsedRequest()._contentType == "close")
+						if (client->getRequest().getParsedRequest()._contentType == "close" && client->getClientStatus() == FINWRITE)
 							_disconnectClient(event);
 						else if (client->getClientStatus() == FINWRITE)
 						{
 							_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
 							_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
+							client->initClient();
+							_setKeepAliveTimeOut(client);
 						}
 					}
 					else if (event->filter == EVFILT_TIMER)
 					{
 						Client *client = static_cast<Client *>(event->udata);
-						std::string errorPagePath = client->getResponse().getErrorPage();
 
-						client->sendErrorPage(event->ident, errorPagePath, _408_REQUEST_TIMEOUT);
+						if (client->getClientStatus() > START && client->getClientStatus() < FINWRITE)
+						{
+							std::string errorPagePath = client->getResponse().getErrorPage();
+
+							client->sendErrorPage(event->ident, errorPagePath, _408_REQUEST_TIMEOUT);
+						}
 						_disconnectClient(event);
 					}
 				}
@@ -133,6 +144,7 @@ void ServerManager::_monitoringEvent()
 					std::string errorPagePath = client->getResponse().getErrorPage();
 
 					client->sendErrorPage(event->ident, errorPagePath, e);
+					_disconnectClient(event);
 				}
 				catch (std::exception &e)
 				{
@@ -200,6 +212,7 @@ void ServerManager::_findServerBlock(Client *client)
 void ServerManager::_disconnectClient(struct kevent *event)
 {
 	Client *client = static_cast<Client *>(event->udata);
+	std::cout << "Disconnected with client : " << client->getSocket() << std::endl;
 	_kqueue._deleteFdType(event->ident);
 	close(client->getSocket());
 	delete client;

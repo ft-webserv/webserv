@@ -1,13 +1,13 @@
 #include "Config.hpp"
 
 Config::Config()
-	: _keepAliveTime(-1), _requestTime(-1), _clientHeaderBufferSize(BUFFERSIZE),
+	: _keepAliveTime(0), _requestTime(0), _clientHeaderBufferSize(BUFFERSIZE),
 	  _clientMaxBodySize(pow(BUFFERSIZE, 2))
 {
 }
 
 Config::Config(const std::string &fileName)
-	: _keepAliveTime(-1), _requestTime(-1), _clientHeaderBufferSize(BUFFERSIZE),
+	: _keepAliveTime(0), _requestTime(0), _clientHeaderBufferSize(BUFFERSIZE),
 	  _clientMaxBodySize(pow(BUFFERSIZE, 2))
 {
 	parseConfigFile(fileName);
@@ -88,10 +88,10 @@ void Config::parseConfigFile(const std::string &fileName)
 		}
 		file >> word;
 	}
-	if (_keepAliveTime == -1)
-		_keepAliveTime = 5;
-	if (_requestTime == -1)
-		_requestTime = 5;
+	if (_keepAliveTime == 0)
+		_keepAliveTime = 75;
+	if (_requestTime == 0)
+		_requestTime = 60;
 	file.close();
 }
 

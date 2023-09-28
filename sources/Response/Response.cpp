@@ -20,6 +20,15 @@ Response::~Response()
 {
 }
 
+void Response::initResponse()
+{
+	_headerFields.clear();
+	_body.clear();
+	_response.clear();
+	_serverInfo = NULL;
+	_locationInfo = NULL;
+}
+
 std::string &Response::getResponse() { return (_response); };
 ServerInfo *Response::getServerInfo() { return (_serverInfo); }
 LocationInfo *Response::getLocationInfo() { return (_locationInfo); }
@@ -70,12 +79,14 @@ void Response::handleGet(Request &rqs)
 
 void Response::handlePost(Request &rqs)
 {
+	rqs.getIsBody();
 	_statusCode = _201_CREATED;
 	// content-type이 없을 시 octet-stream이 content-type이 됨.
 }
 
 void Response::handleDelete(Request &rqs)
 {
+	rqs.getIsBody();
 	_statusCode = _204_NO_CONTENT;
 }
 
@@ -153,16 +164,17 @@ void Response::_setResponse(std::string path, off_t size)
 
 	//_setHeader로 빼기.
 	length << size;
-	_headerFields.insert(std::pair<std::string, std::string>("Conent-Length:", length.str()));
+	_headerFields.insert(std::pair<std::string, std::string>("Content-Length:", length.str()));
 	pos = path.rfind(".");
 	if (pos == std::string::npos)
-		_headerFields.insert(std::pair<std::string, std::string>("Conent-Type:", "application/octet-stream"));
+		_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "application/octet-stream"));
 	else
 	{
 		pos += 1;
 		std::string extension = path.substr(pos, path.length() - pos);
-		_headerFields.insert(std::pair<std::string, std::string>("Conent-Type:", conf.getMimeType().find(extension)->second));
+		_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", conf.getMimeType().find(extension)->second));
 	}
+	// _headerFields.insert(std::pair<std::string, std::string>("Connection:", "keep-alive"));
 	_setBody(path, size);
 }
 
@@ -196,6 +208,7 @@ void Response::_showFileList(std::string path, std::string location)
 {
 	if (path[path.length() - 1] != '/')
 		path[path.length() - 1] += '/';
+	std::cout << location << std::endl;
 }
 
 bool Response::_isAutoIndex()
@@ -207,7 +220,7 @@ bool Response::_isAutoIndex()
 	return (false);
 }
 
-std::string &Response::getErrorPage()
+std::string Response::getErrorPage()
 {
 	std::string findResult;
 	std::stringstream ss;

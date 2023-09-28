@@ -21,3 +21,11 @@ size_t ft_stoi(std::string num)
 
 	return (result);
 }
+
+std::string ft_itos(size_t num)
+{
+	std::stringstream ss;
+
+	ss << num;
+	return (ss.str());
+}

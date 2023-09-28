@@ -36,13 +36,13 @@ public:
 	void setBodyBuf(const std::string buf);
 	void setChunkedBodyBuf(const std::string buf);
 	t_request getParsedRequest() const;
+	void initRequest();
 	bool getIsBody();
 
 private:
 	std::string _headerBuf;
 	std::string _bodyBuf;
 	t_request _parsedRequest;
-	eStatus _statusCode;
 	bool _isBody;
 	void _parseStartLine(std::string::size_type &pos, std::string::size_type &pre);
 	void _checkValidHeader();

@@ -41,6 +41,7 @@ public:
   Response &getResponse();
   void setServerBlock(port_t port);
   void setLocationBlock();
+  void initClient();
 
   // delete keep alive time
 

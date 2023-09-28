@@ -6,3 +6,4 @@
 
 std::string mapFind(std::map<std::string, std::string> tmp, std::string word);
 size_t ft_stoi(std::string num);
+std::string ft_itos(size_t num);

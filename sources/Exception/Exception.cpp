@@ -53,7 +53,7 @@ void Exception::disconnectDuringRecvError(const std::string &message)
 	throw std::runtime_error(message);
 }
 
-static void chdirError(const std::string &message)
+void Exception::chdirError(const std::string &message)
 {
 	throw std::runtime_error(message);
 }

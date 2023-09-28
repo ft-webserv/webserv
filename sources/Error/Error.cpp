@@ -62,7 +62,6 @@ void Error::sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus s
 {
 	std::string extension;
 	std::string::size_type pos;
-	std::stringstream ss;
 	std::ifstream errorPage;
 	struct stat buf;
 	Config &conf = Config::getInstance();
@@ -75,8 +74,7 @@ void Error::sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus s
 	errorPage.open(errorPagePath);
 	if (errorPage.is_open() == false)
 		; // Log 만 찍기;
-	ss << statusCode;
-	_response = "HTTP/1.1 " + ss.str() + " " + _findStatusText(statusCode) + "\r\n";
+	_response = "HTTP/1.1 " + ft_itos(statusCode) + " " + _findStatusText(statusCode) + "\r\n";
 	pos = errorPagePath.rfind(".");
 	if (pos == std::string::npos)
 		_response += "Content-Type: application/octet-stream\r\n";
@@ -86,77 +84,11 @@ void Error::sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus s
 		std::string extension = errorPagePath.substr(pos, errorPagePath.length() - pos);
 		_response += "Content-Type: " + conf.getMimeType().find(extension)->second + "\r\n";
 	}
-	ss.clear();
-	ss << buf.st_size;
-	_response += "Content-Length: " + ss.str() + "\r\n\r\n";
+	_response += "Content-Length: " + ft_itos(buf.st_size) + "\r\n\r\n";
 
-	char *pageBuf = new char[buf.st_size];
-	errorPage.read(pageBuf, buf.st_size);
+	std::string pageBuf;
+	pageBuf.resize(buf.st_size);
+	errorPage.read(&pageBuf[0], buf.st_size);
 	_response += pageBuf;
-	delete[] pageBuf;
 	send(socket, static_cast<void *>(&_response[0]), _response.size(), 0);
 }
-
-// void Error::_400badRequest(uintptr_t socket, std::string errorPagePath)
-// {
-
-// }
-
-// void Error::_401unauthorized(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_403forbidden(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_404notFound(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_405methodNotAllowed(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_406notAcceptable(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_408requestTimeout(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_409conflict(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_413requestEntityTooLarge(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_414uriTooLong(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_500internalServerError(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_501notImplemented(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-// void Error::_501badGateWay(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_503serviceUnavailable(uintptr_t socket, std::string errorPagePath)
-// {
-// }
-
-// void Error::_504gatewayTimeout()
-// {
-// }
-
-// void Error::_505httpVersionNotSupported()
-// {
-// }
