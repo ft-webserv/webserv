@@ -53,7 +53,7 @@ void Client::readRequest()
 	else if (len <= 0)
 		Exception::disconnectDuringRecvError("disconnected during read!");
 
-	// std::cout << "BUF : " << buf << std::endl;
+	std::cout << "BUF : " << buf << std::endl;
 
 	if (_status == READHEADER)
 		_request.setHeaderBuf(buf);

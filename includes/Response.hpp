@@ -37,6 +37,7 @@ private:
 	void _showFileList(std::string path, std::string location);
 	bool _isAutoIndex();
 	void _makeResponse();
+	bool _isAllowedMethod(std::string method);
 
 private:
 	eStatus _statusCode;

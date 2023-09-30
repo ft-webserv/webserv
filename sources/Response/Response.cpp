@@ -69,7 +69,7 @@ void Response::handleGet(Request &rqs)
 	if (_locationInfo != NULL)
 	{
 		tmp = _locationInfo->getLocationInfo();
-		if (tmp.find("GET") == tmp.end())
+		if (_isAllowedMethod("GET") == false)
 			throw(_405_METHOD_NOT_ALLOWED);
 		root = mapFind(tmp, "root");
 	}
@@ -79,9 +79,13 @@ void Response::handleGet(Request &rqs)
 
 void Response::handlePost(Request &rqs)
 {
-	rqs.getIsBody();
 	_statusCode = _201_CREATED;
-	// content-type이 없을 시 octet-stream이 content-type이 됨.
+	Config &conf = Config::getInstance();
+	std::string extension;
+
+	if ((extension = mapFind(conf.getMimeType(), rqs.getParsedRequest()._contentType)) == "")
+		extension = "txt";
+
 }
 
 void Response::handleDelete(Request &rqs)
@@ -218,6 +222,15 @@ bool Response::_isAutoIndex()
 	if (mapFind(tmp, "autoindex") == "on")
 		return (true);
 	return (false);
+}
+
+bool Response::_isAllowedMethod(std::string method)
+{
+	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
+
+	if (tmp.find(method) == tmp.end())
+		return (false);
+	return (true);
 }
 
 std::string Response::getErrorPage()
