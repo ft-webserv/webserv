@@ -170,7 +170,6 @@ void Client::setLocationBlock()
 	std::string::size_type pathLength;
 	std::string::size_type tokenLength;
 
-	it = _response.getServerInfo()->getLocationInfos().begin();
 	end = _response.getServerInfo()->getLocationInfos().end();
 	while (true)
 	{
@@ -178,6 +177,7 @@ void Client::setLocationBlock()
 		if (pos == std::string::npos)
 			break;
 		token = _request.getParsedRequest()._location.substr(0, pos);
+		it = _response.getServerInfo()->getLocationInfos().begin();
 		tokenLength = token.length();
 		for (; it != end; it++)
 		{
@@ -187,7 +187,7 @@ void Client::setLocationBlock()
 				pathLength -= 1;
 			if (tokenLength > 1 && token[tokenLength - 1] == '/')
 				tokenLength -= 1;
-			if (pathLength == tokenLength && path.compare(0, pathLength, token) == 0)
+			if (pathLength == tokenLength && token.compare(0, tokenLength, path) == 0)
 				_response.setLocationInfo(*it);
 		}
 	}

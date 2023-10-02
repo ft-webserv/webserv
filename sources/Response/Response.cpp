@@ -61,31 +61,23 @@ void Response::handleGet(Request &rqs)
 	_statusCode = _200_OK;
 	std::string location = rqs.getParsedRequest()._location;
 	std::string root;
-	std::map<std::string, std::string> tmp;
-	std::map<std::string, std::string>::iterator it;
 
-	tmp = _serverInfo->getServerInfo();
-	root = mapFind(tmp, "root");
-	if (_locationInfo != NULL)
-	{
-		tmp = _locationInfo->getLocationInfo();
-		if (_isAllowedMethod("GET") == false)
-			throw(_405_METHOD_NOT_ALLOWED);
-		root = mapFind(tmp, "root");
-	}
-	_findFile(root, location);
+	root = _findRoot();
+	_getFile(root, location);
 	_makeResponse();
 }
 
 void Response::handlePost(Request &rqs)
 {
 	_statusCode = _201_CREATED;
-	Config &conf = Config::getInstance();
-	std::string extension;
+	std::string location = rqs.getParsedRequest()._location;
+	std::string root;
+	// Config &conf = Config::getInstance();
+	// std::string extension;
 
-	if ((extension = mapFind(conf.getMimeType(), rqs.getParsedRequest()._contentType)) == "")
-		extension = "txt";
-
+	root = _findRoot();
+	_postFile(root, location, rqs);
+	_makeResponse();
 }
 
 void Response::handleDelete(Request &rqs)
@@ -94,7 +86,26 @@ void Response::handleDelete(Request &rqs)
 	_statusCode = _204_NO_CONTENT;
 }
 
-void Response::_findFile(std::string root, std::string location)
+std::string Response::_findRoot()
+{
+	std::string root;
+	std::map<std::string, std::string> tmp;
+	std::map<std::string, std::string>::iterator it;
+
+	tmp = _serverInfo->getServerInfo();
+	root = mapFind(tmp, "root");
+	if (_locationInfo != NULL)
+	{
+		tmp = _locationInfo->getLocationInfo();
+		if (_isAllowedMethod("GET") == false && _isAllowedMethod("POST") == false &&
+			_isAllowedMethod("DELETE") == false)
+			throw(_405_METHOD_NOT_ALLOWED);
+		root = mapFind(tmp, "root");
+	}
+	return (root);
+}
+
+void Response::_getFile(std::string root, std::string location)
 {
 	std::string path;
 	struct stat buf;
@@ -103,15 +114,18 @@ void Response::_findFile(std::string root, std::string location)
 	{
 		std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
 		std::map<std::string, std::string>::iterator it;
+
 		it = tmp.begin();
+		path = _makePath(root, location);
 		for (; it != tmp.end(); it++)
 		{
 			if (it->second == "index")
 			{
-				path = _makePath(root, location) + it->first;
-				if (stat(path.c_str(), &buf) != -1)
+				std::string indexPath;
+				indexPath = path + "/" + it->first;
+				if (stat(indexPath.c_str(), &buf) != -1)
 				{
-					_setResponse(path, buf.st_size);
+					_setResponse(indexPath, buf.st_size);
 					return;
 				}
 			}
@@ -148,6 +162,26 @@ void Response::_findFile(std::string root, std::string location)
 	}
 }
 
+void Response::_postFile(std::string root, std::string location, Request &rqs)
+{
+	std::string path;
+	struct stat buf;
+
+	path = _makePath(root, location);
+	if (stat(path.c_str(), &buf) == -1)
+		throw(_404_NOT_FOUND);
+	switch (buf.st_mode & S_IFMT)
+	{
+	case S_IFREG:
+		throw(_400_BAD_REQUEST);
+	case S_IFDIR:
+		_createFile(path, location, rqs);
+		break;
+	default:
+		break;
+	}
+}
+
 std::string Response::_makePath(std::string root, std::string location)
 {
 	std::string path;
@@ -155,8 +189,8 @@ std::string Response::_makePath(std::string root, std::string location)
 	path = "." + root + location;
 	for (std::string::size_type i = path.find("//"); i != std::string::npos; i = path.find("//"))
 		path.erase(i + 1, 1);
-	if (*path.rbegin() != '/')
-		path += "/";
+	// if (*path.rbegin() != '/')
+	// 	path += "/";
 	return (path);
 }
 
@@ -251,4 +285,29 @@ std::string Response::getErrorPage()
 		findResult += ss.str() + ".html";
 	}
 	return (findResult);
+}
+
+void Response::_createFile(std::string path, std::string location, Request &rqs)
+{
+	Config &conf = Config::getInstance();
+	std::string fileName;
+	std::ofstream os;
+
+	fileName = _makeRandomName() + mapFind(conf.getMimeType(), rqs.getParsedRequest()._contentType);
+	os.open(path + fileName);
+	if (os.is_open() == false)
+		throw(_500_INTERNAL_SERVER_ERROR);
+	_headerFields.insert(std::pair<std::string, std::string>("Location:", location + fileName));
+}
+
+std::string Response::_makeRandomName()
+{
+	std::string format = "yyyymmddhhmmss";
+	std::time_t time = std::time(NULL);
+	std::string timeString;
+
+	timeString.resize(format.size());
+	std::strftime(&timeString[0], timeString.size(),
+				  "%Y%m%d%H%M%S", std::localtime(&time));
+	return (timeString);
 }

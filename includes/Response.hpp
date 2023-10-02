@@ -30,7 +30,9 @@ public:
 	std::string getErrorPage();
 
 private:
-	void _findFile(std::string root, std::string location);
+	std::string _findRoot();
+	void _getFile(std::string root, std::string location);
+	void _postFile(std::string root, std::string location, Request &rqs);
 	std::string _makePath(std::string root, std::string location);
 	void _setResponse(std::string path, off_t size);
 	void _setBody(std::string path, off_t size);
@@ -38,6 +40,8 @@ private:
 	bool _isAutoIndex();
 	void _makeResponse();
 	bool _isAllowedMethod(std::string method);
+	void _createFile(std::string path, std::string location, Request &rqs);
+	std::string _makeRandomName();
 
 private:
 	eStatus _statusCode;
