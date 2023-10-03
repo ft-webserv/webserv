@@ -110,25 +110,21 @@ void Response::_getFile(std::string root, std::string location)
 	std::string path;
 	struct stat buf;
 
+  path = _makePath(root, location);
 	if (_locationInfo->getPath() == location)
 	{
 		std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
 		std::map<std::string, std::string>::iterator it;
 
 		it = tmp.begin();
-		path = _makePath(root, location);
 		for (; it != tmp.end(); it++)
 		{
 			if (it->second == "index")
 			{
 				std::string indexPath;
-        if (*(path.rbegin()) == '/')
-          indexPath = path + it->first;
-        else
-          indexPath = path + "/" + it->first;
+        indexPath = path + "/" + it->first;
 				if (stat(indexPath.c_str(), &buf) != -1)
 				{
-          std::cout << indexPath << "======" << std::endl;
 					_setResponse(indexPath, buf.st_size);
 					return;
 				}
@@ -144,7 +140,6 @@ void Response::_getFile(std::string root, std::string location)
 	/////찢어야함.
 	else
 	{
-		path = _makePath(root, location);
 		if (stat(path.c_str(), &buf) == -1)
 			throw(_404_NOT_FOUND);
 		switch (buf.st_mode & S_IFMT)
@@ -192,7 +187,10 @@ std::string Response::_makePath(std::string root, std::string location)
 
 	path = "." + root + location;
 	for (std::string::size_type i = path.find("//"); i != std::string::npos; i = path.find("//"))
-		path.erase(i + 1, 1);
+    path.erase(i + 1, 1);
+  if (*path.rbegin() == '/')
+    path.pop_back();
+  std::cout << "Path" << path << std::endl;
 	return (path);
 }
 
