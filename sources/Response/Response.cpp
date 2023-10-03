@@ -1,4 +1,5 @@
 #include "Response.hpp"
+#include "Utils.hpp"
 
 Response::Response()
 	: _serverInfo(NULL), _locationInfo(NULL)
@@ -132,7 +133,7 @@ void Response::_getFile(std::string root, std::string location)
 		}
 		if (_isAutoIndex() == true)
 		{
-			_showFileList(path, location);
+			_showFileList(path);
 		}
 		else
 			throw(_404_NOT_FOUND);
@@ -150,7 +151,7 @@ void Response::_getFile(std::string root, std::string location)
 		case S_IFDIR:
 			if (_isAutoIndex() == true)
 			{
-				_showFileList(path, location);
+				_showFileList(path);
 			}
 			else
 				throw(_404_NOT_FOUND);
@@ -190,7 +191,6 @@ std::string Response::_makePath(std::string root, std::string location)
     path.erase(i + 1, 1);
   if (*path.rbegin() == '/')
     path.pop_back();
-  std::cout << "Path" << path << std::endl;
 	return (path);
 }
 
@@ -242,11 +242,51 @@ void Response::_makeResponse()
 	_response += "\r\n" + _body;
 }
 
-void Response::_showFileList(std::string path, std::string location)
+void Response::_showFileList(std::string path)
 {
-	if (path[path.length() - 1] != '/')
-		path[path.length() - 1] += '/';
-	std::cout << location << std::endl;
+  DIR           *dirp = NULL;
+  struct dirent *dp = NULL;
+	struct stat buf;
+  std::string name;
+  std::string time;
+  std::string dpPath;
+
+  dirp = opendir(path.c_str());
+  if(dirp == NULL) 
+  {
+    throw (_500_INTERNAL_SERVER_ERROR);
+  }
+  _body += "<table width=\"450\" height=\"200\" align=\"left\">";
+  _body += "<th>Name</th><th>Last Modified</th><th>Size</th>";
+  while((dp = readdir(dirp)) != NULL) 
+  {
+    _body += "<tr>";
+    name = dp->d_name;
+    dpPath = path + "/" + name; 
+    stat(dpPath.c_str(), &buf);
+    time = std::ctime(&buf.st_mtimespec.tv_sec);
+		switch (buf.st_mode & S_IFMT)
+		{
+      case S_IFREG:
+        _body += "<td><a href=\"" + name + "\">" + "📄 " + name + "</a></td>";
+        _body += "<td>" + time +"</td>";
+        _body += "<td>" + ft_itos(buf.st_size) +"</td>";
+        break;
+      case S_IFDIR:
+        _body += "<td><a href=\"" + name + "\">" + "📁 " + name + "/" + "</a></td>";
+        _body += "<td>" + time +"</td>";
+        _body += "<td>" + ft_itos(buf.st_size) +"</td>";
+        break;
+        break;
+      default:
+        break;
+    }
+    _body += "</tr>";
+  }
+  _body += "</table>";
+  closedir(dirp);
+	_headerFields.insert(std::pair<std::string, std::string>("Content-Length:", ft_itos(_body.length())));
+  _headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "text/html; charset=utf-8;"));
 }
 
 bool Response::_isAutoIndex()

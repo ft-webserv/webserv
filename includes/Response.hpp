@@ -4,6 +4,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #include "Config.hpp"
 #include "Request.hpp"
@@ -36,7 +37,7 @@ private:
 	std::string _makePath(std::string root, std::string location);
 	void _setResponse(std::string path, off_t size);
 	void _setBody(std::string path, off_t size);
-	void _showFileList(std::string path, std::string location);
+	void _showFileList(std::string path);
 	bool _isAutoIndex();
 	void _makeResponse();
 	bool _isAllowedMethod(std::string method);
