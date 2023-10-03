@@ -86,8 +86,8 @@ void Client::readRequest()
 
 void Client::writeResponse()
 {
-	if (chdir(WORK_PATH) == -1)
-		Exception::listenError("chdir() error!");
+	// if (chdir(WORK_PATH) == -1)
+	// 	Exception::listenError("chdir() error!");
 	try
 	{
 		if (_request.getParsedRequest()._method == "GET")

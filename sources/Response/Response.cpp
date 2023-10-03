@@ -122,9 +122,13 @@ void Response::_getFile(std::string root, std::string location)
 			if (it->second == "index")
 			{
 				std::string indexPath;
-				indexPath = path + "/" + it->first;
+        if (*(path.rbegin()) == '/')
+          indexPath = path + it->first;
+        else
+          indexPath = path + "/" + it->first;
 				if (stat(indexPath.c_str(), &buf) != -1)
 				{
+          std::cout << indexPath << "======" << std::endl;
 					_setResponse(indexPath, buf.st_size);
 					return;
 				}
@@ -189,8 +193,6 @@ std::string Response::_makePath(std::string root, std::string location)
 	path = "." + root + location;
 	for (std::string::size_type i = path.find("//"); i != std::string::npos; i = path.find("//"))
 		path.erase(i + 1, 1);
-	// if (*path.rbegin() != '/')
-	// 	path += "/";
 	return (path);
 }
 
