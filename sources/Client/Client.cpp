@@ -80,6 +80,9 @@ void Client::readRequest()
 			_status = READBODY;
 		_request.parseRequest();
 	}
+  std::cout << "contentlength : " << _request.getParsedRequest()._contentLength << std::endl;
+  std::cout << "body : " << _request.getParsedRequest()._body << std:: endl;
+  std::cout << "body size : "<< _request.getParsedRequest()._body.length() << std::endl;
 	if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
 		_status = FINREAD;
 }

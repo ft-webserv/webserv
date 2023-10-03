@@ -13,7 +13,6 @@ Request::~Request()
 void Request::initRequest()
 {
 	_headerBuf.clear();
-	_bodyBuf.clear();
 	_isBody = false;
 	_parsedRequest._method.clear();
 	_parsedRequest._location.clear();
@@ -36,23 +35,24 @@ void Request::setHeaderBuf(const std::string buf)
 	if ((newLinePos = _headerBuf.find("\r\n\r\n")) != std::string ::npos)
 	{
 		_isBody = true;
-		_bodyBuf = _headerBuf.substr(newLinePos + 4, _headerBuf.length());
-		_headerBuf = _headerBuf.substr(0, newLinePos);
+		_parsedRequest._body = _headerBuf.substr(newLinePos + 4, _headerBuf.length());
+    std::cout << "pos :" << newLinePos << "headerbuf :" << _headerBuf.length() << std::endl;
+		_headerBuf = _headerBuf.substr(0, newLinePos) + "\r\n";
 	}
 }
 
 void Request::setBodyBuf(const std::string buf)
 {
-	_bodyBuf += buf;
+	_parsedRequest._body += buf;
 }
 
 void Request::setChunkedBodyBuf(const std::string buf)
 {
 	Config &conf = Config::getInstance();
 
-	if (_bodyBuf.size() > conf.getClientMaxBodySize())
+	if (_parsedRequest._body.size() > conf.getClientMaxBodySize())
 		throw(_413_REQUEST_ENTITY_TOO_LARGE);
-	_bodyBuf += buf;
+	_parsedRequest._body += buf;
 }
 
 t_request Request::getParsedRequest() const
@@ -102,10 +102,10 @@ void Request::parseRequest()
 				std::string tmp;
 
 				line >> tmp;
-				if (_parsedRequest._contentLengthStr != "")
+				// if (_parsedRequest._contentLengthStr != "")
 					_parsedRequest._contentLengthStr = tmp;
-				else if (_parsedRequest._contentLengthStr != tmp)
-					throw(_400_BAD_REQUEST);
+				// else if (_parsedRequest._contentLengthStr != tmp)
+				// 	throw(_400_BAD_REQUEST);
 				if (_parsedRequest._contentLengthStr.find_first_not_of("0123456789") != std::string::npos)
 					throw(_400_BAD_REQUEST);
 				else if (_parsedRequest._contentLengthStr.length() >= 10)

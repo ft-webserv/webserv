@@ -41,7 +41,6 @@ public:
 
 private:
 	std::string _headerBuf;
-	std::string _bodyBuf;
 	t_request _parsedRequest;
 	bool _isBody;
 	void _parseStartLine(std::string::size_type &pos, std::string::size_type &pre);

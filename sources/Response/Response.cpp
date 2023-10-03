@@ -277,7 +277,6 @@ void Response::_showFileList(std::string path)
         _body += "<td>" + time +"</td>";
         _body += "<td>" + ft_itos(buf.st_size) +"</td>";
         break;
-        break;
       default:
         break;
     }
@@ -333,11 +332,17 @@ void Response::_createFile(std::string path, std::string location, Request &rqs)
 	std::string fileName;
 	std::ofstream os;
 
-	fileName = _makeRandomName() + mapFind(conf.getMimeType(), rqs.getParsedRequest()._contentType);
-	os.open(path + fileName);
+	fileName = _makeRandomName() + "." + mapFind(conf.getMimeType(), rqs.getParsedRequest()._contentType);
+	os.open(path + "/" + fileName);
 	if (os.is_open() == false)
-		throw(_500_INTERNAL_SERVER_ERROR);
-	_headerFields.insert(std::pair<std::string, std::string>("Location:", location + fileName));
+    throw(_500_INTERNAL_SERVER_ERROR);
+  os.write(rqs.getParsedRequest()._body.c_str(), rqs.getParsedRequest()._body.size());
+  os.close();
+  if (*location.rbegin() != '/')
+    _headerFields.insert(std::pair<std::string, std::string>("Location:", location + "/" + fileName));
+  else
+    _headerFields.insert(std::pair<std::string, std::string>("Location:", location + fileName));
+	_headerFields.insert(std::pair<std::string, std::string>("Content-Length:", "0"));
 }
 
 std::string Response::_makeRandomName()
