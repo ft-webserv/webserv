@@ -78,7 +78,7 @@ void ServerManager::_monitoringEvent()
 							std::cerr << "server socket error!" << std::endl;
 							break;
 						case CLIENT:
-							_kqueue.deleteEvent(event->ident);
+							_disconnectClient(event);
 							break;
 						default:
 							break;
@@ -181,7 +181,7 @@ void ServerManager::_setKeepAliveTimeOut(Client *client)
 
 	_kqueue.addEvent(client->getSocket(), EVFILT_TIMER,
 					 EV_ADD | EV_ONESHOT, NOTE_SECONDS,
-					 conf.getRequestTime(), static_cast<void *>(client));
+					 conf.getKeepAliveTime(), static_cast<void *>(client));
 }
 
 void ServerManager::_setRequestTimeOut(Client *client)
@@ -213,7 +213,14 @@ void ServerManager::_disconnectClient(struct kevent *event)
 {
 	Client *client = static_cast<Client *>(event->udata);
 	std::cout << "Disconnected with client : " << client->getSocket() << std::endl;
+	_kqueue.addEvent(client->getSocket(), EVFILT_TIMER, EV_DELETE, 0, 0, static_cast<void *>(client));
+	_kqueue.addEvent(client->getSocket(), EVFILT_READ, EV_DELETE, 0, 0, static_cast<void *>(client));
+	_kqueue.addEvent(client->getSocket(), EVFILT_WRITE, EV_DELETE, 0, 0, static_cast<void *>(client));
 	_kqueue._deleteFdType(event->ident);
 	close(client->getSocket());
-	delete client;
+	if (client != NULL)
+	{
+		delete client;
+		client = NULL;
+	}
 }

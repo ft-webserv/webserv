@@ -27,7 +27,7 @@ void Request::initRequest()
 	_parsedRequest._contentLength = 0;
 }
 
-void Request::setHeaderBuf(const std::string buf)
+void Request::setHeaderBuf(const char *buf)
 {
 	std::string::size_type newLinePos;
 
@@ -36,12 +36,12 @@ void Request::setHeaderBuf(const std::string buf)
 	{
 		_isBody = true;
 		_parsedRequest._body = _headerBuf.substr(newLinePos + 4, _headerBuf.length());
-    std::cout << "pos :" << newLinePos << "headerbuf :" << _headerBuf.length() << std::endl;
+		std::cout << "pos :" << newLinePos << "headerbuf :" << _headerBuf.length() << std::endl;
 		_headerBuf = _headerBuf.substr(0, newLinePos) + "\r\n";
 	}
 }
 
-void Request::setBodyBuf(const std::string buf)
+void Request::setBodyBuf(const char *buf)
 {
 	_parsedRequest._body += buf;
 }
@@ -102,10 +102,10 @@ void Request::parseRequest()
 				std::string tmp;
 
 				line >> tmp;
-				// if (_parsedRequest._contentLengthStr != "")
+				if (_parsedRequest._contentLengthStr == "")
 					_parsedRequest._contentLengthStr = tmp;
-				// else if (_parsedRequest._contentLengthStr != tmp)
-				// 	throw(_400_BAD_REQUEST);
+				else if (_parsedRequest._contentLengthStr != tmp)
+					throw(_400_BAD_REQUEST);
 				if (_parsedRequest._contentLengthStr.find_first_not_of("0123456789") != std::string::npos)
 					throw(_400_BAD_REQUEST);
 				else if (_parsedRequest._contentLengthStr.length() >= 10)
@@ -176,6 +176,8 @@ void Request::_checkValidHeader()
 	if (_parsedRequest._location.size() > conf.getClientHeadBufferSize())
 		throw(_414_URI_TOO_LONG);
 	if (_parsedRequest._transferEncoding != "" && _parsedRequest._contentLength != 0)
+		throw(_400_BAD_REQUEST);
+	if (_parsedRequest._host == "")
 		throw(_400_BAD_REQUEST);
 	if (_parsedRequest._contentLength > conf.getClientMaxBodySize())
 		throw(_413_REQUEST_ENTITY_TOO_LARGE);

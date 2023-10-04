@@ -73,8 +73,6 @@ void Response::handlePost(Request &rqs)
 	_statusCode = _201_CREATED;
 	std::string location = rqs.getParsedRequest()._location;
 	std::string root;
-	// Config &conf = Config::getInstance();
-	// std::string extension;
 
 	root = _findRoot();
 	_postFile(root, location, rqs);
@@ -83,8 +81,13 @@ void Response::handlePost(Request &rqs)
 
 void Response::handleDelete(Request &rqs)
 {
-	rqs.getIsBody();
 	_statusCode = _204_NO_CONTENT;
+	std::string location = rqs.getParsedRequest()._location;
+	std::string root;
+
+	root = _findRoot();
+	_deleteFile(root, location);
+	_makeResponse();
 }
 
 std::string Response::_findRoot()
@@ -111,7 +114,7 @@ void Response::_getFile(std::string root, std::string location)
 	std::string path;
 	struct stat buf;
 
-  path = _makePath(root, location);
+	path = _makePath(root, location);
 	if (_locationInfo->getPath() == location)
 	{
 		std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
@@ -123,7 +126,7 @@ void Response::_getFile(std::string root, std::string location)
 			if (it->second == "index")
 			{
 				std::string indexPath;
-        indexPath = path + "/" + it->first;
+				indexPath = path + "/" + it->first;
 				if (stat(indexPath.c_str(), &buf) != -1)
 				{
 					_setResponse(indexPath, buf.st_size);
@@ -182,15 +185,32 @@ void Response::_postFile(std::string root, std::string location, Request &rqs)
 	}
 }
 
+void Response::_deleteFile(std::string root, std::string location)
+{
+	std::string path;
+	struct stat buf;
+
+	path = _makePath(root, location);
+	if (stat(path.c_str(), &buf) == -1)
+		throw(_404_NOT_FOUND);
+	if (buf.st_mode & S_IFDIR)
+		throw(_403_FORBIDDEN);
+	if (std::remove(path.c_str()) != 0)
+		throw(_500_INTERNAL_SERVER_ERROR);
+	// _headerFields.insert(std::pair<std::string, std::string>("Content-Length:", "19"));
+	// _headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "application/json"));
+	// _body += "\r\n{\"success\":\"true\"}";
+}
+
 std::string Response::_makePath(std::string root, std::string location)
 {
 	std::string path;
 
 	path = "." + root + location;
 	for (std::string::size_type i = path.find("//"); i != std::string::npos; i = path.find("//"))
-    path.erase(i + 1, 1);
-  if (*path.rbegin() == '/')
-    path.pop_back();
+		path.erase(i + 1, 1);
+	if (*path.rbegin() == '/')
+		path.pop_back();
 	return (path);
 }
 
@@ -244,48 +264,48 @@ void Response::_makeResponse()
 
 void Response::_showFileList(std::string path)
 {
-  DIR           *dirp = NULL;
-  struct dirent *dp = NULL;
+	DIR *dirp = NULL;
+	struct dirent *dp = NULL;
 	struct stat buf;
-  std::string name;
-  std::string time;
-  std::string dpPath;
+	std::string name;
+	std::string time;
+	std::string dpPath;
 
-  dirp = opendir(path.c_str());
-  if(dirp == NULL) 
-  {
-    throw (_500_INTERNAL_SERVER_ERROR);
-  }
-  _body += "<table width=\"450\" height=\"200\" align=\"left\">";
-  _body += "<th>Name</th><th>Last Modified</th><th>Size</th>";
-  while((dp = readdir(dirp)) != NULL) 
-  {
-    _body += "<tr>";
-    name = dp->d_name;
-    dpPath = path + "/" + name; 
-    stat(dpPath.c_str(), &buf);
-    time = std::ctime(&buf.st_mtimespec.tv_sec);
+	dirp = opendir(path.c_str());
+	if (dirp == NULL)
+	{
+		throw(_500_INTERNAL_SERVER_ERROR);
+	}
+	_body += "<table width=\"450\" height=\"200\" align=\"left\">";
+	_body += "<th>Name</th><th>Last Modified</th><th>Size</th>";
+	while ((dp = readdir(dirp)) != NULL)
+	{
+		_body += "<tr>";
+		name = dp->d_name;
+		dpPath = path + "/" + name;
+		stat(dpPath.c_str(), &buf);
+		time = std::ctime(&buf.st_mtimespec.tv_sec);
 		switch (buf.st_mode & S_IFMT)
 		{
-      case S_IFREG:
-        _body += "<td><a href=\"" + name + "\">" + "📄 " + name + "</a></td>";
-        _body += "<td>" + time +"</td>";
-        _body += "<td>" + ft_itos(buf.st_size) +"</td>";
-        break;
-      case S_IFDIR:
-        _body += "<td><a href=\"" + name + "\">" + "📁 " + name + "/" + "</a></td>";
-        _body += "<td>" + time +"</td>";
-        _body += "<td>" + ft_itos(buf.st_size) +"</td>";
-        break;
-      default:
-        break;
-    }
-    _body += "</tr>";
-  }
-  _body += "</table>";
-  closedir(dirp);
+		case S_IFREG:
+			_body += "<td><a href=\"" + name + "\">" + "📄 " + name + "</a></td>";
+			_body += "<td>" + time + "</td>";
+			_body += "<td>" + ft_itos(buf.st_size) + "</td>";
+			break;
+		case S_IFDIR:
+			_body += "<td><a href=\"" + name + "\">" + "📁 " + name + "/" + "</a></td>";
+			_body += "<td>" + time + "</td>";
+			_body += "<td>" + ft_itos(buf.st_size) + "</td>";
+			break;
+		default:
+			break;
+		}
+		_body += "</tr>";
+	}
+	_body += "</table>";
+	closedir(dirp);
 	_headerFields.insert(std::pair<std::string, std::string>("Content-Length:", ft_itos(_body.length())));
-  _headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "text/html; charset=utf-8;"));
+	_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "text/html; charset=utf-8;"));
 }
 
 bool Response::_isAutoIndex()
@@ -335,14 +355,16 @@ void Response::_createFile(std::string path, std::string location, Request &rqs)
 	fileName = _makeRandomName() + "." + mapFind(conf.getMimeType(), rqs.getParsedRequest()._contentType);
 	os.open(path + "/" + fileName);
 	if (os.is_open() == false)
-    throw(_500_INTERNAL_SERVER_ERROR);
-  os.write(rqs.getParsedRequest()._body.c_str(), rqs.getParsedRequest()._body.size());
-  os.close();
-  if (*location.rbegin() != '/')
-    _headerFields.insert(std::pair<std::string, std::string>("Location:", location + "/" + fileName));
-  else
-    _headerFields.insert(std::pair<std::string, std::string>("Location:", location + fileName));
-	_headerFields.insert(std::pair<std::string, std::string>("Content-Length:", "0"));
+		throw(_500_INTERNAL_SERVER_ERROR);
+	os.write(rqs.getParsedRequest()._body.c_str(), rqs.getParsedRequest()._body.size());
+	os.close();
+	if (*location.rbegin() != '/')
+		_headerFields.insert(std::pair<std::string, std::string>("Location:", location + "/" + fileName));
+	else
+		_headerFields.insert(std::pair<std::string, std::string>("Location:", location + fileName));
+	_headerFields.insert(std::pair<std::string, std::string>("Content-Length:", "19"));
+	_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "application/json"));
+	_body += "\r\n{\"success\":\"true\"}";
 }
 
 std::string Response::_makeRandomName()

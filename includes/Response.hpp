@@ -34,6 +34,7 @@ private:
 	std::string _findRoot();
 	void _getFile(std::string root, std::string location);
 	void _postFile(std::string root, std::string location, Request &rqs);
+	void _deleteFile(std::string root, std::string location);
 	std::string _makePath(std::string root, std::string location);
 	void _setResponse(std::string path, off_t size);
 	void _setBody(std::string path, off_t size);

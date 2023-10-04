@@ -71,7 +71,6 @@ void Config::parseConfigFile(const std::string &fileName)
 		{
 			file >> word;
 			_clientMaxBodySize = ft_stoi(word);
-			_clientMaxBodySize *= pow(BUFFERSIZE, 2);
 		}
 		else
 		{

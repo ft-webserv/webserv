@@ -32,8 +32,8 @@ public:
 	void testPrintRequest();
 
 public:
-	void setHeaderBuf(const std::string buf);
-	void setBodyBuf(const std::string buf);
+	void setHeaderBuf(const char *buf);
+	void setBodyBuf(const char *buf);
 	void setChunkedBodyBuf(const std::string buf);
 	t_request getParsedRequest() const;
 	void initRequest();
@@ -43,6 +43,7 @@ private:
 	std::string _headerBuf;
 	t_request _parsedRequest;
 	bool _isBody;
+	bool _isCgi;
 	void _parseStartLine(std::string::size_type &pos, std::string::size_type &pre);
 	void _checkValidHeader();
 };

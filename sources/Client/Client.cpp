@@ -56,9 +56,9 @@ void Client::readRequest()
 	std::cout << "BUF : " << buf << std::endl;
 
 	if (_status == READHEADER)
-		_request.setHeaderBuf(buf);
+		_request.setHeaderBuf(buf.c_str());
 	else if (_status == READBODY)
-		_request.setBodyBuf(buf);
+		_request.setBodyBuf(buf.c_str());
 	else if (_status == READCHUNKEDBODY)
 	{
 		size_t size = ft_stoi(buf);
@@ -72,6 +72,8 @@ void Client::readRequest()
 		pos = buf.find("\r\n");
 		_request.setChunkedBodyBuf(buf.substr(pos + 2));
 	}
+	if (_request.getParsedRequest()._body.size() > conf.getClientMaxBodySize())
+		throw(_413_REQUEST_ENTITY_TOO_LARGE);
 	if (_request.getIsBody() == true && _status == READHEADER)
 	{
 		if (_request.getParsedRequest()._transferEncoding == "chunked")
@@ -80,9 +82,6 @@ void Client::readRequest()
 			_status = READBODY;
 		_request.parseRequest();
 	}
-  std::cout << "contentlength : " << _request.getParsedRequest()._contentLength << std::endl;
-  std::cout << "body : " << _request.getParsedRequest()._body << std:: endl;
-  std::cout << "body size : "<< _request.getParsedRequest()._body.length() << std::endl;
 	if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
 		_status = FINREAD;
 }

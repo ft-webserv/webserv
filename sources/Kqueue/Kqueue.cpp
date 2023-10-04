@@ -49,11 +49,6 @@ void Kqueue::disableEvent(uintptr_t ident, int16_t filter, void *udata)
 	_changeList.push_back(tempEvent);
 }
 
-void Kqueue::deleteEvent(const uintptr_t Socket)
-{
-	close(Socket);
-}
-
 int &Kqueue::getKq()
 {
 	return (_kq);
