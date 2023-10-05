@@ -92,7 +92,15 @@ void Client::writeResponse()
 	// 	Exception::listenError("chdir() error!");
 	try
 	{
-		if (_request.getParsedRequest()._method == "GET")
+		if (_response.isAllowedMethod(_request.getParsedRequest()._method) == false)
+		{
+			throw(_405_METHOD_NOT_ALLOWED);
+		}
+		if (_response.isCgi() == true)
+		{
+			_response.handleCgi(_request);
+		}
+		else if (_request.getParsedRequest()._method == "GET")
 		{
 			_response.handleGet(_request);
 		}

@@ -90,6 +90,16 @@ void Response::handleDelete(Request &rqs)
 	_makeResponse();
 }
 
+void Response::handleCgi(Request &rqs)
+{
+	std::string path;
+
+	path = _findRoot() + _cgi.cgiPath;
+	if (access(path.c_str(), F_OK) == -1)
+		throw(_404_NOT_FOUND);
+	_makeEnvList();
+}
+
 std::string Response::_findRoot()
 {
 	std::string root;
@@ -101,9 +111,6 @@ std::string Response::_findRoot()
 	if (_locationInfo != NULL)
 	{
 		tmp = _locationInfo->getLocationInfo();
-		if (_isAllowedMethod("GET") == false && _isAllowedMethod("POST") == false &&
-			_isAllowedMethod("DELETE") == false)
-			throw(_405_METHOD_NOT_ALLOWED);
 		root = mapFind(tmp, "root");
 	}
 	return (root);
@@ -317,13 +324,23 @@ bool Response::_isAutoIndex()
 	return (false);
 }
 
-bool Response::_isAllowedMethod(std::string method)
+bool Response::isAllowedMethod(std::string method)
 {
 	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
 
 	if (tmp.find(method) == tmp.end())
 		return (false);
 	return (true);
+}
+
+bool Response::isCgi()
+{
+	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
+
+	if (mapFind(tmp, "cgi_exec") == "" || mapFind(tmp, "cgi_path") == "")
+		return (false);
+	_cgi.cgiExec = mapFind(tmp, "cgi_exec");
+	_cgi.cgiPath = mapFind(tmp, "cgi_path");
 }
 
 std::string Response::getErrorPage()
@@ -377,4 +394,15 @@ std::string Response::_makeRandomName()
 	std::strftime(&timeString[0], timeString.size(),
 				  "%Y%m%d%H%M%S", std::localtime(&time));
 	return (timeString);
+}
+
+void Response::_makeEnvList()
+{
+}
+
+void _addEnv(std::string key, std::string value)
+{
+	std::string tmp;
+
+	tmp = key + "=" + value;
 }

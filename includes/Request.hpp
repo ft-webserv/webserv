@@ -43,7 +43,6 @@ private:
 	std::string _headerBuf;
 	t_request _parsedRequest;
 	bool _isBody;
-	bool _isCgi;
 	void _parseStartLine(std::string::size_type &pos, std::string::size_type &pre);
 	void _checkValidHeader();
 };
