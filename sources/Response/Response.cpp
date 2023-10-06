@@ -4,6 +4,7 @@
 Response::Response()
 	: _serverInfo(NULL), _locationInfo(NULL)
 {
+	_cgi.envCnt = 0;
 	_statusText[0][0] = "OK";
 	_statusText[0][1] = "CREATED";
 	_statusText[0][2] = "ACCEPTED";
@@ -90,14 +91,18 @@ void Response::handleDelete(Request &rqs)
 	_makeResponse();
 }
 
-void Response::handleCgi(Request &rqs)
+void Response::handleCgi(Request &rqs, uintptr_t clntSock)
 {
 	std::string path;
+	std::string root;
 
-	path = _findRoot() + _cgi.cgiPath;
+	root = _findRoot();
+	path = root + _cgi.cgiPath;
 	if (access(path.c_str(), F_OK) == -1)
 		throw(_404_NOT_FOUND);
-	_makeEnvList();
+	_cgi.env = new char *[ENVMAXSIZE];
+	_makeEnvList(clntSock, rqs, root);
+	_cgiStart();
 }
 
 std::string Response::_findRoot()
@@ -396,13 +401,47 @@ std::string Response::_makeRandomName()
 	return (timeString);
 }
 
-void Response::_makeEnvList()
+void Response::_makeEnvList(uintptr_t clntSock, Request &rqs, std::string root)
 {
+	struct sockaddr_in clnt;
+	socklen_t clntSockLen = sizeof(clnt);
+	port_t port;
+
+	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
+	port = ntohs(clnt.sin_port);
+	_addEnv("SERVER_SOFTWARE", "webserv/0.1");
+	_addEnv("SERVER_PROTOCOL", "HTTP/1.1");
+	_addEnv("SERVER_PORT", ft_itos(port));
+	_addEnv("SERVER_NAME", mapFind(_serverInfo->getServerInfo(), "server_name"));
+	_addEnv("GETWAY_INTERFACE", "CGI/1.1");
+	_addEnv("REQUEST_METHOD", rqs.getParsedRequest()._method);
+	_addEnv("REMOTE_ADDR", ft_itos(clnt.sin_addr.s_addr));
+	_addEnv("CONTENT_TYPE", rqs.getParsedRequest()._contentType);
+	_addEnv("CONTENT_LENGTH", rqs.getParsedRequest()._contentLengthStr);
+	_addEnv("CONTENT_LENGTH", rqs.getParsedRequest()._contentLengthStr);
+	_addEnv("SCRIPT_NAME", _cgi.cgiPath);
+	_addEnv("PATH_INFO", root + rqs.getParsedRequest()._location);
 }
 
-void _addEnv(std::string key, std::string value)
+void Response::_addEnv(std::string key, std::string value)
 {
 	std::string tmp;
 
 	tmp = key + "=" + value;
+	_cgi.env[_cgi.envCnt] = new char[tmp.size() + 1];
+	tmp.copy(_cgi.env[_cgi.envCnt], tmp.size());
+	_cgi.env[_cgi.envCnt][tmp.size()] = '\0';
+	_cgi.envCnt++;
+}
+
+void Response::_cgiStart()
+{
+	if (pipe(_cgi.input) == -1)
+		throw(_500_INTERNAL_SERVER_ERROR);
+	if (pipe(_cgi.output) == -1)
+		throw(_500_INTERNAL_SERVER_ERROR);
+	fcntl(_cgi.input[0], F_SETFL, O_NONBLOCK);
+	fcntl(_cgi.input[1], F_SETFL, O_NONBLOCK);
+	fcntl(_cgi.output[0], F_SETFL, O_NONBLOCK);
+	fcntl(_cgi.output[1], F_SETFL, O_NONBLOCK);
 }

@@ -98,7 +98,7 @@ void Client::writeResponse()
 		}
 		if (_response.isCgi() == true)
 		{
-			_response.handleCgi(_request);
+			_response.handleCgi(_request, _socket);
 		}
 		else if (_request.getParsedRequest()._method == "GET")
 		{

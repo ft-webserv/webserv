@@ -3,6 +3,9 @@
 #include <map>
 #include <string>
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
 
@@ -13,12 +16,16 @@
 #include "Utils.hpp"
 
 #define DEFAULT_ROOT "/html"
+#define ENVMAXSIZE 40
 
 typedef struct s_cgi
 {
 	std::string cgiExec;
 	std::string cgiPath;
 	char **env;
+	int envCnt;
+	int input[2];
+	int output[2];
 } t_cgi;
 
 class Response
@@ -29,7 +36,7 @@ public:
 	void handleGet(Request &rqs);
 	void handlePost(Request &rqs);
 	void handleDelete(Request &rqs);
-	void handleCgi(Request &rqs);
+	void handleCgi(Request &rqs, uintptr_t clntSock);
 	ServerInfo *getServerInfo();
 	LocationInfo *getLocationInfo();
 	void setServerInfo(ServerInfo *serverBlock);
@@ -53,8 +60,9 @@ private:
 	void _makeResponse();
 	void _createFile(std::string path, std::string location, Request &rqs);
 	std::string _makeRandomName();
-	void _makeEnvList();
+	void _makeEnvList(uintptr_t clntSock, Request &rqs, std::string root);
 	void _addEnv(std::string key, std::string value);
+	void _cgiStart();
 
 private:
 	eStatus _statusCode;
