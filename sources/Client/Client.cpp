@@ -16,25 +16,12 @@ Client::~Client()
 {
 }
 
-eClientStatus &Client::getClientStatus()
-{
-	return (_status);
-}
-
-uintptr_t &Client::getSocket()
-{
-	return (_socket);
-}
-
-Request &Client::getRequest()
-{
-	return (_request);
-}
-
-Response &Client::getResponse()
-{
-	return (_response);
-}
+eClientStatus &Client::getClientStatus() { return (_status); }
+uintptr_t &Client::getSocket() { return (_socket); }
+Request &Client::getRequest() { return (_request); }
+Response &Client::getResponse() { return (_response); }
+// bool Client::getIsCgi() { return (_isCgi); }
+// void Client::setIsCgi() { _isCgi = true; }
 
 void Client::readRequest()
 {
@@ -98,7 +85,9 @@ void Client::writeResponse()
 		}
 		if (_response.isCgi() == true)
 		{
-			_response.handleCgi(_request, _socket);
+			Kqueue &_kqueue = Kqueue::getInstance();
+			Cgi *cgi = new Cgi(_request, _response, _socket);
+			return;
 		}
 		else if (_request.getParsedRequest()._method == "GET")
 		{
@@ -223,4 +212,8 @@ std::string::size_type Client::getNextPos(std::string::size_type currPos)
 	if (currPos == nextPos)
 		return (std::string::npos);
 	return (nextPos);
+}
+
+void Client::doCgi()
+{
 }

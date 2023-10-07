@@ -20,7 +20,7 @@ public:
 	void runServer();
 
 private:
-	Kqueue _kqueue;
+	Kqueue &_kqueue;
 	void _monitoringEvent(void);
 	void _acceptClient(uintptr_t &servSock);
 	void _findServerBlock(Client *client);

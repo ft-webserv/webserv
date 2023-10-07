@@ -8,6 +8,7 @@
 #include "Response.hpp"
 #include "Exception.hpp"
 #include "Error.hpp"
+#include "CGI.hpp"
 
 // user define value
 #define DEFAULTERRORPAGE "./error_page/html"
@@ -39,9 +40,12 @@ public:
   eClientStatus &getClientStatus();
   Request &getRequest();
   Response &getResponse();
+  bool getIsCgi();
   void setServerBlock(port_t port);
   void setLocationBlock();
+  void setIsCgi();
   void initClient();
+  void doCgi();
 
   // delete keep alive time
 

@@ -36,7 +36,7 @@ void Request::setHeaderBuf(const char *buf)
 	{
 		_isBody = true;
 		_parsedRequest._body = _headerBuf.substr(newLinePos + 4, _headerBuf.length());
-		std::cout << "pos :" << newLinePos << "headerbuf :" << _headerBuf.length() << std::endl;
+		// std::cout << "pos :" << newLinePos << "headerbuf :" << _headerBuf.length() << std::endl;
 		_headerBuf = _headerBuf.substr(0, newLinePos) + "\r\n";
 	}
 }

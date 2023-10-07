@@ -8,6 +8,7 @@ Kqueue::Kqueue()
 	_eventList.resize(EVENTSIZE);
 	FD_ZERO(&_servers);
 	FD_ZERO(&_clients);
+	FD_ZERO(&_cgis);
 }
 
 Kqueue::Kqueue(const Kqueue &copy)
@@ -23,6 +24,12 @@ Kqueue &Kqueue::operator=(const Kqueue &copy)
 
 Kqueue::~Kqueue()
 {
+}
+
+Kqueue &Kqueue::getInstance()
+{
+	static Kqueue instance;
+	return (instance);
 }
 
 void Kqueue::addEvent(uintptr_t ident, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata)
@@ -83,6 +90,9 @@ void Kqueue::setFdset(const uintptr_t socket, eFdType flag)
 	case CLIENT:
 		FD_SET(socket, &_clients);
 		break;
+	case CGI:
+		FD_SET(socket, &_cgis);
+		break;
 	default:
 		break;
 	}
@@ -94,6 +104,8 @@ eFdType Kqueue::getFdType(const uintptr_t socket)
 		return (SERVER);
 	else if (FD_ISSET(socket, &_clients))
 		return (CLIENT);
+	else if (FD_ISSET(socket, &_cgis))
+		return (CGI);
 	else
 		return (DEFAULT);
 }
@@ -107,6 +119,9 @@ void Kqueue::_deleteFdType(const uintptr_t socket)
 		break;
 	case CLIENT:
 		FD_CLR(socket, &_clients);
+		break;
+	case CGI:
+		FD_CLR(socket, &_cgis);
 		break;
 	default:
 		break;

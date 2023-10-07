@@ -17,16 +17,14 @@ enum eFdType
 {
     DEFAULT,
     SERVER,
-    CLIENT
+    CLIENT,
+    CGI
 };
 
 class Kqueue
 {
 public:
-    Kqueue();
-    Kqueue(const Kqueue &copy);
     Kqueue &operator=(const Kqueue &copy);
-    ~Kqueue();
     void addEvent(uintptr_t ident, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
     void enableEvent(const uintptr_t socket, int16_t filter, void *udata);
     void disableEvent(const uintptr_t socket, int16_t filter, void *udata);
@@ -37,13 +35,20 @@ public:
     int doKevent();
 
 public:
+    static Kqueue &getInstance();
     void setFdset(const uintptr_t socket, eFdType flag);
     eFdType getFdType(const uintptr_t socket);
     void _deleteFdType(const uintptr_t socket);
 
 private:
+    Kqueue();
+    Kqueue(const Kqueue &copy);
+    ~Kqueue();
+
+private:
     fd_set _servers;
     fd_set _clients;
+    fd_set _cgis;
 
 private:
     int _kq;

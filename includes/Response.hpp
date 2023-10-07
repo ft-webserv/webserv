@@ -16,7 +16,6 @@
 #include "Utils.hpp"
 
 #define DEFAULT_ROOT "/html"
-#define ENVMAXSIZE 40
 
 typedef struct s_cgi
 {
@@ -36,7 +35,7 @@ public:
 	void handleGet(Request &rqs);
 	void handlePost(Request &rqs);
 	void handleDelete(Request &rqs);
-	void handleCgi(Request &rqs, uintptr_t clntSock);
+	// void handleCgi(Request &rqs, uintptr_t clntSock);
 	ServerInfo *getServerInfo();
 	LocationInfo *getLocationInfo();
 	void setServerInfo(ServerInfo *serverBlock);

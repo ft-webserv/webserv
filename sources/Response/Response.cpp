@@ -91,19 +91,19 @@ void Response::handleDelete(Request &rqs)
 	_makeResponse();
 }
 
-void Response::handleCgi(Request &rqs, uintptr_t clntSock)
-{
-	std::string path;
-	std::string root;
+// void Response::handleCgi(Request &rqs, uintptr_t clntSock)
+// {
+// 	std::string path;
+// 	std::string root;
 
-	root = _findRoot();
-	path = root + _cgi.cgiPath;
-	if (access(path.c_str(), F_OK) == -1)
-		throw(_404_NOT_FOUND);
-	_cgi.env = new char *[ENVMAXSIZE];
-	_makeEnvList(clntSock, rqs, root);
-	_cgiStart();
-}
+// 	root = _findRoot();
+// 	path = root + _cgi.cgiPath;
+// 	if (access(path.c_str(), F_OK) == -1)
+// 		throw(_404_NOT_FOUND);
+// 	_cgi.env = new char *[ENVMAXSIZE];
+// 	_makeEnvList(clntSock, rqs, root);
+// 	_cgiStart();
+// }
 
 std::string Response::_findRoot()
 {
@@ -346,6 +346,7 @@ bool Response::isCgi()
 		return (false);
 	_cgi.cgiExec = mapFind(tmp, "cgi_exec");
 	_cgi.cgiPath = mapFind(tmp, "cgi_path");
+	return (true);
 }
 
 std::string Response::getErrorPage()

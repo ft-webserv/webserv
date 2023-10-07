@@ -1,10 +1,12 @@
 #include "ServerManager.hpp"
 
 ServerManager::ServerManager()
+	: _kqueue(Kqueue::getInstance())
 {
 }
 
 ServerManager::ServerManager(const ServerManager &src)
+	: _kqueue(Kqueue::getInstance())
 {
 	(void)src;
 }
@@ -113,16 +115,25 @@ void ServerManager::_monitoringEvent()
 					}
 					else if (event->filter == EVFILT_WRITE)
 					{
-						Client *client = static_cast<Client *>(event->udata);
-						client->writeResponse();
-						if (client->getRequest().getParsedRequest()._contentType == "close" && client->getClientStatus() == FINWRITE)
-							_disconnectClient(event);
-						else if (client->getClientStatus() == FINWRITE)
+						switch (type)
 						{
-							_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
-							_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
-							client->initClient();
-							_setKeepAliveTimeOut(client);
+						case CLIENT:
+							Client *client = static_cast<Client *>(event->udata);
+							client->writeResponse();
+							if (client->getRequest().getParsedRequest()._connection == "close" && client->getClientStatus() == FINWRITE)
+								_disconnectClient(event);
+							else if (client->getClientStatus() == FINWRITE)
+							{
+								_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
+								_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
+								client->initClient();
+								_setKeepAliveTimeOut(client);
+							}
+							break;
+						case CGI:
+							break;
+						default:
+							break;
 						}
 					}
 					else if (event->filter == EVFILT_TIMER)
