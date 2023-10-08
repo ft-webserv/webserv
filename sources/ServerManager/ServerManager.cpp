@@ -131,6 +131,7 @@ void ServerManager::_monitoringEvent()
 							}
 							break;
 						case CGI:
+							Cgi *cgi = static_cast<Cgi *>(event->udata);
 							break;
 						default:
 							break;

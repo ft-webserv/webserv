@@ -17,16 +17,6 @@
 
 #define DEFAULT_ROOT "/html"
 
-typedef struct s_cgi
-{
-	std::string cgiExec;
-	std::string cgiPath;
-	char **env;
-	int envCnt;
-	int input[2];
-	int output[2];
-} t_cgi;
-
 class Response
 {
 public:
@@ -44,14 +34,15 @@ public:
 	bool isAllowedMethod(std::string method);
 	bool isCgi();
 	std::string &getResponse(); // 굳이 client에서 response를 보내야하는가 ? 그냥 response에서 보내면 되지 않나 ?
+	std::string &Response::getRoot();
 	std::string getErrorPage();
 
 private:
-	std::string _findRoot();
-	void _getFile(std::string root, std::string location);
-	void _postFile(std::string root, std::string location, Request &rqs);
-	void _deleteFile(std::string root, std::string location);
-	std::string _makePath(std::string root, std::string location);
+	void _findRoot();
+	void _getFile(std::string location);
+	void _postFile(std::string location, Request &rqs);
+	void _deleteFile(std::string location);
+	std::string _makePath(std::string location);
 	void _setResponse(std::string path, off_t size);
 	void _setBody(std::string path, off_t size);
 	void _showFileList(std::string path);
@@ -59,17 +50,14 @@ private:
 	void _makeResponse();
 	void _createFile(std::string path, std::string location, Request &rqs);
 	std::string _makeRandomName();
-	void _makeEnvList(uintptr_t clntSock, Request &rqs, std::string root);
-	void _addEnv(std::string key, std::string value);
-	void _cgiStart();
 
 private:
 	eStatus _statusCode;
 	std::map<std::string, std::string> _headerFields;
 	std::string _body;
+	std::string _root;
 	std::string _response;
 	std::string _statusText[2][13];
-	t_cgi _cgi;
 	ServerInfo *_serverInfo;
 	LocationInfo *_locationInfo;
 };

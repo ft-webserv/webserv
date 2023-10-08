@@ -85,8 +85,10 @@ void Client::writeResponse()
 		}
 		if (_response.isCgi() == true)
 		{
-			Kqueue &_kqueue = Kqueue::getInstance();
-			Cgi *cgi = new Cgi(_request, _response, _socket);
+			Kqueue &kq = Kqueue::getInstance();
+
+			Cgi *cgi = new Cgi(&_request, &_response, _socket);
+			kq.disableEvent(_socket, EVFILT_WRITE, static_cast<void *>(this));
 			return;
 		}
 		else if (_request.getParsedRequest()._method == "GET")

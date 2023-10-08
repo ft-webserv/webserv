@@ -4,7 +4,6 @@
 Response::Response()
 	: _serverInfo(NULL), _locationInfo(NULL)
 {
-	_cgi.envCnt = 0;
 	_statusText[0][0] = "OK";
 	_statusText[0][1] = "CREATED";
 	_statusText[0][2] = "ACCEPTED";
@@ -26,12 +25,14 @@ void Response::initResponse()
 {
 	_headerFields.clear();
 	_body.clear();
+	_root.clear();
 	_response.clear();
 	_serverInfo = NULL;
 	_locationInfo = NULL;
 }
 
-std::string &Response::getResponse() { return (_response); };
+std::string &Response::getResponse() { return (_response); }
+std::string &Response::getRoot() { return (_root); }
 ServerInfo *Response::getServerInfo() { return (_serverInfo); }
 LocationInfo *Response::getLocationInfo() { return (_locationInfo); }
 void Response::setServerInfo(ServerInfo *serverBlock) { _serverInfo = serverBlock; }
@@ -56,16 +57,15 @@ void Response::setLocationInfo(LocationInfo *locationBlock)
 		_headerFields.insert(std::pair<std::string, std::string>("Location:", location));
 		_makeResponse();
 	}
+	_findRoot();
 }
 
 void Response::handleGet(Request &rqs)
 {
 	_statusCode = _200_OK;
 	std::string location = rqs.getParsedRequest()._location;
-	std::string root;
 
-	root = _findRoot();
-	_getFile(root, location);
+	_getFile(location);
 	_makeResponse();
 }
 
@@ -73,10 +73,8 @@ void Response::handlePost(Request &rqs)
 {
 	_statusCode = _201_CREATED;
 	std::string location = rqs.getParsedRequest()._location;
-	std::string root;
 
-	root = _findRoot();
-	_postFile(root, location, rqs);
+	_postFile(location, rqs);
 	_makeResponse();
 }
 
@@ -84,49 +82,32 @@ void Response::handleDelete(Request &rqs)
 {
 	_statusCode = _204_NO_CONTENT;
 	std::string location = rqs.getParsedRequest()._location;
-	std::string root;
 
-	root = _findRoot();
-	_deleteFile(root, location);
+	_deleteFile(location);
 	_makeResponse();
 }
 
-// void Response::handleCgi(Request &rqs, uintptr_t clntSock)
-// {
-// 	std::string path;
-// 	std::string root;
-
-// 	root = _findRoot();
-// 	path = root + _cgi.cgiPath;
-// 	if (access(path.c_str(), F_OK) == -1)
-// 		throw(_404_NOT_FOUND);
-// 	_cgi.env = new char *[ENVMAXSIZE];
-// 	_makeEnvList(clntSock, rqs, root);
-// 	_cgiStart();
-// }
-
-std::string Response::_findRoot()
+void Response::_findRoot()
 {
 	std::string root;
 	std::map<std::string, std::string> tmp;
 	std::map<std::string, std::string>::iterator it;
 
 	tmp = _serverInfo->getServerInfo();
-	root = mapFind(tmp, "root");
+	_root = mapFind(tmp, "root");
 	if (_locationInfo != NULL)
 	{
 		tmp = _locationInfo->getLocationInfo();
-		root = mapFind(tmp, "root");
+		_root = mapFind(tmp, "root");
 	}
-	return (root);
 }
 
-void Response::_getFile(std::string root, std::string location)
+void Response::_getFile(std::string location)
 {
 	std::string path;
 	struct stat buf;
 
-	path = _makePath(root, location);
+	path = _makePath(location);
 	if (_locationInfo->getPath() == location)
 	{
 		std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
@@ -177,12 +158,12 @@ void Response::_getFile(std::string root, std::string location)
 	}
 }
 
-void Response::_postFile(std::string root, std::string location, Request &rqs)
+void Response::_postFile(std::string location, Request &rqs)
 {
 	std::string path;
 	struct stat buf;
 
-	path = _makePath(root, location);
+	path = _makePath(location);
 	if (stat(path.c_str(), &buf) == -1)
 		throw(_404_NOT_FOUND);
 	switch (buf.st_mode & S_IFMT)
@@ -197,12 +178,12 @@ void Response::_postFile(std::string root, std::string location, Request &rqs)
 	}
 }
 
-void Response::_deleteFile(std::string root, std::string location)
+void Response::_deleteFile(std::string location)
 {
 	std::string path;
 	struct stat buf;
 
-	path = _makePath(root, location);
+	path = _makePath(location);
 	if (stat(path.c_str(), &buf) == -1)
 		throw(_404_NOT_FOUND);
 	if (buf.st_mode & S_IFDIR)
@@ -214,11 +195,11 @@ void Response::_deleteFile(std::string root, std::string location)
 	// _body += "\r\n{\"success\":\"true\"}";
 }
 
-std::string Response::_makePath(std::string root, std::string location)
+std::string Response::_makePath(std::string location)
 {
 	std::string path;
 
-	path = "." + root + location;
+	path = "." + _root + location;
 	for (std::string::size_type i = path.find("//"); i != std::string::npos; i = path.find("//"))
 		path.erase(i + 1, 1);
 	if (*path.rbegin() == '/')
@@ -344,8 +325,6 @@ bool Response::isCgi()
 
 	if (mapFind(tmp, "cgi_exec") == "" || mapFind(tmp, "cgi_path") == "")
 		return (false);
-	_cgi.cgiExec = mapFind(tmp, "cgi_exec");
-	_cgi.cgiPath = mapFind(tmp, "cgi_path");
 	return (true);
 }
 
@@ -400,49 +379,4 @@ std::string Response::_makeRandomName()
 	std::strftime(&timeString[0], timeString.size(),
 				  "%Y%m%d%H%M%S", std::localtime(&time));
 	return (timeString);
-}
-
-void Response::_makeEnvList(uintptr_t clntSock, Request &rqs, std::string root)
-{
-	struct sockaddr_in clnt;
-	socklen_t clntSockLen = sizeof(clnt);
-	port_t port;
-
-	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
-	port = ntohs(clnt.sin_port);
-	_addEnv("SERVER_SOFTWARE", "webserv/0.1");
-	_addEnv("SERVER_PROTOCOL", "HTTP/1.1");
-	_addEnv("SERVER_PORT", ft_itos(port));
-	_addEnv("SERVER_NAME", mapFind(_serverInfo->getServerInfo(), "server_name"));
-	_addEnv("GETWAY_INTERFACE", "CGI/1.1");
-	_addEnv("REQUEST_METHOD", rqs.getParsedRequest()._method);
-	_addEnv("REMOTE_ADDR", ft_itos(clnt.sin_addr.s_addr));
-	_addEnv("CONTENT_TYPE", rqs.getParsedRequest()._contentType);
-	_addEnv("CONTENT_LENGTH", rqs.getParsedRequest()._contentLengthStr);
-	_addEnv("CONTENT_LENGTH", rqs.getParsedRequest()._contentLengthStr);
-	_addEnv("SCRIPT_NAME", _cgi.cgiPath);
-	_addEnv("PATH_INFO", root + rqs.getParsedRequest()._location);
-}
-
-void Response::_addEnv(std::string key, std::string value)
-{
-	std::string tmp;
-
-	tmp = key + "=" + value;
-	_cgi.env[_cgi.envCnt] = new char[tmp.size() + 1];
-	tmp.copy(_cgi.env[_cgi.envCnt], tmp.size());
-	_cgi.env[_cgi.envCnt][tmp.size()] = '\0';
-	_cgi.envCnt++;
-}
-
-void Response::_cgiStart()
-{
-	if (pipe(_cgi.input) == -1)
-		throw(_500_INTERNAL_SERVER_ERROR);
-	if (pipe(_cgi.output) == -1)
-		throw(_500_INTERNAL_SERVER_ERROR);
-	fcntl(_cgi.input[0], F_SETFL, O_NONBLOCK);
-	fcntl(_cgi.input[1], F_SETFL, O_NONBLOCK);
-	fcntl(_cgi.output[0], F_SETFL, O_NONBLOCK);
-	fcntl(_cgi.output[1], F_SETFL, O_NONBLOCK);
 }

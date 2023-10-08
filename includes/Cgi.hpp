@@ -10,6 +10,7 @@
 #include <dirent.h>
 
 #include "Config.hpp"
+#include "Kqueue.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
 #include "Status.hpp"
@@ -26,18 +27,25 @@ enum eCgiStaus
 class Cgi
 {
 public:
-	Cgi();
-	Cgi();
+	Cgi(Request *request, Response *response, uintptr_t socket);
 	~Cgi();
 	void doCgi();
 
 private:
+	void _makeEnvList(uintptr_t clntSock);
+	void _addEnv(std::string key, std::string value);
+	void _cgiStart();
+
+private:
+	std::string _body;
 	std::string _cgiExec;
 	std::string _cgiPath;
 	char **_env;
 	int _envCnt;
-	int _input[2];
-	int _output[2];
-	Response &_response;
-	Request &_requset;
+	int _reqFd[2];
+	int _resFd[2];
+	pid_t _pid;
+	Response *_response;
+	Request *_request;
+	uintptr_t clientSock;
 };
