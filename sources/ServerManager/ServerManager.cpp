@@ -67,11 +67,13 @@ void ServerManager::_monitoringEvent()
 				eFdType type = _kqueue.getFdType(event->ident);
 				try
 				{
-					// std::cout << ((type == SERVER) ? "Server : " : "Client : ");
-					// std::cout << event->ident << std::endl;
-					// std::cout << ((event->filter == EVFILT_READ) ? "read" : (event->filter == EVFILT_WRITE) ? "write"
-					// 																						: "timmer")
-					// 		  << std::endl;
+					std::cout << ((type == SERVER) ? "Server : " : (type == CLIENT) ? "CLIENT : "
+																					: "CGI : ")
+							  << std::endl;
+					std::cout << event->ident << std::endl;
+					std::cout << ((event->filter == EVFILT_READ) ? "read" : (event->filter == EVFILT_WRITE) ? "write"
+																											: "timmer")
+							  << std::endl;
 					if (event->flags & EV_ERROR)
 					{
 						switch (type)
@@ -94,8 +96,9 @@ void ServerManager::_monitoringEvent()
 							_acceptClient(event->ident);
 							break;
 						case CLIENT:
-							Client *client;
-							client = static_cast<Client *>(event->udata);
+						{
+							Client *client = static_cast<Client *>(event->udata);
+
 							if (client->getClientStatus() == START)
 								_setRequestTimeOut(client);
 							client->readRequest();
@@ -109,6 +112,13 @@ void ServerManager::_monitoringEvent()
 								_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata);
 							}
 							break;
+						}
+						case CGI:
+						{
+							Cgi *cgi = static_cast<Cgi *>(event->udata);
+
+							cgi->readResponse();
+						}
 						default:
 							break;
 						}
@@ -118,7 +128,9 @@ void ServerManager::_monitoringEvent()
 						switch (type)
 						{
 						case CLIENT:
+						{
 							Client *client = static_cast<Client *>(event->udata);
+
 							client->writeResponse();
 							if (client->getRequest().getParsedRequest()._connection == "close" && client->getClientStatus() == FINWRITE)
 								_disconnectClient(event);
@@ -130,9 +142,14 @@ void ServerManager::_monitoringEvent()
 								_setKeepAliveTimeOut(client);
 							}
 							break;
+						}
 						case CGI:
+						{
 							Cgi *cgi = static_cast<Cgi *>(event->udata);
+
+							cgi->writeBody();
 							break;
+						}
 						default:
 							break;
 						}
@@ -152,11 +169,26 @@ void ServerManager::_monitoringEvent()
 				}
 				catch (const eStatus &e)
 				{
-					Client *client = static_cast<Client *>(event->udata);
-					std::string errorPagePath = client->getResponse().getErrorPage();
+					std::string errorPagePath;
+					switch (type)
+					{
+					case CGI:
+					{
+						Cgi *cgi = static_cast<Cgi *>(event->udata);
+						errorPagePath = cgi->getResponse()->getErrorPage();
 
-					client->sendErrorPage(event->ident, errorPagePath, e);
-					_disconnectClient(event);
+						cgi->sendErrorPage(event->ident, errorPagePath, e);
+						_disconnectCGI(event);
+						break;
+					}
+					default:
+						Client *client = static_cast<Client *>(event->udata);
+						errorPagePath = client->getResponse().getErrorPage();
+
+						client->sendErrorPage(event->ident, errorPagePath, e);
+						_disconnectClient(event);
+						break;
+					}
 				}
 				catch (std::exception &e)
 				{
@@ -234,5 +266,27 @@ void ServerManager::_disconnectClient(struct kevent *event)
 	{
 		delete client;
 		client = NULL;
+	}
+}
+
+void ServerManager::_disconnectCGI(struct kevent *event)
+{
+	size_t size;
+	Cgi *cgi = static_cast<Cgi *>(event->udata);
+
+	cgi->deleteCgiEvent();
+	size = _kqueue.getEventList().size();
+	for (size_t i = 0; i < size; i++)
+	{
+		if (_kqueue.getEventList()[i].ident == cgi->getClientSock())
+		{
+			_disconnectClient(&_kqueue.getEventList()[i]);
+			break;
+		}
+	}
+	if (cgi != NULL)
+	{
+		delete cgi;
+		cgi = NULL;
 	}
 }

@@ -4,18 +4,26 @@ Cgi::Cgi(Request *request, Response *response, uintptr_t socket)
 {
 	_request = request;
 	_response = response;
-	clientSock = socket;
+	_clientSock = socket;
 	_envCnt = 0;
 	_reqFd[0] = 0;
 	_reqFd[1] = 0;
 	_resFd[0] = 0;
 	_resFd[1] = 0;
 	_pid = 0;
-	_body = request->getParsedRequest()._body;
+	_env = new char *[ENVMAXSIZE];
+	_body.str(request->getParsedRequest()._body);
 	_cgiExec = mapFind(_response->getLocationInfo()->getLocationInfo(), "cgi_exec");
-	_cgiPath = mapFind(_response->getLocationInfo()->getLocationInfo(), "cgi_path");
-	_makeEnvList(clientSock);
+	_cgiPath = "." + _response->getRoot() + mapFind(_response->getLocationInfo()->getLocationInfo(), "cgi_path");
+	_makeEnvList(_clientSock);
 }
+
+Cgi::~Cgi()
+{
+}
+
+uintptr_t Cgi::getClientSock() { return (_clientSock); }
+Response *Cgi::getResponse() { return (_response); }
 
 void Cgi::_makeEnvList(uintptr_t clntSock)
 {
@@ -25,6 +33,7 @@ void Cgi::_makeEnvList(uintptr_t clntSock)
 
 	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
 	port = ntohs(clnt.sin_port);
+
 	_addEnv("SERVER_SOFTWARE", "webserv/0.1");
 	_addEnv("SERVER_PROTOCOL", "HTTP/1.1");
 	_addEnv("SERVER_PORT", ft_itos(port));
@@ -33,10 +42,9 @@ void Cgi::_makeEnvList(uintptr_t clntSock)
 	_addEnv("REQUEST_METHOD", _request->getParsedRequest()._method);
 	_addEnv("REMOTE_ADDR", ft_itos(clnt.sin_addr.s_addr));
 	_addEnv("CONTENT_TYPE", _request->getParsedRequest()._contentType);
-	_addEnv("CONTENT_LENGTH", _request->getParsedRequest()._contentLengthStr);
+	_addEnv("CONTENT_LENGTH", ft_itos(_request->getParsedRequest()._body.size()));
 	_addEnv("SCRIPT_NAME", _cgiPath);
 	_addEnv("PATH_INFO", _response->getRoot() + _request->getParsedRequest()._location);
-	_cgiStart();
 }
 
 void Cgi::_addEnv(std::string key, std::string value)
@@ -51,13 +59,18 @@ void Cgi::_addEnv(std::string key, std::string value)
 	_env[_envCnt] = NULL;
 }
 
-void Cgi::_cgiStart()
+void Cgi::cgiStart()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
 
-	if (pipe(_reqFd) == -1)
+	std::cout << _cgiPath << std::endl;
+	if (access(_cgiPath.c_str(), F_OK))
+		throw(_404_NOT_FOUND);
+	if (access(_cgiPath.c_str(), X_OK))
+		throw(_403_FORBIDDEN);
+	if (pipe(_reqFd))
 		throw(_500_INTERNAL_SERVER_ERROR);
-	if (pipe(_resFd) == -1)
+	if (pipe(_resFd))
 		throw(_500_INTERNAL_SERVER_ERROR);
 	_pid = fork();
 	if (_pid == -1)
@@ -91,4 +104,65 @@ void Cgi::_cgiStart()
 		kqueue.addEvent(_reqFd[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(this));
 		kqueue.addEvent(_resFd[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, static_cast<void *>(this));
 	}
+}
+
+void Cgi::writeBody()
+{
+	char buf[BUFFERSIZE + 1];
+
+	memset(static_cast<void *>(buf), 0, BUFFERSIZE + 1);
+	_body.read(buf, BUFFERSIZE);
+	if (_body.fail() == true)
+		throw(_500_INTERNAL_SERVER_ERROR);
+	write(_reqFd[1], buf, BUFFERSIZE);
+	if (_body.eof() == true)
+	{
+		Kqueue &kqueue = Kqueue::getInstance();
+
+		kqueue.addEvent(_reqFd[1], EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, static_cast<void *>(this));
+		kqueue.addEvent(_resFd[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(this));
+	}
+}
+
+void Cgi::readResponse()
+{
+	char buf[BUFFERSIZE + 1];
+	ssize_t readSize;
+	pid_t result;
+
+	memset(static_cast<void *>(buf), 0, BUFFERSIZE);
+	readSize = read(_resFd[0], buf, BUFFERSIZE);
+	if (readSize == -1)
+		throw(_500_INTERNAL_SERVER_ERROR);
+	else if (readSize == 0)
+	{
+		result = waitpid(_pid, NULL, WNOHANG);
+		switch (result)
+		{
+		case 0:
+			return;
+		case -1:
+			throw(_500_INTERNAL_SERVER_ERROR);
+			break;
+		default:
+			deleteCgiEvent();
+			_response->setResponse(_cgiResponse);
+			delete this;
+			break;
+		}
+	}
+	else
+		_cgiResponse += buf;
+}
+
+void Cgi::deleteCgiEvent()
+{
+	Kqueue &kqueue = Kqueue::getInstance();
+
+	kqueue.addEvent(_reqFd[1], EVFILT_WRITE, EV_DELETE, 0, 0, static_cast<void *>(this));
+	kqueue.addEvent(_resFd[0], EVFILT_READ, EV_DELETE, 0, 0, static_cast<void *>(this));
+	kqueue._deleteFdType(_reqFd[1]);
+	kqueue._deleteFdType(_resFd[0]);
+	close(_reqFd[1]);
+	close(_resFd[0]);
 }

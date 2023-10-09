@@ -4,19 +4,37 @@
 #include <sstream>
 #include <ctime>
 
+class foo
+{
+private:
+public:
+    void deletme()
+    {
+        delete this;
+        std::cout << "hi" << std::endl;
+    }
+};
+
+void leakCheck()
+{
+    system("leaks a.out");
+}
+
 int main()
 {
+    atexit(leakCheck);
+    foo *me = new foo();
+    me->deletme();
+    // delete me;
     // int i = 0;
-    // std::string word;
+    // char buf[30];
     // std::string tmp = "asdf 123123 asdf";
-    // std::istringstream ss(tmp);
+    // std::stringstream ss(tmp);
 
-    // ss >> word;
     // while (1)
     // {
-    //     i++;
-    //     ss >> word;
-    //     std::cout << word << i << std::endl;
+    //     ss.read(buf, 5);
+    //     std::cout << buf << std::endl;
     //     if (ss.eof() == true)
     //         break;
     // }

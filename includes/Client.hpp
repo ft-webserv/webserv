@@ -8,7 +8,7 @@
 #include "Response.hpp"
 #include "Exception.hpp"
 #include "Error.hpp"
-#include "CGI.hpp"
+#include "Cgi.hpp"
 
 // user define value
 #define DEFAULTERRORPAGE "./error_page/html"
@@ -22,7 +22,8 @@ enum eClientStatus
   FINREAD,
   RESPONSE_START,
   WRITTING,
-  FINWRITE
+  FINWRITE,
+  CGIACTION,
 };
 
 class Client : public Error

@@ -32,10 +32,15 @@ void Response::initResponse()
 }
 
 std::string &Response::getResponse() { return (_response); }
+
 std::string &Response::getRoot() { return (_root); }
+
 ServerInfo *Response::getServerInfo() { return (_serverInfo); }
+
 LocationInfo *Response::getLocationInfo() { return (_locationInfo); }
+
 void Response::setServerInfo(ServerInfo *serverBlock) { _serverInfo = serverBlock; }
+
 void Response::setLocationInfo(LocationInfo *locationBlock)
 {
 	_locationInfo = locationBlock;
@@ -379,4 +384,9 @@ std::string Response::_makeRandomName()
 	std::strftime(&timeString[0], timeString.size(),
 				  "%Y%m%d%H%M%S", std::localtime(&time));
 	return (timeString);
+}
+
+void Response::setResponse(std::string &response)
+{
+	this->_response = response;
 }

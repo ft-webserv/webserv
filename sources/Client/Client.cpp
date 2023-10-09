@@ -83,12 +83,18 @@ void Client::writeResponse()
 		{
 			throw(_405_METHOD_NOT_ALLOWED);
 		}
-		if (_response.isCgi() == true)
+		if (_status == CGIACTION)
 		{
-			Kqueue &kq = Kqueue::getInstance();
-
+			if (_response.getResponse() == "")
+			{
+				return;
+			}
+		}
+		else if (_response.isCgi() == true)
+		{
 			Cgi *cgi = new Cgi(&_request, &_response, _socket);
-			kq.disableEvent(_socket, EVFILT_WRITE, static_cast<void *>(this));
+			_status = CGIACTION;
+			cgi->cgiStart();
 			return;
 		}
 		else if (_request.getParsedRequest()._method == "GET")
