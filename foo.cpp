@@ -22,20 +22,27 @@ void leakCheck()
 
 int main()
 {
-    atexit(leakCheck);
-    foo *me = new foo();
-    me->deletme();
+    // atexit(leakCheck);
+    // foo *me = new foo();
+    // me->deletme();
     // delete me;
-    // int i = 0;
-    // char buf[30];
-    // std::string tmp = "asdf 123123 asdf";
-    // std::stringstream ss(tmp);
+    int i = 0;
+    char *buf;
+    std::string tmp = "asdf 123123 asdf";
+    std::stringstream ss(tmp);
 
-    // while (1)
-    // {
-    //     ss.read(buf, 5);
-    //     std::cout << buf << std::endl;
-    //     if (ss.eof() == true)
-    //         break;
-    // }
+    buf = new char[1000];
+    while (1)
+    {
+        ss.clear();
+        ss.read(buf, tmp.length() + 1);
+        std::cout << buf << std::endl;
+        if (ss.fail() == true)
+        {
+            std::cout << "fuck" << std::endl;
+            break;
+        }
+        if (ss.eof() == true)
+            break;
+    }
 }

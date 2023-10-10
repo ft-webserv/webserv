@@ -11,7 +11,7 @@ Error::Error()
 	_defaultPath[0][8] = "./error_page/408.html";
 	_defaultPath[0][13] = "./error_page/413.html";
 	_defaultPath[0][15] = "./error_page/415.html";
-	_defaultPath[1][0] = "./error_page/501.html";
+	_defaultPath[1][0] = "./error_page/500.html";
 	_defaultPath[1][1] = "./error_page/501.html";
 	_defaultPath[1][5] = "./error_page/505.html";
 

@@ -24,6 +24,7 @@ Cgi::~Cgi()
 
 uintptr_t Cgi::getClientSock() { return (_clientSock); }
 Response *Cgi::getResponse() { return (_response); }
+pid_t Cgi::getPid() { return (_pid); }
 
 void Cgi::_makeEnvList(uintptr_t clntSock)
 {
@@ -63,7 +64,6 @@ void Cgi::cgiStart()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
 
-	std::cout << _cgiPath << std::endl;
 	if (access(_cgiPath.c_str(), F_OK))
 		throw(_404_NOT_FOUND);
 	if (access(_cgiPath.c_str(), X_OK))
@@ -92,6 +92,7 @@ void Cgi::cgiStart()
 		args[1] = &_cgiPath[0];
 		args[2] = NULL;
 		execve(_cgiExec.c_str(), args, _env);
+		throw(_403_FORBIDDEN);
 	}
 	else
 	{
@@ -109,19 +110,24 @@ void Cgi::cgiStart()
 void Cgi::writeBody()
 {
 	char buf[BUFFERSIZE + 1];
+	Kqueue &kqueue = Kqueue::getInstance();
 
 	memset(static_cast<void *>(buf), 0, BUFFERSIZE + 1);
 	_body.read(buf, BUFFERSIZE);
-	if (_body.fail() == true)
-		throw(_500_INTERNAL_SERVER_ERROR);
-	write(_reqFd[1], buf, BUFFERSIZE);
 	if (_body.eof() == true)
 	{
-		Kqueue &kqueue = Kqueue::getInstance();
-
-		kqueue.addEvent(_reqFd[1], EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, static_cast<void *>(this));
-		kqueue.addEvent(_resFd[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(this));
+		std::cout << buf << std::endl;
+		kqueue.disableEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
+		kqueue.enableEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
+		write(_reqFd[1], buf, BUFFERSIZE);
+		close(_reqFd[1]);
+		return;
 	}
+	if (_body.fail() == true)
+	{
+		throw(_500_INTERNAL_SERVER_ERROR);
+	}
+	write(_reqFd[1], buf, BUFFERSIZE);
 }
 
 void Cgi::readResponse()

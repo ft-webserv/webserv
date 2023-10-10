@@ -60,13 +60,15 @@ void ServerManager::_monitoringEvent()
 		try
 		{
 			numEvents = _kqueue.doKevent();
-			// std::cout << "Events num : " << numEvents << std::endl;
+			std::cout << "Events num : " << numEvents << std::endl;
 			for (int i = 0; i < numEvents; i++)
 			{
 				event = &_kqueue.getEventList()[i];
 				eFdType type = _kqueue.getFdType(event->ident);
 				try
 				{
+					// if (type != CLIENT)
+					// {
 					std::cout << ((type == SERVER) ? "Server : " : (type == CLIENT) ? "CLIENT : "
 																					: "CGI : ")
 							  << std::endl;
@@ -74,6 +76,7 @@ void ServerManager::_monitoringEvent()
 					std::cout << ((event->filter == EVFILT_READ) ? "read" : (event->filter == EVFILT_WRITE) ? "write"
 																											: "timmer")
 							  << std::endl;
+					// }
 					if (event->flags & EV_ERROR)
 					{
 						switch (type)
@@ -177,7 +180,8 @@ void ServerManager::_monitoringEvent()
 						Cgi *cgi = static_cast<Cgi *>(event->udata);
 						errorPagePath = cgi->getResponse()->getErrorPage();
 
-						cgi->sendErrorPage(event->ident, errorPagePath, e);
+						std::cout << errorPagePath << std::endl;
+						cgi->sendErrorPage(cgi->getClientSock(), errorPagePath, e);
 						_disconnectCGI(event);
 						break;
 					}
@@ -274,6 +278,8 @@ void ServerManager::_disconnectCGI(struct kevent *event)
 	size_t size;
 	Cgi *cgi = static_cast<Cgi *>(event->udata);
 
+	if (kill(cgi->getPid(), SIGTERM))
+		waitpid(cgi->getPid(), NULL, 0);
 	cgi->deleteCgiEvent();
 	size = _kqueue.getEventList().size();
 	for (size_t i = 0; i < size; i++)

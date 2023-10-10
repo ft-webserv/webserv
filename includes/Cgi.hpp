@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -29,6 +30,7 @@ public:
 	void readResponse();
 	uintptr_t getClientSock();
 	Response *getResponse();
+	pid_t getPid();
 	void cgiStart();
 	void deleteCgiEvent();
 

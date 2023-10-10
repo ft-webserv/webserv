@@ -6,8 +6,8 @@ import os
 sys.stdout.reconfigure(encoding='utf-8')
 
 # 헤더 출력
-print("Content-Type: text/plain;charset=utf-8")
-print()
+print("HTTP/1.1 201 OK\r\n", end="")
+print("Content-Type: text/plain;charset=utf-8\r\n", end="")
 
 # 표준 입력에서 데이터 읽기
 data = sys.stdin.read()
@@ -19,4 +19,5 @@ if not data:
 
 # 대문자로 변환하여 출력
 result = data.upper()
+print("Content-Length: " + len(result) + "\r\n\r\n", end="")
 print(result)
