@@ -60,23 +60,23 @@ void ServerManager::_monitoringEvent()
 		try
 		{
 			numEvents = _kqueue.doKevent();
-			std::cout << "Events num : " << numEvents << std::endl;
+			// std::cout << "Events num : " << numEvents << std::endl;
 			for (int i = 0; i < numEvents; i++)
 			{
 				event = &_kqueue.getEventList()[i];
 				eFdType type = _kqueue.getFdType(event->ident);
 				try
 				{
-					// if (type != CLIENT)
-					// {
-					std::cout << ((type == SERVER) ? "Server : " : (type == CLIENT) ? "CLIENT : "
-																					: "CGI : ")
-							  << std::endl;
-					std::cout << event->ident << std::endl;
-					std::cout << ((event->filter == EVFILT_READ) ? "read" : (event->filter == EVFILT_WRITE) ? "write"
-																											: "timmer")
-							  << std::endl;
-					// }
+					if (type != CLIENT)
+					{
+						std::cout << ((type == SERVER) ? "Server : " : (type == CLIENT) ? "CLIENT : "
+																						: "CGI : ")
+								  << std::endl;
+						std::cout << event->ident << std::endl;
+						std::cout << ((event->filter == EVFILT_READ) ? "read" : (event->filter == EVFILT_WRITE) ? "write"
+																												: "timmer")
+								  << std::endl;
+					}
 					if (event->flags & EV_ERROR)
 					{
 						switch (type)
@@ -261,9 +261,12 @@ void ServerManager::_disconnectClient(struct kevent *event)
 {
 	Client *client = static_cast<Client *>(event->udata);
 	std::cout << "Disconnected with client : " << client->getSocket() << std::endl;
-	_kqueue.addEvent(client->getSocket(), EVFILT_TIMER, EV_DELETE, 0, 0, static_cast<void *>(client));
-	_kqueue.addEvent(client->getSocket(), EVFILT_READ, EV_DELETE, 0, 0, static_cast<void *>(client));
-	_kqueue.addEvent(client->getSocket(), EVFILT_WRITE, EV_DELETE, 0, 0, static_cast<void *>(client));
+	// _kqueue.addEvent(client->getSocket(), EVFILT_TIMER, EV_DELETE, 0, 0, static_cast<void *>(client));
+	// _kqueue.addEvent(client->getSocket(), EVFILT_READ, EV_DELETE, 0, 0, static_cast<void *>(client));
+	// _kqueue.addEvent(client->getSocket(), EVFILT_WRITE, EV_DELETE, 0, 0, static_cast<void *>(client));
+	_kqueue.deleteEvent(client->getSocket(), EVFILT_TIMER, static_cast<void *>(client));
+	_kqueue.deleteEvent(client->getSocket(), EVFILT_READ, static_cast<void *>(client));
+	_kqueue.deleteEvent(client->getSocket(), EVFILT_WRITE, static_cast<void *>(client));
 	_kqueue._deleteFdType(event->ident);
 	close(client->getSocket());
 	if (client != NULL)

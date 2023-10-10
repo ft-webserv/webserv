@@ -45,7 +45,8 @@ void Kqueue::enableEvent(uintptr_t ident, int16_t filter, void *udata)
 	struct kevent tempEvent;
 
 	EV_SET(&tempEvent, ident, filter, EV_ENABLE, 0, 0, udata);
-	_changeList.push_back(tempEvent);
+	kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
+	// _changeList.push_back(tempEvent);
 }
 
 void Kqueue::disableEvent(uintptr_t ident, int16_t filter, void *udata)
@@ -53,7 +54,16 @@ void Kqueue::disableEvent(uintptr_t ident, int16_t filter, void *udata)
 	struct kevent tempEvent;
 
 	EV_SET(&tempEvent, ident, filter, EV_DISABLE, 0, 0, udata);
-	_changeList.push_back(tempEvent);
+	kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
+	// _changeList.push_back(tempEvent);
+}
+
+void Kqueue::deleteEvent(const uintptr_t ident, int16_t filter, void *udata)
+{
+	struct kevent tempEvent;
+
+	EV_SET(&tempEvent, ident, filter, EV_DELETE, 0, 0, udata);
+	kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
 }
 
 int &Kqueue::getKq()
@@ -74,17 +84,17 @@ std::vector<struct kevent> &Kqueue::getChangeList()
 int Kqueue::doKevent()
 {
 	int res = kevent(_kq, &_changeList[0], _changeList.size(), &_eventList[0], EVENTSIZE, NULL);
-	// if (_eventList[0].ident != 6)
-	// {
-	std::cout << "-----------evn list-------------" << std::endl;
-
-	for (int i = 0; i < res; i++)
+	if (_eventList[0].ident != 6 || res >= 2)
 	{
-		std::cout << _eventList[i].ident << " ";
+		std::cout << "-----------evn list-------------" << std::endl;
+
+		for (int i = 0; i < res; i++)
+		{
+			std::cout << _eventList[i].ident << " ";
+		}
+		std::cout << std::endl;
+		std::cout << "-----------evn list-------------" << std::endl;
 	}
-	std::cout << std::endl;
-	std::cout << "-----------evn list-------------" << std::endl;
-	// }
 	if (res == -1)
 		Exception::keventError("kevent() error!");
 	_changeList.clear();

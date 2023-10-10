@@ -112,14 +112,20 @@ void Cgi::writeBody()
 	char buf[BUFFERSIZE + 1];
 	Kqueue &kqueue = Kqueue::getInstance();
 
+	std::streampos startPos = _body.tellg();
+	std::cout << "start tellg : " << startPos << std::endl;
 	memset(static_cast<void *>(buf), 0, BUFFERSIZE + 1);
 	_body.read(buf, BUFFERSIZE);
+	std::streampos endPos = _body.tellg();
+	if (endPos == -1)
+		endPos = _body.str().length();
+	std::cout << "end tellg : " << endPos << std::endl;
 	if (_body.eof() == true)
 	{
 		std::cout << buf << std::endl;
 		kqueue.disableEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
 		kqueue.enableEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
-		write(_reqFd[1], buf, BUFFERSIZE);
+		write(_reqFd[1], buf, endPos - startPos);
 		close(_reqFd[1]);
 		return;
 	}
@@ -138,11 +144,15 @@ void Cgi::readResponse()
 
 	memset(static_cast<void *>(buf), 0, BUFFERSIZE);
 	readSize = read(_resFd[0], buf, BUFFERSIZE);
+	std::cout << "ReadSize : " << readSize << std::endl;
+	std::cout << "===========buf===========" << std::endl;
+	std::cout << buf << std::endl;
 	if (readSize == -1)
 		throw(_500_INTERNAL_SERVER_ERROR);
 	else if (readSize == 0)
 	{
 		result = waitpid(_pid, NULL, WNOHANG);
+		std::cout << "Result : " << result << std::endl;
 		switch (result)
 		{
 		case 0:
@@ -165,8 +175,10 @@ void Cgi::deleteCgiEvent()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
 
-	kqueue.addEvent(_reqFd[1], EVFILT_WRITE, EV_DELETE, 0, 0, static_cast<void *>(this));
-	kqueue.addEvent(_resFd[0], EVFILT_READ, EV_DELETE, 0, 0, static_cast<void *>(this));
+	// kqueue.addEvent(_reqFd[1], EVFILT_WRITE, EV_DELETE, 0, 0, static_cast<void *>(this));
+	// kqueue.addEvent(_resFd[0], EVFILT_READ, EV_DELETE, 0, 0, static_cast<void *>(this));
+	kqueue.deleteEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
+	kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
 	kqueue._deleteFdType(_reqFd[1]);
 	kqueue._deleteFdType(_resFd[0]);
 	close(_reqFd[1]);

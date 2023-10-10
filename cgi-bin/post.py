@@ -19,5 +19,5 @@ if not data:
 
 # 대문자로 변환하여 출력
 result = data.upper()
-print("Content-Length: " + len(result) + "\r\n\r\n", end="")
+print("Content-Length: " + str(len(result)) + "\r\n\r\n", end="")
 print(result)
