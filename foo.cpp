@@ -27,22 +27,10 @@ int main()
     // me->deletme();
     // delete me;
     int i = 0;
-    char *buf;
-    std::string tmp = "asdf 123123 asdf";
-    std::stringstream ss(tmp);
-
-    buf = new char[1000];
-    while (1)
-    {
-        ss.clear();
-        ss.read(buf, tmp.length() + 1);
-        std::cout << buf << std::endl;
-        if (ss.fail() == true)
-        {
-            std::cout << "fuck" << std::endl;
-            break;
-        }
-        if (ss.eof() == true)
-            break;
-    }
+    int *buf = new int[2];
+    int *&buf2 = buf;
+    delete[] buf;
+    buf = NULL;
+    std::cout << buf2 << std::endl;
+    return (0);
 }

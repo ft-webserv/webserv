@@ -1,10 +1,10 @@
 #include "Client.hpp"
 
 Client::Client(uintptr_t socket)
-	: _status(START), _socket(socket) {}
+	: _status(START), _socket(socket), _cgi(NULL) {}
 
 Client::Client(const Client &src)
-	: _status(START), _socket(src._socket) {}
+	: _status(START), _socket(src._socket), _cgi(NULL) {}
 
 Client &Client::operator=(const Client &src)
 {
@@ -20,6 +20,7 @@ eClientStatus &Client::getClientStatus() { return (_status); }
 uintptr_t &Client::getSocket() { return (_socket); }
 Request &Client::getRequest() { return (_request); }
 Response &Client::getResponse() { return (_response); }
+Cgi *Client::getCgi() { return (_cgi); }
 // bool Client::getIsCgi() { return (_isCgi); }
 // void Client::setIsCgi() { _isCgi = true; }
 
@@ -83,18 +84,13 @@ void Client::writeResponse()
 		{
 			throw(_405_METHOD_NOT_ALLOWED);
 		}
-		if (_status == CGIACTION)
-		{
-			if (_response.getResponse() == "")
-			{
-				return;
-			}
-		}
 		else if (_response.isCgi() == true)
 		{
-			Cgi *cgi = new Cgi(&_request, &_response, _socket);
-			_status = CGIACTION;
-			cgi->cgiStart();
+			Kqueue &kq = Kqueue::getInstance();
+
+			_cgi = new Cgi(&_request, &_response, _socket, this);
+			_cgi->cgiStart();
+			kq.disableEvent(_socket, EVFILT_WRITE, static_cast<void *>(this));
 			return;
 		}
 		else if (_request.getParsedRequest()._method == "GET")

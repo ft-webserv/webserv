@@ -1,10 +1,11 @@
 #include "Cgi.hpp"
 
-Cgi::Cgi(Request *request, Response *response, uintptr_t socket)
+Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 {
 	_request = request;
 	_response = response;
 	_clientSock = socket;
+	_client = client;
 	_envCnt = 0;
 	_reqFd[0] = 0;
 	_reqFd[1] = 0;
@@ -20,6 +21,9 @@ Cgi::Cgi(Request *request, Response *response, uintptr_t socket)
 
 Cgi::~Cgi()
 {
+	for (int i = 0; i < _envCnt; i++)
+		delete[] _env[i];
+	delete[] _env;
 }
 
 uintptr_t Cgi::getClientSock() { return (_clientSock); }
@@ -123,7 +127,7 @@ void Cgi::writeBody()
 	if (_body.eof() == true)
 	{
 		std::cout << buf << std::endl;
-		kqueue.disableEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
+		kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
 		kqueue.enableEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
 		write(_reqFd[1], buf, endPos - startPos);
 		close(_reqFd[1]);
@@ -175,8 +179,6 @@ void Cgi::deleteCgiEvent()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
 
-	// kqueue.addEvent(_reqFd[1], EVFILT_WRITE, EV_DELETE, 0, 0, static_cast<void *>(this));
-	// kqueue.addEvent(_resFd[0], EVFILT_READ, EV_DELETE, 0, 0, static_cast<void *>(this));
 	kqueue.deleteEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
 	kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
 	kqueue._deleteFdType(_reqFd[1]);

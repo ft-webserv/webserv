@@ -24,7 +24,7 @@
 class Cgi : public Error
 {
 public:
-	Cgi(Request *request, Response *response, uintptr_t socket);
+	Cgi(Request *request, Response *response, uintptr_t socket, Client *client);
 	~Cgi();
 	void writeBody();
 	void readResponse();
@@ -52,4 +52,5 @@ private:
 	Response *_response;
 	Request *_request;
 	uintptr_t _clientSock;
+	Client *_client;
 };

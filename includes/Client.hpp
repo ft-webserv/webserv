@@ -22,8 +22,8 @@ enum eClientStatus
   FINREAD,
   RESPONSE_START,
   WRITTING,
-  FINWRITE,
-  CGIACTION,
+  FINWRITE
+  // CGIACTION,
 };
 
 class Client : public Error
@@ -42,6 +42,7 @@ public:
   Request &getRequest();
   Response &getResponse();
   bool getIsCgi();
+  Cgi *getCgi();
   void setServerBlock(port_t port);
   void setLocationBlock();
   void setIsCgi();
@@ -58,4 +59,5 @@ private:
   uintptr_t _socket;
   Request _request;
   Response _response;
+  Cgi *_cgi;
 };
