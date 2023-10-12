@@ -60,7 +60,7 @@ void ServerManager::_monitoringEvent()
 		try
 		{
 			numEvents = _kqueue.doKevent();
-			// std::cout << "Events num : " << numEvents << std::endl;
+			std::cout << "Events num : " << numEvents << std::endl;
 			for (int i = 0; i < numEvents; i++)
 			{
 				event = &_kqueue.getEventList()[i];
@@ -68,13 +68,13 @@ void ServerManager::_monitoringEvent()
 				eFdType type = _kqueue.getFdType(event->ident);
 				try
 				{
-					// std::cout << ((type == SERVER) ? "Server : " : (type == CLIENT) ? "CLIENT : "
-					// 																: "CGI : ")
-					// 		  << std::endl;
-					// std::cout << event->ident << std::endl;
-					// std::cout << ((event->filter == EVFILT_READ) ? "read" : (event->filter == EVFILT_WRITE) ? "write"
-					// 																						: "timmer")
-					// 		  << std::endl;
+					std::cout << ((type == SERVER) ? "Server : " : (type == CLIENT) ? "CLIENT : "
+																					: "CGI : ")
+							  << std::endl;
+					std::cout << event->ident << std::endl;
+					std::cout << ((event->filter == EVFILT_READ) ? "read" : (event->filter == EVFILT_WRITE) ? "write"
+																											: "timmer")
+							  << std::endl;
 					if (event->flags & EV_ERROR)
 					{
 						switch (type)
@@ -83,10 +83,10 @@ void ServerManager::_monitoringEvent()
 							std::cerr << "server socket error!" << std::endl;
 							break;
 						case CLIENT:
-							_disconnectClient(event);
+							_disconnectClient(static_cast<Client *>(event->udata));
 							break;
 						case CGI:
-							_disconnectClient(event);
+							_disconnectClient(static_cast<Cgi *>(event->udata)->getClient());
 							break;
 						default:
 							break;
@@ -122,6 +122,9 @@ void ServerManager::_monitoringEvent()
 							Cgi *cgi = static_cast<Cgi *>(event->udata);
 
 							cgi->readResponse();
+							if (cgi->getIsCgiFin() == true)
+								cgi->getClient()->setCgi(NULL);
+							break;
 						}
 						default:
 							break;
@@ -137,7 +140,7 @@ void ServerManager::_monitoringEvent()
 
 							client->writeResponse();
 							if (client->getRequest().getParsedRequest()._connection == "close" && client->getClientStatus() == FINWRITE)
-								_disconnectClient(event);
+								_disconnectClient(client);
 							else if (client->getClientStatus() == FINWRITE)
 							{
 								_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
@@ -168,7 +171,7 @@ void ServerManager::_monitoringEvent()
 
 							client->sendErrorPage(event->ident, errorPagePath, _408_REQUEST_TIMEOUT);
 						}
-						_disconnectClient(event);
+						_disconnectClient(client);
 					}
 				}
 				catch (const eStatus &e)
@@ -182,7 +185,7 @@ void ServerManager::_monitoringEvent()
 						errorPagePath = cgi->getResponse()->getErrorPage();
 
 						cgi->sendErrorPage(cgi->getClientSock(), errorPagePath, e);
-						_disconnectClient(event);
+						_disconnectClient(cgi->getClient());
 						break;
 					}
 					default:
@@ -190,14 +193,14 @@ void ServerManager::_monitoringEvent()
 						errorPagePath = client->getResponse().getErrorPage();
 
 						client->sendErrorPage(event->ident, errorPagePath, e);
-						_disconnectClient(event);
+						_disconnectClient(client);
 						break;
 					}
 				}
 				catch (std::exception &e)
 				{
 					std::cerr << e.what() << std::endl;
-					_disconnectClient(event);
+					_disconnectClient(static_cast<Client *>(event->udata));
 				}
 			}
 		}
@@ -257,19 +260,18 @@ void ServerManager::_findServerBlock(Client *client)
 	client->setServerBlock(_findOutPort(client->getSocket()));
 }
 
-void ServerManager::_disconnectClient(struct kevent *event)
+void ServerManager::_disconnectClient(Client *client)
 {
-	Client *client = static_cast<Client *>(event->udata);
-
 	std::cout << "Disconnected with client : " << client->getSocket() << std::endl;
 	_kqueue.deleteEvent(client->getSocket(), EVFILT_TIMER, static_cast<void *>(client));
 	_kqueue.deleteEvent(client->getSocket(), EVFILT_READ, static_cast<void *>(client));
 	_kqueue.deleteEvent(client->getSocket(), EVFILT_WRITE, static_cast<void *>(client));
-	_kqueue._deleteFdType(event->ident);
+	_kqueue._deleteFdType(client->getSocket());
 	close(client->getSocket());
 	if (client->getCgi() != NULL)
 	{
 		Cgi *cgi = client->getCgi();
+
 		if (kill(cgi->getPid(), SIGTERM))
 			waitpid(cgi->getPid(), NULL, 0);
 		cgi->deleteCgiEvent();

@@ -27,6 +27,6 @@ private:
 	void _setKeepAliveTimeOut(Client *client);
 	void _setRequestTimeOut(Client *client);
 	port_t _findOutPort(uintptr_t clntsock);
-	void _disconnectClient(struct kevent *event);
+	void _disconnectClient(Client *client);
 	// void _disconnectCGI(struct kevent *event);
 };

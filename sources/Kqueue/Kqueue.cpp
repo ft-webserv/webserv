@@ -68,8 +68,8 @@ void Kqueue::deleteEvent(const uintptr_t ident, int16_t filter, void *udata)
 	struct kevent tempEvent;
 
 	EV_SET(&tempEvent, ident, filter, EV_DELETE, 0, 0, udata);
-	kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
-	// _changeList.push_back(tempEvent);
+	// kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
+	_changeList.push_back(tempEvent);
 }
 
 int &Kqueue::getKq()

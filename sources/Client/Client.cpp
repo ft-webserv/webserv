@@ -21,8 +21,8 @@ uintptr_t &Client::getSocket() { return (_socket); }
 Request &Client::getRequest() { return (_request); }
 Response &Client::getResponse() { return (_response); }
 Cgi *Client::getCgi() { return (_cgi); }
+void Client::setCgi(Cgi *cgi) { _cgi = cgi; }
 // bool Client::getIsCgi() { return (_isCgi); }
-// void Client::setIsCgi() { _isCgi = true; }
 
 void Client::readRequest()
 {
@@ -64,11 +64,11 @@ void Client::readRequest()
 		throw(_413_REQUEST_ENTITY_TOO_LARGE);
 	if (_request.getIsBody() == true && _status == READHEADER)
 	{
+		_request.parseRequest();
 		if (_request.getParsedRequest()._transferEncoding == "chunked")
 			_status = READCHUNKEDBODY;
 		else
 			_status = READBODY;
-		_request.parseRequest();
 	}
 	if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
 		_status = FINREAD;
@@ -86,14 +86,17 @@ void Client::writeResponse()
 		}
 		else if (_response.isCgi() == true)
 		{
-			Kqueue &kq = Kqueue::getInstance();
+			if (_response.getResponse() == "")
+			{
+				Kqueue &kq = Kqueue::getInstance();
 
-			_cgi = new Cgi(&_request, &_response, _socket, this);
-			_cgi->cgiStart();
-			kq.disableEvent(_socket, EVFILT_WRITE, static_cast<void *>(this));
-			return;
+				_cgi = new Cgi(&_request, &_response, _socket, this);
+				_cgi->cgiStart();
+				kq.disableEvent(_socket, EVFILT_WRITE, static_cast<void *>(this));
+				return;
+			}
 		}
-		else if (_request.getParsedRequest()._method == "GET")
+		else if (_request.getParsedRequest()._method == "GET" || _request.getParsedRequest()._method == "HEAD")
 		{
 			_response.handleGet(_request);
 		}
@@ -111,6 +114,7 @@ void Client::writeResponse()
 		}
 		std::string &response = _response.getResponse();
 		_status = FINWRITE;
+		std::cout << _response.getResponse() << std::endl;
 		send(_socket, static_cast<void *>(&response[0]), response.size(), 0);
 	}
 	catch (const eStatus &e)
@@ -199,6 +203,7 @@ void Client::setLocationBlock()
 void Client::initClient()
 {
 	_status = START;
+	_cgi = NULL;
 	_request.initRequest();
 	_response.initResponse();
 }
@@ -216,8 +221,4 @@ std::string::size_type Client::getNextPos(std::string::size_type currPos)
 	if (currPos == nextPos)
 		return (std::string::npos);
 	return (nextPos);
-}
-
-void Client::doCgi()
-{
 }

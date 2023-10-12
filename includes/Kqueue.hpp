@@ -2,7 +2,6 @@
 
 #include <vector>
 #include "Exception.hpp"
-#include "Client.hpp"
 
 // kqueue(), kevent() header
 #include <sys/types.h>

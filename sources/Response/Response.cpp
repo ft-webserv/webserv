@@ -4,6 +4,7 @@
 Response::Response()
 	: _serverInfo(NULL), _locationInfo(NULL)
 {
+	_isHead = false;
 	_statusText[0][0] = "OK";
 	_statusText[0][1] = "CREATED";
 	_statusText[0][2] = "ACCEPTED";
@@ -23,6 +24,7 @@ Response::~Response()
 
 void Response::initResponse()
 {
+	_isHead = false;
 	_headerFields.clear();
 	_body.clear();
 	_root.clear();
@@ -71,6 +73,8 @@ void Response::handleGet(Request &rqs)
 	std::string location = rqs.getParsedRequest()._location;
 
 	_getFile(location);
+	if (rqs.getParsedRequest()._method == "HEAD")
+		_isHead = true;
 	_makeResponse();
 }
 
@@ -228,7 +232,10 @@ void Response::_setResponse(std::string path, off_t size)
 	{
 		pos += 1;
 		std::string extension = path.substr(pos, path.length() - pos);
-		_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", conf.getMimeType().find(extension)->second));
+		if (conf.getMimeType().find(extension) != conf.getMimeType().end())
+			_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", conf.getMimeType().find(extension)->second));
+		else
+			_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "application/octet-stream"));
 	}
 	// _headerFields.insert(std::pair<std::string, std::string>("Connection:", "keep-alive"));
 	_setBody(path, size);
@@ -257,7 +264,9 @@ void Response::_makeResponse()
 	_response = "HTTP/1.1 " + status.str() + " " + _statusText[type][detail] + "\r\n";
 	for (it = _headerFields.begin(); it != _headerFields.end(); it++)
 		_response += it->first + " " + it->second + "\r\n";
-	_response += "\r\n" + _body;
+	_response += "\r\n";
+	if (_isHead == false)
+		_response += _body;
 }
 
 void Response::_showFileList(std::string path)
@@ -369,9 +378,9 @@ void Response::_createFile(std::string path, std::string location, Request &rqs)
 		_headerFields.insert(std::pair<std::string, std::string>("Location:", location + "/" + fileName));
 	else
 		_headerFields.insert(std::pair<std::string, std::string>("Location:", location + fileName));
-	_headerFields.insert(std::pair<std::string, std::string>("Content-Length:", "19"));
+	_headerFields.insert(std::pair<std::string, std::string>("Content-Length:", "18"));
 	_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "application/json"));
-	_body += "\r\n{\"success\":\"true\"}";
+	_body += "{\"success\":\"true\"}";
 }
 
 std::string Response::_makeRandomName()

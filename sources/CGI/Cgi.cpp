@@ -11,6 +11,7 @@ Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 	_reqFd[1] = 0;
 	_resFd[0] = 0;
 	_resFd[1] = 0;
+	_isCgiFin = false;
 	_pid = 0;
 	_env = new char *[ENVMAXSIZE];
 	_body.str(request->getParsedRequest()._body);
@@ -29,6 +30,8 @@ Cgi::~Cgi()
 uintptr_t Cgi::getClientSock() { return (_clientSock); }
 Response *Cgi::getResponse() { return (_response); }
 pid_t Cgi::getPid() { return (_pid); }
+Client *Cgi::getClient() { return (_client); }
+bool Cgi::getIsCgiFin() { return (_isCgiFin); }
 
 void Cgi::_makeEnvList(uintptr_t clntSock)
 {
@@ -165,8 +168,12 @@ void Cgi::readResponse()
 			throw(_500_INTERNAL_SERVER_ERROR);
 			break;
 		default:
+			Kqueue &kqueue = Kqueue::getInstance();
+
 			deleteCgiEvent();
 			_response->setResponse(_cgiResponse);
+			kqueue.enableEvent(_clientSock, EVFILT_WRITE, static_cast<void *>(_client));
+			_isCgiFin = true;
 			delete this;
 			break;
 		}

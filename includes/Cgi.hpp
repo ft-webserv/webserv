@@ -1,7 +1,5 @@
 #pragma once
 
-#include <map>
-#include <string>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -10,7 +8,6 @@
 #include <unistd.h>
 #include <dirent.h>
 
-#include "Config.hpp"
 #include "Kqueue.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
@@ -20,6 +17,8 @@
 #include "Utils.hpp"
 
 #define ENVMAXSIZE 40
+
+class Client;
 
 class Cgi : public Error
 {
@@ -31,6 +30,8 @@ public:
 	uintptr_t getClientSock();
 	Response *getResponse();
 	pid_t getPid();
+	Client *getClient();
+	bool getIsCgiFin();
 	void cgiStart();
 	void deleteCgiEvent();
 
@@ -48,6 +49,7 @@ private:
 	int _envCnt;
 	int _reqFd[2];
 	int _resFd[2];
+	bool _isCgiFin;
 	pid_t _pid;
 	Response *_response;
 	Request *_request;

@@ -53,6 +53,7 @@ private:
 	std::string _makeRandomName();
 
 private:
+	bool _isHead;
 	eStatus _statusCode;
 	std::map<std::string, std::string> _headerFields;
 	std::string _body;

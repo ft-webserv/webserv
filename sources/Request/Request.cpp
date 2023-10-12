@@ -37,7 +37,11 @@ void Request::setHeaderBuf(const char *buf)
 		_isBody = true;
 		_parsedRequest._body = _headerBuf.substr(newLinePos + 4, _headerBuf.length());
 		// std::cout << "pos :" << newLinePos << "headerbuf :" << _headerBuf.length() << std::endl;
+		std::cout << _parsedRequest._body;
 		_headerBuf = _headerBuf.substr(0, newLinePos) + "\r\n";
+		std::cout << "===============================" << std::endl;
+		std::cout << _headerBuf;
+		std::cout << "===============================" << std::endl;
 	}
 }
 
@@ -186,12 +190,11 @@ void Request::_checkValidHeader()
 	if (_parsedRequest._transferEncoding.empty() == false && _parsedRequest._transferEncoding != "chunked")
 		throw(_400_BAD_REQUEST);
 	// Check Method
-	if (_parsedRequest._method != "GET" && _parsedRequest._method != "POST" && _parsedRequest._method != "DELETE")
+	if (_parsedRequest._method != "GET" && _parsedRequest._method != "POST" && _parsedRequest._method != "DELETE" && _parsedRequest._method != "PUT" && _parsedRequest._method != "HEAD")
 		throw(_501_NOT_IMPLEMENTED);
 	// Check HTTP Version
 	if (_parsedRequest._httpVersion.compare(0, 5, "HTTP/") != 0 || _parsedRequest._httpVersion.length() != 8)
 		throw(_400_BAD_REQUEST);
-
 	char *endPtr;
 	std::string versionStr = _parsedRequest._httpVersion.substr(5);
 	double version;

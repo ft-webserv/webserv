@@ -23,7 +23,6 @@ enum eClientStatus
   RESPONSE_START,
   WRITTING,
   FINWRITE
-  // CGIACTION,
 };
 
 class Client : public Error
@@ -45,9 +44,8 @@ public:
   Cgi *getCgi();
   void setServerBlock(port_t port);
   void setLocationBlock();
-  void setIsCgi();
+  void setCgi(Cgi *cgi);
   void initClient();
-  void doCgi();
 
   // delete keep alive time
 
