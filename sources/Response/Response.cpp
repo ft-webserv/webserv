@@ -41,6 +41,8 @@ ServerInfo *Response::getServerInfo() { return (_serverInfo); }
 
 LocationInfo *Response::getLocationInfo() { return (_locationInfo); }
 
+bool &Response::getIsHead() { return (_isHead); }
+
 void Response::setServerInfo(ServerInfo *serverBlock) { _serverInfo = serverBlock; }
 
 void Response::setLocationInfo(LocationInfo *locationBlock)
@@ -117,7 +119,14 @@ void Response::_getFile(std::string location)
 	struct stat buf;
 
 	path = _makePath(location);
-	if (_locationInfo->getPath() == location)
+	if (stat(path.c_str(), &buf) == -1)
+		throw(_404_NOT_FOUND);
+	switch (buf.st_mode & S_IFMT)
+	{
+	case S_IFREG:
+		_setResponse(path, buf.st_size);
+		break;
+	case S_IFDIR:
 	{
 		std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
 		std::map<std::string, std::string>::iterator it;
@@ -142,28 +151,10 @@ void Response::_getFile(std::string location)
 		}
 		else
 			throw(_404_NOT_FOUND);
+		break;
 	}
-	/////찢어야함.
-	else
-	{
-		if (stat(path.c_str(), &buf) == -1)
-			throw(_404_NOT_FOUND);
-		switch (buf.st_mode & S_IFMT)
-		{
-		case S_IFREG:
-			_setResponse(path, buf.st_size);
-			break;
-		case S_IFDIR:
-			if (_isAutoIndex() == true)
-			{
-				_showFileList(path);
-			}
-			else
-				throw(_404_NOT_FOUND);
-			break;
-		default:
-			break;
-		}
+	default:
+		break;
 	}
 }
 
@@ -173,6 +164,7 @@ void Response::_postFile(std::string location, Request &rqs)
 	struct stat buf;
 
 	path = _makePath(location);
+	std::cout << rqs.getParsedRequest()._body.length() << std::endl;
 	if (stat(path.c_str(), &buf) == -1)
 		throw(_404_NOT_FOUND);
 	switch (buf.st_mode & S_IFMT)
@@ -206,9 +198,15 @@ void Response::_deleteFile(std::string location)
 
 std::string Response::_makePath(std::string location)
 {
+	std::string tmp;
 	std::string path;
+	std::size_t pos;
 
+	pos = location.find(_locationInfo->getPath());
+	if (pos != std::string::npos)
+		location.erase(pos, _locationInfo->getPath().length());
 	path = "." + _root + location;
+	std::cout << "*******************" << path << std::endl;
 	for (std::string::size_type i = path.find("//"); i != std::string::npos; i = path.find("//"))
 		path.erase(i + 1, 1);
 	if (*path.rbegin() == '/')

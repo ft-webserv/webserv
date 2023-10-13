@@ -2,13 +2,13 @@
 
 Config::Config()
 	: _keepAliveTime(0), _requestTime(0), _clientHeaderBufferSize(BUFFERSIZE),
-	  _clientMaxBodySize(pow(BUFFERSIZE, 2))
+	  _clientMaxBodySize(1000000000)
 {
 }
 
 Config::Config(const std::string &fileName)
 	: _keepAliveTime(0), _requestTime(0), _clientHeaderBufferSize(BUFFERSIZE),
-	  _clientMaxBodySize(pow(BUFFERSIZE, 2))
+	  _clientMaxBodySize(1000000000)
 {
 	parseConfigFile(fileName);
 }

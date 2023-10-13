@@ -32,7 +32,7 @@ public:
   Client(const Client &src);
   Client &operator=(const Client &src);
   ~Client();
-  void readRequest();
+  void readRequest(struct kevent *event);
   void writeResponse();
 
 public:
@@ -53,6 +53,7 @@ private:
   std::string::size_type getNextPos(std::string::size_type currPos);
 
 private:
+  std::string _chunkedBodyBuf;
   eClientStatus _status;
   uintptr_t _socket;
   Request _request;

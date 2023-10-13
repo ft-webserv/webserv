@@ -60,7 +60,7 @@ void ServerManager::_monitoringEvent()
 		try
 		{
 			numEvents = _kqueue.doKevent();
-			std::cout << "Events num : " << numEvents << std::endl;
+			// std::cout << "Events num : " << numEvents << std::endl;
 			for (int i = 0; i < numEvents; i++)
 			{
 				event = &_kqueue.getEventList()[i];
@@ -68,6 +68,7 @@ void ServerManager::_monitoringEvent()
 				eFdType type = _kqueue.getFdType(event->ident);
 				try
 				{
+					std::cout << "----------------------------------" << std::endl;
 					std::cout << ((type == SERVER) ? "Server : " : (type == CLIENT) ? "CLIENT : "
 																					: "CGI : ")
 							  << std::endl;
@@ -75,6 +76,7 @@ void ServerManager::_monitoringEvent()
 					std::cout << ((event->filter == EVFILT_READ) ? "read" : (event->filter == EVFILT_WRITE) ? "write"
 																											: "timmer")
 							  << std::endl;
+					std::cout << "----------------------------------" << std::endl;
 					if (event->flags & EV_ERROR)
 					{
 						switch (type)
@@ -105,7 +107,7 @@ void ServerManager::_monitoringEvent()
 
 							if (client->getClientStatus() == START)
 								_setRequestTimeOut(client);
-							client->readRequest();
+							client->readRequest(event);
 							if (client->getClientStatus() == READBODY || client->getClientStatus() == READCHUNKEDBODY || client->getClientStatus() == FINREAD)
 							{
 								_findServerBlock(client);
