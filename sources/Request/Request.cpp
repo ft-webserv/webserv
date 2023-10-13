@@ -56,8 +56,10 @@ void Request::setChunkedBodyBuf(const std::string buf)
 	if (_parsedRequest._body.size() > conf.getClientMaxBodySize())
 		throw(_413_REQUEST_ENTITY_TOO_LARGE);
 	_parsedRequest._body += buf;
-	// std::cout << "CHUNKED BODY SIZE : " << _parsedRequest._body.size() << std::endl;
-	// std::cout << "CHUNKED BODY : " << _parsedRequest._body << std::endl;
+	std::cout << "(((((((((((((())))))))))))))" << std::endl;
+	std::cout << "CHUNKED BODY SIZE : " << _parsedRequest._body.size() << std::endl;
+	std::cout << "CHUNKED BODY : " << _parsedRequest._body << std::endl;
+	std::cout << "(((((((((((((())))))))))))))" << std::endl;
 }
 
 t_request Request::getParsedRequest() const

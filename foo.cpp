@@ -23,6 +23,9 @@ void leakCheck()
 int main()
 {
     std::string foo("HELLO HELLO HI");
+    std::size_t pos;
+
+    pos = foo.find("HELLO");
     // atexit(leakCheck);
     // foo *me = new foo();
     // me->deletme();
@@ -33,7 +36,8 @@ int main()
     // delete[] buf;
     // buf = NULL;
     // std::cout << buf2 << std::endl;
-    for (int i = 0; i < 100000000; i++)
-        std::cout << "e";
+    std::cout << pos + 5 << std::endl;
+    std::cout << foo.find("HI", pos + 5) << std::endl;
+    std::cout << foo.substr(pos + 6, foo.find("HI", pos + 5)) << std::endl;
     return (0);
 }

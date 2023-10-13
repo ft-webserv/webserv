@@ -82,12 +82,14 @@ void Client::readRequest(struct kevent *event)
 		{
 			if (_chunkedBodyBuf.length() - (pos + 2) >= size && size != 0)
 			{
+				std::size_t tmp;
 				// std::cout << "SIZE : " << size << std::endl;
 				// std::cout << "POS : " << pos + 2 << std::endl;
 				// std::cout << "CHUNKED BODY LENGTH : " << _chunkedBodyBuf.length() << std::endl;
 				// std::cout << "CHUNKED BODY BUF : " << _chunkedBodyBuf << std::endl;
-				_request.setChunkedBodyBuf(_chunkedBodyBuf.substr(pos + 2, _chunkedBodyBuf.find("\r\n", pos + 2)));
-				_chunkedBodyBuf = _chunkedBodyBuf.substr(pos + 2 + size, _chunkedBodyBuf.length());
+				tmp = pos + 2 + size;
+				_request.setChunkedBodyBuf(_chunkedBodyBuf.substr(pos + 2, size));
+				_chunkedBodyBuf = _chunkedBodyBuf.substr(tmp, _chunkedBodyBuf.length() - tmp);
 				std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
 				std::cout << "CHUNKED BODY BUF : " << _chunkedBodyBuf << std::endl;
 				std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
