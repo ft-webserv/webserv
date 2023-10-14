@@ -15,8 +15,9 @@ Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 	_pid = 0;
 	_env = new char *[ENVMAXSIZE];
 	_body.str(request->getParsedRequest()._body);
-	_cgiExec = mapFind(_response->getLocationInfo()->getLocationInfo(), "cgi_exec");
-	_cgiPath = "." + _response->getRoot() + mapFind(_response->getLocationInfo()->getLocationInfo(), "cgi_path");
+	_cgiInfo = response->getCgiInfo();
+	_cgiExec = _cgiInfo.cgiExec;
+	_cgiPath = "." + _response->getRoot() + _cgiInfo.cgiPath;
 	_makeEnvList(_clientSock);
 }
 
@@ -71,9 +72,11 @@ void Cgi::cgiStart()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
 
-	if (access(_cgiPath.c_str(), F_OK))
+	std::cout << "CGI INFO: 1 " << _cgiExec << std::endl;
+	std::cout << "CGI INFO: 2 " << _cgiPath << std::endl;
+	if (access(_cgiExec.c_str(), F_OK))
 		throw(_404_NOT_FOUND);
-	if (access(_cgiPath.c_str(), X_OK))
+	if (access(_cgiExec.c_str(), X_OK))
 		throw(_403_FORBIDDEN);
 	if (pipe(_reqFd))
 		throw(_500_INTERNAL_SERVER_ERROR);
@@ -119,6 +122,8 @@ void Cgi::writeBody()
 	char buf[BUFFERSIZE + 1];
 	Kqueue &kqueue = Kqueue::getInstance();
 
+	std::cout << "CGI INFO: 1 " << _cgiExec << std::endl;
+	std::cout << "CGI INFO: 2 " << _cgiPath << std::endl;
 	std::streampos startPos = _body.tellg();
 	std::cout << "start tellg : " << startPos << std::endl;
 	memset(static_cast<void *>(buf), 0, BUFFERSIZE + 1);

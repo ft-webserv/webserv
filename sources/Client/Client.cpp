@@ -26,7 +26,6 @@ void Client::setCgi(Cgi *cgi) { _cgi = cgi; }
 
 void Client::readRequest(struct kevent *event)
 {
-	bool flag = false;
 	Config &conf = Config::getInstance();
 	ssize_t len;
 	std::string buf;
@@ -35,17 +34,17 @@ void Client::readRequest(struct kevent *event)
 		_status = READHEADER;
 
 	buf.clear();
-	buf.resize(conf.getClientHeadBufferSize());
+	buf.resize(event->data);
 
-	if ((len = recv(_socket, &buf[0], conf.getClientHeadBufferSize(), 0)) == -1)
+	if ((len = recv(_socket, &buf[0], event->data, 0)) == -1)
 		Exception::recvError("recv() error!");
 	else if (len <= 0)
 		Exception::disconnectDuringRecvError("disconnected during read!");
-	std::cout << "***************************" << std::endl;
-	std::cout << "BUF : " << buf << std::endl;
-	std::cout << "***************************" << std::endl;
+	// std::cout << "***************************" << std::endl;
+	// std::cout << "BUF : " << buf << std::endl;
+	// std::cout << "***************************" << std::endl;
 	if (_status == READHEADER)
-		_request.setHeaderBuf(buf.c_str());
+		buf = _request.setHeaderBuf(buf);
 	if (_request.getIsBody() == true && _status == READHEADER)
 	{
 		_request.parseRequest();
@@ -54,47 +53,43 @@ void Client::readRequest(struct kevent *event)
 			_status = READCHUNKEDBODY;
 			_chunkedBodyBuf = _request.getParsedRequest()._body;
 			_request.getParsedRequest()._body.clear();
-			flag = true;
 		}
 		else
 			_status = READBODY;
 	}
-	else if (_status == READBODY)
-		_request.setBodyBuf(buf.c_str());
-	if (_status == READCHUNKEDBODY)
+	if (_status == READBODY)
+		_request.setBodyBuf(buf);
+	else if (_status == READCHUNKEDBODY)
 	{
-		if (flag == false)
-			_chunkedBodyBuf.append(buf);
-		size_t size = std::strtol(_chunkedBodyBuf.c_str(), NULL, 16);
-		std::string::size_type pos;
-		std::cout << "###########################" << std::endl;
-		std::cout << "CHUNKED BODY BUF : " << _chunkedBodyBuf << std::endl;
-		std::cout << "SIZE : " << size << std::endl;
-		std::cout << "###########################" << std::endl;
-		if (size == 0 && _chunkedBodyBuf.find("\r\n\r\n") != std::string::npos)
+		std::cout << _request.getParsedRequest()._body.length() << std::endl;
+		_chunkedBodyBuf.append(buf.c_str());
+		while (1)
 		{
-			_status = FINREAD;
-			_chunkedBodyBuf.clear();
-			return;
-		}
-		pos = _chunkedBodyBuf.find("\r\n");
-		if (pos != std::string::npos)
-		{
-			if (_chunkedBodyBuf.length() - (pos + 2) >= size && size != 0)
+			std::string::size_type pos;
+			std::size_t size = -1;
+
+			// std::cout << "CHUNKED BODY: " << _chunkedBodyBuf << std::endl;
+			// std::cout << "CHUNKED BODY SIZE : " << _chunkedBodyBuf.length() << std::endl;
+			pos = _chunkedBodyBuf.find("\r\n");
+			if (pos == std::string::npos)
+				break;
+			else
+				size = std::strtol(_chunkedBodyBuf.c_str(), NULL, 16);
+
+			if (size == 0 && _chunkedBodyBuf.find("\r\n\r\n") != std::string::npos)
 			{
-				std::size_t tmp;
-				// std::cout << "SIZE : " << size << std::endl;
-				// std::cout << "POS : " << pos + 2 << std::endl;
-				// std::cout << "CHUNKED BODY LENGTH : " << _chunkedBodyBuf.length() << std::endl;
-				// std::cout << "CHUNKED BODY BUF : " << _chunkedBodyBuf << std::endl;
-				tmp = pos + 2 + size;
-				_request.setChunkedBodyBuf(_chunkedBodyBuf.substr(pos + 2, size));
-				_chunkedBodyBuf = _chunkedBodyBuf.substr(tmp, _chunkedBodyBuf.length() - tmp);
-				std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
-				std::cout << "CHUNKED BODY BUF : " << _chunkedBodyBuf << std::endl;
-				std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
-				sleep(5);
+				_status = FINREAD;
+				_chunkedBodyBuf.clear();
+				return;
 			}
+			else if (_chunkedBodyBuf.length() - (pos + 2) >= size + 2 && size != 0)
+			{
+				_chunkedBodyBuf = _chunkedBodyBuf.substr(pos + 2);
+				_request.setChunkedBodyBuf(_chunkedBodyBuf.substr(0, size));
+				_chunkedBodyBuf = _chunkedBodyBuf.substr(size + 2);
+			}
+			else
+				break;
 		}
 	}
 	if (_request.getParsedRequest()._body.size() > conf.getClientMaxBodySize())
@@ -113,7 +108,7 @@ void Client::writeResponse()
 		{
 			throw(_405_METHOD_NOT_ALLOWED);
 		}
-		else if (_response.isCgi() == true)
+		else if (_response.isCgi(_request.getParsedRequest()._location) == true)
 		{
 			if (_response.getResponse() == "")
 			{

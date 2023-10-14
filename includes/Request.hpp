@@ -33,8 +33,8 @@ public:
 	void testPrintRequest();
 
 public:
-	void setHeaderBuf(const char *buf);
-	void setBodyBuf(const char *buf);
+	std::string setHeaderBuf(std::string &buf);
+	void setBodyBuf(std::string &buf);
 	void setChunkedBodyBuf(const std::string buf);
 	t_request getParsedRequest() const;
 	void initRequest();

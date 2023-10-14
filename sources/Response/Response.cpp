@@ -31,6 +31,9 @@ void Response::initResponse()
 	_response.clear();
 	_serverInfo = NULL;
 	_locationInfo = NULL;
+	_cgiInfo.cgi.clear();
+	_cgiInfo.cgiExec.clear();
+	_cgiInfo.cgiPath.clear();
 }
 
 std::string &Response::getResponse() { return (_response); }
@@ -42,6 +45,8 @@ ServerInfo *Response::getServerInfo() { return (_serverInfo); }
 LocationInfo *Response::getLocationInfo() { return (_locationInfo); }
 
 bool &Response::getIsHead() { return (_isHead); }
+
+t_cgiInfo &Response::getCgiInfo() { return (_cgiInfo); }
 
 void Response::setServerInfo(ServerInfo *serverBlock) { _serverInfo = serverBlock; }
 
@@ -228,8 +233,7 @@ void Response::_setResponse(std::string path, off_t size)
 		_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "application/octet-stream"));
 	else
 	{
-		pos += 1;
-		std::string extension = path.substr(pos, path.length() - pos);
+		std::string extension = findExtension(path);
 		if (conf.getMimeType().find(extension) != conf.getMimeType().end())
 			_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", conf.getMimeType().find(extension)->second));
 		else
@@ -331,12 +335,23 @@ bool Response::isAllowedMethod(std::string method)
 	return (true);
 }
 
-bool Response::isCgi()
+bool Response::isCgi(std::string location)
 {
 	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
 
-	if (mapFind(tmp, "cgi_exec") == "" || mapFind(tmp, "cgi_path") == "")
-		return (false);
+	_cgiInfo.cgiExec = mapFind(tmp, "cgi_exec");
+	_cgiInfo.cgiPath = mapFind(tmp, "cgi_path");
+	if (_cgiInfo.cgiExec == "" || _cgiInfo.cgiPath == "")
+	{
+		tmp = _serverInfo->getServerInfo();
+		_cgiInfo.cgi = mapFind(tmp, "cgi");
+		_cgiInfo.cgiExec = mapFind(tmp, "cgi_exec");
+		_cgiInfo.cgiPath = mapFind(tmp, "cgi_path");
+		if (_cgiInfo.cgi == "" || _cgiInfo.cgiExec == "" || _cgiInfo.cgiPath == "")
+			return (false);
+		if (findExtension(location) != _cgiInfo.cgi)
+			return (false);
+	}
 	return (true);
 }
 

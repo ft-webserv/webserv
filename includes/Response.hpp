@@ -17,6 +17,13 @@
 
 #define DEFAULT_ROOT "/html"
 
+typedef struct s_cgiInfo
+{
+	std::string cgi;
+	std::string cgiExec;
+	std::string cgiPath;
+} t_cgiInfo;
+
 class Response
 {
 public:
@@ -32,11 +39,12 @@ public:
 	void setLocationInfo(LocationInfo *locationBlock);
 	void initResponse();
 	bool isAllowedMethod(std::string method);
-	bool isCgi();
+	bool isCgi(std::string location);
 	bool &getIsHead();
 	std::string &getResponse(); // 굳이 client에서 response를 보내야하는가 ? 그냥 response에서 보내면 되지 않나 ?
 	std::string &getRoot();
 	std::string getErrorPage();
+	t_cgiInfo &getCgiInfo();
 	void setResponse(std::string &response);
 
 private:
@@ -63,4 +71,5 @@ private:
 	std::string _statusText[2][13];
 	ServerInfo *_serverInfo;
 	LocationInfo *_locationInfo;
+	t_cgiInfo _cgiInfo;
 };

@@ -24,8 +24,10 @@ int main()
 {
     std::string foo("HELLO HELLO HI");
     std::size_t pos;
+    std::string test;
 
-    pos = foo.find("HELLO");
+    test = foo.substr(2);
+    std::cout << test << std::endl;
     // atexit(leakCheck);
     // foo *me = new foo();
     // me->deletme();
@@ -36,8 +38,8 @@ int main()
     // delete[] buf;
     // buf = NULL;
     // std::cout << buf2 << std::endl;
-    std::cout << pos + 5 << std::endl;
-    std::cout << foo.find("HI", pos + 5) << std::endl;
-    std::cout << foo.substr(pos + 6, foo.find("HI", pos + 5)) << std::endl;
+    // std::cout << pos + 5 << std::endl;
+    // std::cout << foo.find("HI", pos + 5) << std::endl;
+    // std::cout << foo.substr(pos + 6, foo.find("HI", pos + 5)) << std::endl;
     return (0);
 }

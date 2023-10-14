@@ -80,8 +80,7 @@ void Error::sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus s
 		_response += "Content-Type: application/octet-stream\r\n";
 	else
 	{
-		pos += 1;
-		std::string extension = errorPagePath.substr(pos, errorPagePath.length() - pos);
+		std::string extension = findExtension(errorPagePath);
 		_response += "Content-Type: " + conf.getMimeType().find(extension)->second + "\r\n";
 	}
 	_response += "Content-Length: " + ft_itos(buf.st_size) + "\r\n\r\n";

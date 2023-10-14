@@ -60,11 +60,11 @@ void ServerManager::_monitoringEvent()
 		try
 		{
 			numEvents = _kqueue.doKevent();
-			// std::cout << "Events num : " << numEvents << std::endl;
+			std::cout << "Events num : " << numEvents << std::endl;
 			for (int i = 0; i < numEvents; i++)
 			{
 				event = &_kqueue.getEventList()[i];
-				// std::cout << "Events : " << event->ident << ", " << event->flags << ", " << event->fflags << ", " << event->filter << ", " << event->data << ", " << event->udata << std::endl;
+				std::cout << "Events : " << event->ident << ", " << event->flags << ", " << event->fflags << ", " << event->filter << ", " << event->data << ", " << event->udata << std::endl;
 				eFdType type = _kqueue.getFdType(event->ident);
 				try
 				{
@@ -88,6 +88,7 @@ void ServerManager::_monitoringEvent()
 							_disconnectClient(static_cast<Client *>(event->udata));
 							break;
 						case CGI:
+							std::cout << strerror(event->data) << std::endl;
 							_disconnectClient(static_cast<Cgi *>(event->udata)->getClient());
 							break;
 						default:

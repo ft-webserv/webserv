@@ -29,3 +29,12 @@ std::string ft_itos(size_t num)
 	ss << num;
 	return (ss.str());
 }
+
+std::string findExtension(std::string fileName)
+{
+	std::string::size_type pos;
+
+	pos = fileName.rfind(".");
+	pos += 1;
+	return (fileName.substr(pos, fileName.length() - pos));
+}
