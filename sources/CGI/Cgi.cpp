@@ -135,7 +135,7 @@ void Cgi::writeBody()
 	if (_body.eof() == true)
 	{
 		std::cout << buf << std::endl;
-		kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
+		// kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
 		kqueue.enableEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
 		write(_reqFd[1], buf, endPos - startPos);
 		close(_reqFd[1]);

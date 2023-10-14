@@ -88,7 +88,6 @@ void ServerManager::_monitoringEvent()
 							_disconnectClient(static_cast<Client *>(event->udata));
 							break;
 						case CGI:
-							std::cout << strerror(event->data) << std::endl;
 							_disconnectClient(static_cast<Cgi *>(event->udata)->getClient());
 							break;
 						default:

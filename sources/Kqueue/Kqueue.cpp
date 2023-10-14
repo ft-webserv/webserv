@@ -46,7 +46,8 @@ void Kqueue::enableEvent(uintptr_t ident, int16_t filter, void *udata)
 	struct kevent tempEvent;
 
 	EV_SET(&tempEvent, ident, filter, EV_ENABLE, 0, 0, udata);
-	_changeList.push_back(tempEvent);
+	kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
+	// _changeList.push_back(tempEvent);
 	// std::cout << "enable event ident : " << tempEvent.ident << std::endl;
 	// std::cout << "enable event size : " << _changeList.size() << std::endl;
 	// std::cout << "enable event filter : " << tempEvent.filter << std::endl;
@@ -57,7 +58,8 @@ void Kqueue::disableEvent(uintptr_t ident, int16_t filter, void *udata)
 	struct kevent tempEvent;
 
 	EV_SET(&tempEvent, ident, filter, EV_DISABLE, 0, 0, udata);
-	_changeList.push_back(tempEvent);
+	kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
+	// _changeList.push_back(tempEvent);
 	// std::cout << "disable event ident : " << tempEvent.ident << std::endl;
 	// std::cout << "disable event size : " << _changeList.size() << std::endl;
 	// std::cout << "disable event filter : " << tempEvent.filter << std::endl;
@@ -68,8 +70,8 @@ void Kqueue::deleteEvent(const uintptr_t ident, int16_t filter, void *udata)
 	struct kevent tempEvent;
 
 	EV_SET(&tempEvent, ident, filter, EV_DELETE, 0, 0, udata);
-	// kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
-	_changeList.push_back(tempEvent);
+	kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
+	// _changeList.push_back(tempEvent);
 }
 
 int &Kqueue::getKq()
