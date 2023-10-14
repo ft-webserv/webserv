@@ -124,8 +124,6 @@ void ServerManager::_monitoringEvent()
 							Cgi *cgi = static_cast<Cgi *>(event->udata);
 
 							cgi->readResponse();
-							if (cgi->getIsCgiFin() == true)
-								cgi->getClient()->setCgi(NULL);
 							break;
 						}
 						default:
@@ -178,6 +176,7 @@ void ServerManager::_monitoringEvent()
 				}
 				catch (const eStatus &e)
 				{
+					std::cout << e << std::endl;
 					std::string errorPagePath;
 					switch (type)
 					{
@@ -201,7 +200,7 @@ void ServerManager::_monitoringEvent()
 				}
 				catch (std::exception &e)
 				{
-					std::cerr << e.what() << std::endl;
+					std::cout << e.what() << std::endl;
 					_disconnectClient(static_cast<Client *>(event->udata));
 				}
 			}
@@ -274,31 +273,10 @@ void ServerManager::_disconnectClient(Client *client)
 	{
 		Cgi *cgi = client->getCgi();
 
-		if (kill(cgi->getPid(), SIGTERM))
-			waitpid(cgi->getPid(), NULL, 0);
 		cgi->deleteCgiEvent();
+		if (cgi->getPid() != 0 && kill(cgi->getPid(), SIGTERM))
+			waitpid(cgi->getPid(), NULL, 0);
 		delete cgi;
 	}
 	delete client;
 }
-
-// void ServerManager::_disconnectCGI(struct kevent *event)
-// {
-// 	size_t size;
-// 	Cgi *cgi = static_cast<Cgi *>(event->udata);
-
-// 	if (kill(cgi->getPid(), SIGTERM))
-// 		waitpid(cgi->getPid(), NULL, 0);
-// 	cgi->deleteCgiEvent();
-// 	size = _kqueue.getEventList().size();
-// 	for (size_t i = 0; i < size; i++)
-// 	{
-// 		if (_kqueue.getEventList()[i].ident == cgi->getClientSock())
-// 		{
-// 			_disconnectClient(&_kqueue.getEventList()[i]);
-// 			break;
-// 		}
-// 	}
-// 	if (cgi != NULL)
-// 		delete cgi;
-// }

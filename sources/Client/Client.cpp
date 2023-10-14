@@ -38,7 +38,7 @@ void Client::readRequest(struct kevent *event)
 
 	if ((len = recv(_socket, &buf[0], event->data, 0)) == -1)
 		Exception::recvError("recv() error!");
-	else if (len <= 0)
+	else if (len == 0)
 		Exception::disconnectDuringRecvError("disconnected during read!");
 	// std::cout << "***************************" << std::endl;
 	// std::cout << "BUF : " << buf << std::endl;
@@ -61,7 +61,6 @@ void Client::readRequest(struct kevent *event)
 		_request.setBodyBuf(buf);
 	else if (_status == READCHUNKEDBODY)
 	{
-		std::cout << _request.getParsedRequest()._body.length() << std::endl;
 		_chunkedBodyBuf.append(buf.c_str());
 		while (1)
 		{
@@ -79,6 +78,8 @@ void Client::readRequest(struct kevent *event)
 			if (size == 0 && _chunkedBodyBuf.find("\r\n\r\n") != std::string::npos)
 			{
 				_status = FINREAD;
+				std::cout << _request.getParsedRequest()._body.length() << std::endl;
+				std::cout << "CHUNKEDBODY : " << _chunkedBodyBuf << std::endl;
 				_chunkedBodyBuf.clear();
 				return;
 			}
@@ -102,23 +103,24 @@ void Client::writeResponse()
 {
 	// if (chdir(WORK_PATH) == -1)
 	// 	Exception::listenError("chdir() error!");
-	try
-	{
 		if (_response.isAllowedMethod(_request.getParsedRequest()._method) == false)
 		{
 			throw(_405_METHOD_NOT_ALLOWED);
 		}
-		else if (_response.isCgi(_request.getParsedRequest()._location) == true)
+		else if (_status != CGISTART && _response.isCgi(_request.getParsedRequest()._location) == true)
 		{
-			if (_response.getResponse() == "")
-			{
-				Kqueue &kq = Kqueue::getInstance();
+			Kqueue &kq = Kqueue::getInstance();
 
-				_cgi = new Cgi(&_request, &_response, _socket, this);
-				_cgi->cgiStart();
-				kq.disableEvent(_socket, EVFILT_WRITE, static_cast<void *>(this));
-				return;
-			}
+			std::cout << "CGI START" << std::endl;
+			_cgi = new Cgi(&_request, &_response, _socket, this);
+			_cgi->cgiStart();
+			kq.disableEvent(_socket, EVFILT_WRITE, static_cast<void *>(this));
+			_status = CGISTART;
+			return;
+		}
+		else if (_status == CGISTART)
+		{
+			_status = CGIFIN;
 		}
 		else if (_request.getParsedRequest()._method == "GET" || _request.getParsedRequest()._method == "HEAD")
 		{
@@ -140,18 +142,6 @@ void Client::writeResponse()
 		_status = FINWRITE;
 		std::cout << _response.getResponse();
 		send(_socket, static_cast<void *>(&response[0]), response.size(), 0);
-	}
-	catch (const eStatus &e)
-	{
-		std::map<std::string, std::string> tmp = _response.getServerInfo()->getServerInfo();
-		std::string findResult = mapFind(tmp, "errorpage");
-
-		if (findResult.empty() == false)
-			findResult = "." + findResult;
-		_status = FINWRITE;
-
-		sendErrorPage(_socket, findResult, e);
-	}
 }
 
 void Client::setServerBlock(port_t port)

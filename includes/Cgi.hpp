@@ -31,7 +31,6 @@ public:
 	Response *getResponse();
 	pid_t getPid();
 	Client *getClient();
-	bool getIsCgiFin();
 	void cgiStart();
 	void deleteCgiEvent();
 
@@ -49,7 +48,6 @@ private:
 	int _envCnt;
 	int _reqFd[2];
 	int _resFd[2];
-	bool _isCgiFin;
 	pid_t _pid;
 	Response *_response;
 	Request *_request;

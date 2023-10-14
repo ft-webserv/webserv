@@ -19,7 +19,7 @@
 
 typedef struct s_cgiInfo
 {
-	std::string cgi;
+	std::string cgiExtension;
 	std::string cgiExec;
 	std::string cgiPath;
 } t_cgiInfo;
@@ -45,6 +45,7 @@ public:
 	std::string &getRoot();
 	std::string getErrorPage();
 	t_cgiInfo &getCgiInfo();
+	std::string &getPath(std::string location);
 	void setResponse(std::string &response);
 
 private:
@@ -52,13 +53,13 @@ private:
 	void _getFile(std::string location);
 	void _postFile(std::string location, Request &rqs);
 	void _deleteFile(std::string location);
-	std::string _makePath(std::string location);
+	void _makePath(std::string location);
 	void _setResponse(std::string path, off_t size);
 	void _setBody(std::string path, off_t size);
 	void _showFileList(std::string path);
 	bool _isAutoIndex();
 	void _makeResponse();
-	void _createFile(std::string path, std::string location, Request &rqs);
+	void _createFile(std::string location, Request &rqs);
 	std::string _makeRandomName();
 
 private:
@@ -67,6 +68,7 @@ private:
 	std::map<std::string, std::string> _headerFields;
 	std::string _body;
 	std::string _root;
+	std::string _path;
 	std::string _response;
 	std::string _statusText[2][13];
 	ServerInfo *_serverInfo;

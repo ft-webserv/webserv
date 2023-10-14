@@ -11,7 +11,6 @@ Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 	_reqFd[1] = 0;
 	_resFd[0] = 0;
 	_resFd[1] = 0;
-	_isCgiFin = false;
 	_pid = 0;
 	_env = new char *[ENVMAXSIZE];
 	_body.str(request->getParsedRequest()._body);
@@ -32,7 +31,7 @@ uintptr_t Cgi::getClientSock() { return (_clientSock); }
 Response *Cgi::getResponse() { return (_response); }
 pid_t Cgi::getPid() { return (_pid); }
 Client *Cgi::getClient() { return (_client); }
-bool Cgi::getIsCgiFin() { return (_isCgiFin); }
+// bool Cgi::getIsCgiFin() { return (_isCgiFin); }
 
 void Cgi::_makeEnvList(uintptr_t clntSock)
 {
@@ -53,7 +52,7 @@ void Cgi::_makeEnvList(uintptr_t clntSock)
 	_addEnv("CONTENT_TYPE", _request->getParsedRequest()._contentType);
 	_addEnv("CONTENT_LENGTH", ft_itos(_request->getParsedRequest()._body.size()));
 	_addEnv("SCRIPT_NAME", _cgiPath);
-	_addEnv("PATH_INFO", _response->getRoot() + _request->getParsedRequest()._location);
+	_addEnv("PATH_INFO", _response->getPath(_request->getParsedRequest()._location).substr(2));
 }
 
 void Cgi::_addEnv(std::string key, std::string value)
@@ -64,6 +63,7 @@ void Cgi::_addEnv(std::string key, std::string value)
 	_env[_envCnt] = new char[tmp.size() + 1];
 	tmp.copy(_env[_envCnt], tmp.size());
 	_env[_envCnt][tmp.size()] = '\0';
+	std::cout << _env[_envCnt] << std::endl;
 	_envCnt++;
 	_env[_envCnt] = NULL;
 }
@@ -135,7 +135,7 @@ void Cgi::writeBody()
 	if (_body.eof() == true)
 	{
 		std::cout << buf << std::endl;
-		// kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
+		kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
 		kqueue.enableEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
 		write(_reqFd[1], buf, endPos - startPos);
 		close(_reqFd[1]);
@@ -178,7 +178,6 @@ void Cgi::readResponse()
 			deleteCgiEvent();
 			_response->setResponse(_cgiResponse);
 			kqueue.enableEvent(_clientSock, EVFILT_WRITE, static_cast<void *>(_client));
-			_isCgiFin = true;
 			delete this;
 			break;
 		}

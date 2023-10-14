@@ -22,6 +22,8 @@ enum eClientStatus
   FINREAD,
   RESPONSE_START,
   WRITTING,
+  CGISTART,
+  CGIFIN,
   FINWRITE
 };
 

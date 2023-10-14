@@ -28,10 +28,11 @@ void Response::initResponse()
 	_headerFields.clear();
 	_body.clear();
 	_root.clear();
+	_path.clear();
 	_response.clear();
 	_serverInfo = NULL;
 	_locationInfo = NULL;
-	_cgiInfo.cgi.clear();
+	_cgiInfo.cgiExtension.clear();
 	_cgiInfo.cgiExec.clear();
 	_cgiInfo.cgiPath.clear();
 }
@@ -40,6 +41,12 @@ std::string &Response::getResponse() { return (_response); }
 
 std::string &Response::getRoot() { return (_root); }
 
+std::string &Response::getPath(std::string location)
+{
+	_makePath(location);
+	return (_path);
+}
+
 ServerInfo *Response::getServerInfo() { return (_serverInfo); }
 
 LocationInfo *Response::getLocationInfo() { return (_locationInfo); }
@@ -47,6 +54,7 @@ LocationInfo *Response::getLocationInfo() { return (_locationInfo); }
 bool &Response::getIsHead() { return (_isHead); }
 
 t_cgiInfo &Response::getCgiInfo() { return (_cgiInfo); }
+
 
 void Response::setServerInfo(ServerInfo *serverBlock) { _serverInfo = serverBlock; }
 
@@ -120,16 +128,15 @@ void Response::_findRoot()
 
 void Response::_getFile(std::string location)
 {
-	std::string path;
 	struct stat buf;
 
-	path = _makePath(location);
-	if (stat(path.c_str(), &buf) == -1)
+	_makePath(location);
+	if (stat(_path.c_str(), &buf) == -1)
 		throw(_404_NOT_FOUND);
 	switch (buf.st_mode & S_IFMT)
 	{
 	case S_IFREG:
-		_setResponse(path, buf.st_size);
+		_setResponse(_path, buf.st_size);
 		break;
 	case S_IFDIR:
 	{
@@ -142,7 +149,7 @@ void Response::_getFile(std::string location)
 			if (it->second == "index")
 			{
 				std::string indexPath;
-				indexPath = path + "/" + it->first;
+				indexPath = _path + "/" + it->first;
 				if (stat(indexPath.c_str(), &buf) != -1)
 				{
 					_setResponse(indexPath, buf.st_size);
@@ -152,7 +159,7 @@ void Response::_getFile(std::string location)
 		}
 		if (_isAutoIndex() == true)
 		{
-			_showFileList(path);
+			_showFileList(_path);
 		}
 		else
 			throw(_404_NOT_FOUND);
@@ -165,19 +172,17 @@ void Response::_getFile(std::string location)
 
 void Response::_postFile(std::string location, Request &rqs)
 {
-	std::string path;
 	struct stat buf;
 
-	path = _makePath(location);
-	std::cout << rqs.getParsedRequest()._body.length() << std::endl;
-	if (stat(path.c_str(), &buf) == -1)
+	_makePath(location);
+	if (stat(_path.c_str(), &buf) == -1)
 		throw(_404_NOT_FOUND);
 	switch (buf.st_mode & S_IFMT)
 	{
 	case S_IFREG:
 		throw(_400_BAD_REQUEST);
 	case S_IFDIR:
-		_createFile(path, location, rqs);
+		_createFile(location, rqs);
 		break;
 	default:
 		break;
@@ -186,37 +191,34 @@ void Response::_postFile(std::string location, Request &rqs)
 
 void Response::_deleteFile(std::string location)
 {
-	std::string path;
 	struct stat buf;
 
-	path = _makePath(location);
-	if (stat(path.c_str(), &buf) == -1)
+	_makePath(location);
+	if (stat(_path.c_str(), &buf) == -1)
 		throw(_404_NOT_FOUND);
 	if (buf.st_mode & S_IFDIR)
 		throw(_403_FORBIDDEN);
-	if (std::remove(path.c_str()) != 0)
+	if (std::remove(_path.c_str()) != 0)
 		throw(_500_INTERNAL_SERVER_ERROR);
 	// _headerFields.insert(std::pair<std::string, std::string>("Content-Length:", "19"));
 	// _headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "application/json"));
 	// _body += "\r\n{\"success\":\"true\"}";
 }
 
-std::string Response::_makePath(std::string location)
+void Response::_makePath(std::string location)
 {
 	std::string tmp;
-	std::string path;
 	std::size_t pos;
 
 	pos = location.find(_locationInfo->getPath());
 	if (pos != std::string::npos)
 		location.erase(pos, _locationInfo->getPath().length());
-	path = "." + _root + location;
-	std::cout << "*******************" << path << std::endl;
-	for (std::string::size_type i = path.find("//"); i != std::string::npos; i = path.find("//"))
-		path.erase(i + 1, 1);
-	if (*path.rbegin() == '/')
-		path.pop_back();
-	return (path);
+	_path = "." + _root + location;
+	std::cout << "*******************" << _path << std::endl;
+	for (std::string::size_type i = _path.find("//"); i != std::string::npos; i = _path.find("//"))
+		_path.erase(i + 1, 1);
+	if (*_path.rbegin() == '/')
+		_path.pop_back();
 }
 
 void Response::_setResponse(std::string path, off_t size)
@@ -344,12 +346,12 @@ bool Response::isCgi(std::string location)
 	if (_cgiInfo.cgiExec == "" || _cgiInfo.cgiPath == "")
 	{
 		tmp = _serverInfo->getServerInfo();
-		_cgiInfo.cgi = mapFind(tmp, "cgi");
+		_cgiInfo.cgiExtension = mapFind(tmp, "cgi_extension");
 		_cgiInfo.cgiExec = mapFind(tmp, "cgi_exec");
 		_cgiInfo.cgiPath = mapFind(tmp, "cgi_path");
-		if (_cgiInfo.cgi == "" || _cgiInfo.cgiExec == "" || _cgiInfo.cgiPath == "")
+		if (_cgiInfo.cgiExtension == "" || _cgiInfo.cgiExec == "" || _cgiInfo.cgiPath == "")
 			return (false);
-		if (findExtension(location) != _cgiInfo.cgi)
+		if (findExtension(location) != _cgiInfo.cgiExtension)
 			return (false);
 	}
 	return (true);
@@ -375,14 +377,14 @@ std::string Response::getErrorPage()
 	return (findResult);
 }
 
-void Response::_createFile(std::string path, std::string location, Request &rqs)
+void Response::_createFile(std::string location, Request &rqs)
 {
 	Config &conf = Config::getInstance();
 	std::string fileName;
 	std::ofstream os;
 
 	fileName = _makeRandomName() + "." + mapFind(conf.getMimeType(), rqs.getParsedRequest()._contentType);
-	os.open(path + "/" + fileName);
+	os.open(_path + "/" + fileName);
 	if (os.is_open() == false)
 		throw(_500_INTERNAL_SERVER_ERROR);
 	os.write(rqs.getParsedRequest()._body.c_str(), rqs.getParsedRequest()._body.size());
