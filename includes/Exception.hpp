@@ -19,5 +19,6 @@ public:
 	static void acceptError(const std::string &message);
 	static void recvError(const std::string &message);
 	static void disconnectDuringRecvError(const std::string &message);
+	static void disconnectDuringSendError(const std::string &message);
 	static void chdirError(const std::string &message);
 };

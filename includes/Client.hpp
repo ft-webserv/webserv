@@ -52,9 +52,11 @@ public:
   // delete keep alive time
 
 private:
-  std::string::size_type getNextPos(std::string::size_type currPos);
+  std::string::size_type _getNextPos(std::string::size_type currPos);
+  void _sendResponse();
 
 private:
+  size_t _lastPos;
   std::string _chunkedBodyBuf;
   eClientStatus _status;
   uintptr_t _socket;

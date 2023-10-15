@@ -17,7 +17,8 @@ Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 	_requestBodyLength = _requestBody.length();
 	_lastPos = 0;
 	_cgiInfo = response->getCgiInfo();
-	_cgiExec = "." + _response->getRoot() + _cgiInfo.cgiExec;
+	char buf[100];
+	_cgiExec = getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiExec;
 	_cgiPath = "." + _response->getRoot() + _cgiInfo.cgiPath;
 	_makeEnvList(_clientSock);
 }
@@ -92,7 +93,7 @@ void Cgi::cgiStart()
 	}
 	else if (_pid == 0)
 	{
-		char *args[3];
+		char *args[2];
 
 		dup2(_reqFd[0], STDIN_FILENO);
 		dup2(_resFd[1], STDOUT_FILENO);
@@ -101,9 +102,11 @@ void Cgi::cgiStart()
 		close(_reqFd[1]);
 		close(_resFd[0]);
 
-		args[0] = &_cgiExec[0];
-		args[1] = &_cgiPath[0];
-		args[2] = NULL;
+		args[0] = new char[100];
+		args[1] = new char[100];
+		_cgiExec.copy(args[0], _cgiExec.size() + 1);
+		args[0][_cgiExec.size()] = '\0';
+		args[1] = NULL;
 		execve(_cgiExec.c_str(), args, _env);
 		throw(_403_FORBIDDEN);
 	}
@@ -125,6 +128,8 @@ void Cgi::writeBody()
 	Kqueue &kqueue = Kqueue::getInstance();
 	ssize_t res;
 
+	std::cout << "REQUEST BODY SIZE : " << _requestBodyLength << std::endl;
+	std::cout << "_lastPos : " << _lastPos << std::endl;
 	std::cout << "CGI INFO: 1 " << _cgiExec << std::endl;
 	std::cout << "CGI INFO: 2 " << _cgiPath << std::endl;
 	res = write(_reqFd[1], _requestBody.c_str() + _lastPos, _requestBodyLength - _lastPos);
@@ -169,9 +174,13 @@ void Cgi::readResponse(struct kevent *event)
 
 			deleteCgiEvent();
 
-			if (_cgiResponse.find("Status: "))
+			if (_cgiResponse.find("Status: ") != std::string::npos)
 			{
-				_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
+				std::cout << "%%%%%%%%%%%%%%%%%%%%" << std::endl;
+				std::cout << _cgiResponse << std::endl;
+				std::cout << "%%%%%%%%%%%%%%%%%%%%" << std::endl;
+				_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
+				_response->setResponse(_cgiResponse);
 			}
 			else
 				_response->setResponse(_cgiResponse);

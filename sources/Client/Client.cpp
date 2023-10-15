@@ -1,10 +1,10 @@
 #include "Client.hpp"
 
 Client::Client(uintptr_t socket)
-	: _status(START), _socket(socket), _cgi(NULL) {}
+	: _lastPos(0), _status(START), _socket(socket), _cgi(NULL) {}
 
 Client::Client(const Client &src)
-	: _status(START), _socket(src._socket), _cgi(NULL) {}
+	: _lastPos(0), _status(START), _socket(src._socket), _cgi(NULL) {}
 
 Client &Client::operator=(const Client &src)
 {
@@ -38,8 +38,8 @@ void Client::readRequest(struct kevent *event)
 
 	if ((len = recv(_socket, &buf[0], event->data, 0)) == -1)
 		Exception::recvError("recv() error!");
-	else if (len == 0)
-		Exception::disconnectDuringRecvError("disconnected during read!");
+	else if (len <= 0)
+		Exception::disconnectDuringRecvError("disconnected during read()");
 	// std::cout << "***************************" << std::endl;
 	// std::cout << "BUF : " << buf << std::endl;
 	// std::cout << "***************************" << std::endl;
@@ -137,11 +137,31 @@ void Client::writeResponse()
 	{
 		throw(_501_NOT_IMPLEMENTED);
 	}
+	_sendResponse();
+}
+
+void Client::_sendResponse()
+{
+	size_t sendSize = 2048;
 	std::string &response = _response.getResponse();
+
+	if (response.length() - _lastPos < sendSize)
+		sendSize = response.length() - _lastPos;
+	ssize_t res = send(_socket, response.c_str() + _lastPos, sendSize, 0);
+	if (res == -1)
+		throw(_500_INTERNAL_SERVER_ERROR);
+	else if (res <= 0)
+		Exception::disconnectDuringSendError("disconnected during send()");
+	if (static_cast<size_t>(res) < response.length() - _lastPos)
+	{
+		_lastPos += res;
+		std::cout << _lastPos << std::endl;
+		return;
+	}
+	std::cout << ")))))))))))))))))))))" << std::endl;
+	std::cout << response.size() << std::endl;
+	std::cout << response << std::endl;
 	_status = FINWRITE;
-	std::cout << _response.getResponse().size() << std::endl;
-	std::cout << _response.getResponse() << std::endl;
-	send(_socket, static_cast<void *>(&response[0]), response.size(), 0);
 }
 
 void Client::setServerBlock(port_t port)
@@ -195,7 +215,7 @@ void Client::setLocationBlock()
 	end = _response.getServerInfo()->getLocationInfos().end();
 	while (true)
 	{
-		pos = getNextPos(pos);
+		pos = _getNextPos(pos);
 		if (pos == std::string::npos)
 			break;
 		token = _request.getParsedRequest()._location.substr(0, pos);
@@ -219,11 +239,12 @@ void Client::initClient()
 {
 	_status = START;
 	_cgi = NULL;
+	_lastPos = 0;
 	_request.initRequest();
 	_response.initResponse();
 }
 
-std::string::size_type Client::getNextPos(std::string::size_type currPos)
+std::string::size_type Client::_getNextPos(std::string::size_type currPos)
 {
 	std::string location = _request.getParsedRequest()._location;
 	std::string::size_type nextPos;

@@ -54,7 +54,7 @@ private:
 	void _postFile(std::string location, Request &rqs);
 	void _deleteFile(std::string location);
 	void _makePath(std::string location);
-	void _setResponse(std::string path, off_t size);
+	void _setHeader(std::string path, off_t size);
 	void _setBody(std::string path, off_t size);
 	void _showFileList(std::string path);
 	bool _isAutoIndex();

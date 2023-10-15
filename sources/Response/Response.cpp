@@ -135,7 +135,7 @@ void Response::_getFile(std::string location)
 	switch (buf.st_mode & S_IFMT)
 	{
 	case S_IFREG:
-		_setResponse(_path, buf.st_size);
+		_setHeader(_path, buf.st_size);
 		break;
 	case S_IFDIR:
 	{
@@ -151,7 +151,7 @@ void Response::_getFile(std::string location)
 				indexPath = _path + "/" + it->first;
 				if (stat(indexPath.c_str(), &buf) != -1)
 				{
-					_setResponse(indexPath, buf.st_size);
+					_setHeader(indexPath, buf.st_size);
 					return;
 				}
 			}
@@ -217,10 +217,11 @@ void Response::_makePath(std::string location)
 		_path.erase(i + 1, 1);
 	if (*_path.rbegin() == '/')
 		_path.pop_back();
-	std::cout << "*******************" << _path << std::endl;
+	std::cout << "*******************" << std::endl;
+	std::cout << _path << std::endl;
 }
 
-void Response::_setResponse(std::string path, off_t size)
+void Response::_setHeader(std::string path, off_t size)
 {
 	Config &conf = Config::getInstance();
 	std::string::size_type pos;
