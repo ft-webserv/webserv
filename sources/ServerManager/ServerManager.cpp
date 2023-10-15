@@ -94,6 +94,10 @@ void ServerManager::_monitoringEvent()
 							break;
 						}
 					}
+					else if (event->flags & EV_EOF && type == CLIENT)
+					{
+						_disconnectClient(static_cast<Client *>(event->udata));
+					}
 					else if (event->filter == EVFILT_READ)
 					{
 						switch (type)
@@ -123,7 +127,7 @@ void ServerManager::_monitoringEvent()
 						{
 							Cgi *cgi = static_cast<Cgi *>(event->udata);
 
-							cgi->readResponse();
+							cgi->readResponse(event);
 							break;
 						}
 						default:
@@ -164,7 +168,6 @@ void ServerManager::_monitoringEvent()
 					else if (event->filter == EVFILT_TIMER)
 					{
 						Client *client = static_cast<Client *>(event->udata);
-
 						if (client->getClientStatus() > START && client->getClientStatus() < FINWRITE)
 						{
 							std::string errorPagePath = client->getResponse().getErrorPage();
@@ -264,11 +267,11 @@ void ServerManager::_findServerBlock(Client *client)
 void ServerManager::_disconnectClient(Client *client)
 {
 	std::cout << "Disconnected with client : " << client->getSocket() << std::endl;
+	close(client->getSocket());
+	_kqueue._deleteFdType(client->getSocket());
 	_kqueue.deleteEvent(client->getSocket(), EVFILT_TIMER, static_cast<void *>(client));
 	_kqueue.deleteEvent(client->getSocket(), EVFILT_READ, static_cast<void *>(client));
 	_kqueue.deleteEvent(client->getSocket(), EVFILT_WRITE, static_cast<void *>(client));
-	_kqueue._deleteFdType(client->getSocket());
-	close(client->getSocket());
 	if (client->getCgi() != NULL)
 	{
 		Cgi *cgi = client->getCgi();

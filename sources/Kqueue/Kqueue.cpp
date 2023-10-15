@@ -154,9 +154,13 @@ eFdType Kqueue::getFdType(const uintptr_t socket)
 	if (FD_ISSET(socket, &_servers))
 		return (SERVER);
 	else if (FD_ISSET(socket, &_clients))
+	{
 		return (CLIENT);
+	}
 	else if (FD_ISSET(socket, &_cgis))
+	{
 		return (CGI);
+	}
 	else
 		return (DEFAULT);
 }

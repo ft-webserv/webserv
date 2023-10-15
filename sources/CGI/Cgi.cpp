@@ -13,9 +13,11 @@ Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 	_resFd[1] = 0;
 	_pid = 0;
 	_env = new char *[ENVMAXSIZE];
-	_body.str(request->getParsedRequest()._body);
+	_requestBody = request->getParsedRequest()._body;
+	_requestBodyLength = _requestBody.length();
+	_lastPos = 0;
 	_cgiInfo = response->getCgiInfo();
-	_cgiExec = _cgiInfo.cgiExec;
+	_cgiExec = "." + _response->getRoot() + _cgiInfo.cgiExec;
 	_cgiPath = "." + _response->getRoot() + _cgiInfo.cgiPath;
 	_makeEnvList(_clientSock);
 }
@@ -42,17 +44,18 @@ void Cgi::_makeEnvList(uintptr_t clntSock)
 	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
 	port = ntohs(clnt.sin_port);
 
-	_addEnv("SERVER_SOFTWARE", "webserv/0.1");
-	_addEnv("SERVER_PROTOCOL", "HTTP/1.1");
-	_addEnv("SERVER_PORT", ft_itos(port));
+	_addEnv("CONTENT_TYPE", _request->getParsedRequest()._contentType);
+	_addEnv("CONTENT_LENGTH", ft_itos(_request->getParsedRequest()._body.size()));
 	_addEnv("SERVER_NAME", mapFind(_response->getServerInfo()->getServerInfo(), "server_name"));
+	_addEnv("SERVER_PROTOCOL", "HTTP/1.1");
+	char buf[100];
+	_addEnv("PATH_INFO", getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiExec);
+	_addEnv("SERVER_SOFTWARE", "webserv/0.1");
+	_addEnv("SERVER_PORT", ft_itos(port));
 	_addEnv("GETWAY_INTERFACE", "CGI/1.1");
 	_addEnv("REQUEST_METHOD", _request->getParsedRequest()._method);
 	_addEnv("REMOTE_ADDR", ft_itos(clnt.sin_addr.s_addr));
-	_addEnv("CONTENT_TYPE", _request->getParsedRequest()._contentType);
-	_addEnv("CONTENT_LENGTH", ft_itos(_request->getParsedRequest()._body.size()));
-	_addEnv("SCRIPT_NAME", _cgiPath);
-	_addEnv("PATH_INFO", _response->getPath(_request->getParsedRequest()._location).substr(2));
+	// _addEnv("SCRIPT_NAME", getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiExec);
 }
 
 void Cgi::_addEnv(std::string key, std::string value)
@@ -119,43 +122,32 @@ void Cgi::cgiStart()
 
 void Cgi::writeBody()
 {
-	char buf[BUFFERSIZE + 1];
 	Kqueue &kqueue = Kqueue::getInstance();
+	ssize_t res;
 
 	std::cout << "CGI INFO: 1 " << _cgiExec << std::endl;
 	std::cout << "CGI INFO: 2 " << _cgiPath << std::endl;
-	std::streampos startPos = _body.tellg();
-	std::cout << "start tellg : " << startPos << std::endl;
-	memset(static_cast<void *>(buf), 0, BUFFERSIZE + 1);
-	_body.read(buf, BUFFERSIZE);
-	std::streampos endPos = _body.tellg();
-	if (endPos == -1)
-		endPos = _body.str().length();
-	std::cout << "end tellg : " << endPos << std::endl;
-	if (_body.eof() == true)
+	res = write(_reqFd[1], _requestBody.c_str() + _lastPos, _requestBodyLength - _lastPos);
+	if (res == -1)
+		throw(_500_INTERNAL_SERVER_ERROR);
+	_lastPos += res;
+	if (_lastPos == _requestBodyLength)
 	{
-		std::cout << buf << std::endl;
 		kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
 		kqueue.enableEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
-		write(_reqFd[1], buf, endPos - startPos);
 		close(_reqFd[1]);
-		return;
 	}
-	if (_body.fail() == true)
-	{
-		throw(_500_INTERNAL_SERVER_ERROR);
-	}
-	write(_reqFd[1], buf, BUFFERSIZE);
 }
 
-void Cgi::readResponse()
+void Cgi::readResponse(struct kevent *event)
 {
-	char buf[BUFFERSIZE + 1];
+	std::string buf;
 	ssize_t readSize;
 	pid_t result;
 
-	memset(static_cast<void *>(buf), 0, BUFFERSIZE);
-	readSize = read(_resFd[0], buf, BUFFERSIZE);
+	buf.clear();
+	buf.resize(event->data);
+	readSize = read(_resFd[0], &buf[0], event->data);
 	std::cout << "ReadSize : " << readSize << std::endl;
 	std::cout << "===========buf===========" << std::endl;
 	std::cout << buf << std::endl;
@@ -176,7 +168,13 @@ void Cgi::readResponse()
 			Kqueue &kqueue = Kqueue::getInstance();
 
 			deleteCgiEvent();
-			_response->setResponse(_cgiResponse);
+
+			if (_cgiResponse.find("Status: "))
+			{
+				_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
+			}
+			else
+				_response->setResponse(_cgiResponse);
 			kqueue.enableEvent(_clientSock, EVFILT_WRITE, static_cast<void *>(_client));
 			delete this;
 			break;

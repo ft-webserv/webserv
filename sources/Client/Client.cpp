@@ -103,45 +103,45 @@ void Client::writeResponse()
 {
 	// if (chdir(WORK_PATH) == -1)
 	// 	Exception::listenError("chdir() error!");
-		if (_response.isAllowedMethod(_request.getParsedRequest()._method) == false)
-		{
-			throw(_405_METHOD_NOT_ALLOWED);
-		}
-		else if (_status != CGISTART && _response.isCgi(_request.getParsedRequest()._location) == true)
-		{
-			Kqueue &kq = Kqueue::getInstance();
+	if (_response.isAllowedMethod(_request.getParsedRequest()._method) == false)
+	{
+		throw(_405_METHOD_NOT_ALLOWED);
+	}
+	else if (_status != CGISTART && _response.isCgi(_request.getParsedRequest()._location) == true)
+	{
+		Kqueue &kq = Kqueue::getInstance();
 
-			std::cout << "CGI START" << std::endl;
-			_cgi = new Cgi(&_request, &_response, _socket, this);
-			_cgi->cgiStart();
-			kq.disableEvent(_socket, EVFILT_WRITE, static_cast<void *>(this));
-			_status = CGISTART;
-			return;
-		}
-		else if (_status == CGISTART)
-		{
-			_status = CGIFIN;
-		}
-		else if (_request.getParsedRequest()._method == "GET" || _request.getParsedRequest()._method == "HEAD")
-		{
-			_response.handleGet(_request);
-		}
-		else if (_request.getParsedRequest()._method == "POST")
-		{
-			_response.handlePost(_request);
-		}
-		else if (_request.getParsedRequest()._method == "DELETE")
-		{
-			_response.handleDelete(_request);
-		}
-		else
-		{
-			throw(_501_NOT_IMPLEMENTED);
-		}
-		std::string &response = _response.getResponse();
-		_status = FINWRITE;
-		std::cout << _response.getResponse();
-		send(_socket, static_cast<void *>(&response[0]), response.size(), 0);
+		_cgi = new Cgi(&_request, &_response, _socket, this);
+		_cgi->cgiStart();
+		kq.disableEvent(_socket, EVFILT_WRITE, static_cast<void *>(this));
+		_status = CGISTART;
+		return;
+	}
+	else if (_status == CGISTART)
+	{
+		_status = CGIFIN;
+	}
+	else if (_request.getParsedRequest()._method == "GET" || _request.getParsedRequest()._method == "HEAD")
+	{
+		_response.handleGet(_request);
+	}
+	else if (_request.getParsedRequest()._method == "POST")
+	{
+		_response.handlePost(_request);
+	}
+	else if (_request.getParsedRequest()._method == "DELETE")
+	{
+		_response.handleDelete(_request);
+	}
+	else
+	{
+		throw(_501_NOT_IMPLEMENTED);
+	}
+	std::string &response = _response.getResponse();
+	_status = FINWRITE;
+	std::cout << _response.getResponse().size() << std::endl;
+	std::cout << _response.getResponse() << std::endl;
+	send(_socket, static_cast<void *>(&response[0]), response.size(), 0);
 }
 
 void Client::setServerBlock(port_t port)

@@ -26,7 +26,7 @@ public:
 	Cgi(Request *request, Response *response, uintptr_t socket, Client *client);
 	~Cgi();
 	void writeBody();
-	void readResponse();
+	void readResponse(struct kevent *event);
 	uintptr_t getClientSock();
 	Response *getResponse();
 	pid_t getPid();
@@ -40,9 +40,12 @@ private:
 	void _sendResponse();
 
 private:
-	std::stringstream _body;
+	std::size_t _lastPos;
+	std::size_t _requestBodyLength;
+	std::string _requestBody;
 	std::string _cgiExec;
 	std::string _cgiPath;
+	std::string _readbuf;
 	std::string _cgiResponse;
 	char **_env;
 	int _envCnt;

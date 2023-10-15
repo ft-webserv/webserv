@@ -55,7 +55,6 @@ bool &Response::getIsHead() { return (_isHead); }
 
 t_cgiInfo &Response::getCgiInfo() { return (_cgiInfo); }
 
-
 void Response::setServerInfo(ServerInfo *serverBlock) { _serverInfo = serverBlock; }
 
 void Response::setLocationInfo(LocationInfo *locationBlock)
@@ -211,14 +210,14 @@ void Response::_makePath(std::string location)
 	std::size_t pos;
 
 	pos = location.find(_locationInfo->getPath());
-	if (pos != std::string::npos)
+	if (pos != std::string::npos && _locationInfo->getPath() != "/")
 		location.erase(pos, _locationInfo->getPath().length());
 	_path = "." + _root + location;
-	std::cout << "*******************" << _path << std::endl;
 	for (std::string::size_type i = _path.find("//"); i != std::string::npos; i = _path.find("//"))
 		_path.erase(i + 1, 1);
 	if (*_path.rbegin() == '/')
 		_path.pop_back();
+	std::cout << "*******************" << _path << std::endl;
 }
 
 void Response::_setResponse(std::string path, off_t size)
