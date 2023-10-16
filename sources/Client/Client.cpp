@@ -107,7 +107,7 @@ void Client::writeResponse()
 	{
 		throw(_405_METHOD_NOT_ALLOWED);
 	}
-	else if (_status != CGISTART && _response.isCgi(_request.getParsedRequest()._location) == true)
+	else if (_status < CGISTART && _response.isCgi(_request.getParsedRequest()._location) == true)
 	{
 		Kqueue &kq = Kqueue::getInstance();
 
@@ -117,7 +117,7 @@ void Client::writeResponse()
 		_status = CGISTART;
 		return;
 	}
-	else if (_status == CGISTART)
+	else if (_status >= CGISTART)
 	{
 		_status = CGIFIN;
 	}
@@ -147,20 +147,21 @@ void Client::_sendResponse()
 
 	if (response.length() - _lastPos < sendSize)
 		sendSize = response.length() - _lastPos;
-	ssize_t res = send(_socket, response.c_str() + _lastPos, sendSize, 0);
+	ssize_t res = write(_socket, response.c_str() + _lastPos, response.length() - _lastPos);
 	if (res == -1)
 		throw(_500_INTERNAL_SERVER_ERROR);
 	else if (res <= 0)
 		Exception::disconnectDuringSendError("disconnected during send()");
+	std::cout << "RES : " << res << std::endl;
+	std::cout << "LAST POS : " << _lastPos << std::endl;
 	if (static_cast<size_t>(res) < response.length() - _lastPos)
 	{
 		_lastPos += res;
-		std::cout << _lastPos << std::endl;
 		return;
 	}
-	std::cout << ")))))))))))))))))))))" << std::endl;
-	std::cout << response.size() << std::endl;
-	std::cout << response << std::endl;
+	// std::cout << ")))))))))))))))))))))" << std::endl;
+	// std::cout << response.size() << std::endl;
+	// std::cout << response << std::endl;
 	_status = FINWRITE;
 }
 

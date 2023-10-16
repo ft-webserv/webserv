@@ -41,6 +41,7 @@ public:
 	bool getIsBody();
 
 private:
+	std::map<std::string, std::string> _etcHeader;
 	std::string _headerBuf;
 	t_request _parsedRequest;
 	bool _isBody;

@@ -139,6 +139,13 @@ void Request::parseRequest()
 			{
 				if (word.find(":") == std::string::npos)
 					throw(_400_BAD_REQUEST);
+				else
+				{
+					std::string val;
+
+					line >> val;
+					_etcHeader[word] = val;
+				}
 			}
 			pos += 2;
 			pre = pos;

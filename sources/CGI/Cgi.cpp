@@ -18,6 +18,7 @@ Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 	_lastPos = 0;
 	_cgiInfo = response->getCgiInfo();
 	char buf[100];
+	// _cgiExec = "/usr/bin/python3";
 	_cgiExec = getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiExec;
 	_cgiPath = "." + _response->getRoot() + _cgiInfo.cgiPath;
 	_makeEnvList(_clientSock);
@@ -44,7 +45,10 @@ void Cgi::_makeEnvList(uintptr_t clntSock)
 
 	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
 	port = ntohs(clnt.sin_port);
-
+	for ()
+	{
+		std::for_each();
+	}
 	_addEnv("CONTENT_TYPE", _request->getParsedRequest()._contentType);
 	_addEnv("CONTENT_LENGTH", ft_itos(_request->getParsedRequest()._body.size()));
 	_addEnv("SERVER_NAME", mapFind(_response->getServerInfo()->getServerInfo(), "server_name"));
@@ -93,7 +97,7 @@ void Cgi::cgiStart()
 	}
 	else if (_pid == 0)
 	{
-		char *args[2];
+		char *args[3];
 
 		dup2(_reqFd[0], STDIN_FILENO);
 		dup2(_resFd[1], STDOUT_FILENO);
@@ -104,6 +108,10 @@ void Cgi::cgiStart()
 
 		args[0] = new char[100];
 		args[1] = new char[100];
+		// args[2] = new char[100];
+		// args[0] = "/usr/bin/python3\0";
+		// args[1] = "./cgi-bin/post.py\0";
+		// args[2] = NULL;
 		_cgiExec.copy(args[0], _cgiExec.size() + 1);
 		args[0][_cgiExec.size()] = '\0';
 		args[1] = NULL;
@@ -119,7 +127,7 @@ void Cgi::cgiStart()
 		kqueue.setFdset(_reqFd[1], CGI);
 		kqueue.setFdset(_resFd[0], CGI);
 		kqueue.addEvent(_reqFd[1], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(this));
-		kqueue.addEvent(_resFd[0], EVFILT_READ, EV_ADD | EV_DISABLE, 0, 0, static_cast<void *>(this));
+		kqueue.addEvent(_resFd[0], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(this));
 	}
 }
 
@@ -132,9 +140,16 @@ void Cgi::writeBody()
 	std::cout << "_lastPos : " << _lastPos << std::endl;
 	std::cout << "CGI INFO: 1 " << _cgiExec << std::endl;
 	std::cout << "CGI INFO: 2 " << _cgiPath << std::endl;
-	res = write(_reqFd[1], _requestBody.c_str() + _lastPos, _requestBodyLength - _lastPos);
-	if (res == -1)
-		throw(_500_INTERNAL_SERVER_ERROR);
+	if (_request->getParsedRequest()._method == "GET")
+	{
+		kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
+		kqueue.enableEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
+		close(_reqFd[1]);
+	}
+	res = write(_reqFd[1], _requestBody.c_str() + _lastPos, _requestBody.length() - _lastPos);
+	std::cout << "RESULT : " << res << std::endl;
+	// if (res == -1)
+	// 	throw(_500_INTERNAL_SERVER_ERROR);
 	_lastPos += res;
 	if (_lastPos == _requestBodyLength)
 	{
@@ -153,9 +168,9 @@ void Cgi::readResponse(struct kevent *event)
 	buf.clear();
 	buf.resize(event->data);
 	readSize = read(_resFd[0], &buf[0], event->data);
-	std::cout << "ReadSize : " << readSize << std::endl;
-	std::cout << "===========buf===========" << std::endl;
-	std::cout << buf << std::endl;
+	// std::cout << "ReadSize : " << readSize << std::endl;
+	// std::cout << "CGIRESPONSE LENGTH : " << _cgiResponse.length() << std::endl;
+	// std::cout << buf << std::endl;
 	if (readSize == -1)
 		throw(_500_INTERNAL_SERVER_ERROR);
 	else if (readSize == 0)
@@ -176,10 +191,15 @@ void Cgi::readResponse(struct kevent *event)
 
 			if (_cgiResponse.find("Status: ") != std::string::npos)
 			{
-				std::cout << "%%%%%%%%%%%%%%%%%%%%" << std::endl;
-				std::cout << _cgiResponse << std::endl;
-				std::cout << "%%%%%%%%%%%%%%%%%%%%" << std::endl;
-				_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
+				// std::cout << "%%%%%%%%%%%%%%%%%%%%" << std::endl;
+				std::cout << _cgiResponse.substr(0, 200) << std::endl;
+				// std::cout << "%%%%%%%%%%%%%%%%%%%%" << std::endl;
+				if (_request->getParsedRequest()._method == "GET")
+					_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
+				else
+				{
+					_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: " + ft_itos(_cgiResponse.substr(_cgiResponse.find("\r\n\r\n") + 4).length()) + "\r\nContent-Type: text/html; charset=utf-8" + _cgiResponse.substr(_cgiResponse.find("\r\n\r\n"));
+				}
 				_response->setResponse(_cgiResponse);
 			}
 			else

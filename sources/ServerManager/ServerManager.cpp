@@ -277,7 +277,7 @@ void ServerManager::_disconnectClient(Client *client)
 		Cgi *cgi = client->getCgi();
 
 		cgi->deleteCgiEvent();
-		if (cgi->getPid() != 0 && kill(cgi->getPid(), SIGTERM))
+		if (cgi->getPid() != 0 && kill(cgi->getPid(), SIGTERM) == 0)
 			waitpid(cgi->getPid(), NULL, 0);
 		delete cgi;
 	}
