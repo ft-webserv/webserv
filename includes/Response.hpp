@@ -74,4 +74,5 @@ private:
 	ServerInfo *_serverInfo;
 	LocationInfo *_locationInfo;
 	t_cgiInfo _cgiInfo;
+  std::size_t _clientMaxBodySize;
 };

@@ -4,6 +4,8 @@
 Response::Response()
 	: _serverInfo(NULL), _locationInfo(NULL)
 {
+  Config& conf = Config::getInstance();
+
 	_isHead = false;
 	_statusText[0][0] = "OK";
 	_statusText[0][1] = "CREATED";
@@ -16,6 +18,7 @@ Response::Response()
 	_statusText[1][4] = "NOT MODIFIED";
 	_statusText[1][7] = "TEMPORARY REDIRECT";
 	_statusText[1][8] = "PERMANENT REDIRECT";
+  _clientMaxBodySize = conf.getClientMaxBodySize();
 }
 
 Response::~Response()
@@ -55,7 +58,10 @@ bool &Response::getIsHead() { return (_isHead); }
 
 t_cgiInfo &Response::getCgiInfo() { return (_cgiInfo); }
 
-void Response::setServerInfo(ServerInfo *serverBlock) { _serverInfo = serverBlock; }
+void Response::setServerInfo(ServerInfo *serverBlock)
+{
+  _serverInfo = serverBlock;
+}
 
 void Response::setLocationInfo(LocationInfo *locationBlock)
 {

@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <algorithm>
 
 #include "Kqueue.hpp"
 #include "Response.hpp"

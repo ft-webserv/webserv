@@ -93,7 +93,7 @@ void Client::readRequest(struct kevent *event)
 				break;
 		}
 	}
-	if (_request.getParsedRequest()._body.size() > conf.getClientMaxBodySize())
+	if (_status >= READBODY && _request.getParsedRequest()._body.size() > conf.getClientMaxBodySize())
 		throw(_413_REQUEST_ENTITY_TOO_LARGE);
 	if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
 		_status = FINREAD;

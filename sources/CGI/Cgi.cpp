@@ -42,13 +42,24 @@ void Cgi::_makeEnvList(uintptr_t clntSock)
 	struct sockaddr_in clnt;
 	socklen_t clntSockLen = sizeof(clnt);
 	port_t port;
+  std::map<std::string, std::string>::iterator iter = _request->getEtcHeader().begin();
+  std::map<std::string, std::string>::iterator end = _request->getEtcHeader().end();
 
 	getsockname(clntSock, (sockaddr *)&clnt, &clntSockLen);
 	port = ntohs(clnt.sin_port);
-	for ()
+	for (; iter != end; iter++)
 	{
-		std::for_each();
+    std::string str = iter->first;
+
+    std::for_each(str.begin(), str.end(), ft_toupper);
+    str.pop_back();
+    if (str == "X_SECRET_HEADER_FOR_TEST")
+    {
+      str = "HTTP_" + str;
+    }
+    _addEnv(str, iter->second);
 	}
+
 	_addEnv("CONTENT_TYPE", _request->getParsedRequest()._contentType);
 	_addEnv("CONTENT_LENGTH", ft_itos(_request->getParsedRequest()._body.size()));
 	_addEnv("SERVER_NAME", mapFind(_response->getServerInfo()->getServerInfo(), "server_name"));

@@ -38,3 +38,10 @@ std::string findExtension(std::string fileName)
 	pos += 1;
 	return (fileName.substr(pos, fileName.length() - pos));
 }
+
+void ft_toupper(char& c)
+{
+  c = std::toupper(c);
+  if (c == '-')
+    c = '_';
+}

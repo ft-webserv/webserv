@@ -65,15 +65,11 @@ void Request::setChunkedBodyBuf(const std::string buf)
 	// std::cout << "(((((((((((((())))))))))))))" << std::endl;
 }
 
-t_request Request::getParsedRequest() const
-{
-	return (_parsedRequest);
-}
+t_request Request::getParsedRequest() const { return (_parsedRequest); }
 
-bool Request::getIsBody()
-{
-	return (_isBody);
-}
+bool Request::getIsBody() { return (_isBody); }
+
+std::map<std::string, std::string> &Request::getEtcHeader() { return (_etcHeader); }
 
 void Request::parseRequest()
 {
@@ -225,3 +221,4 @@ void Request::_checkValidHeader()
 			throw(_400_BAD_REQUEST);
 	}
 }
+
