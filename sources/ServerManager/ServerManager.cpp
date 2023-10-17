@@ -113,9 +113,10 @@ void ServerManager::_monitoringEvent()
 								_setRequestTimeOut(client);
 							client->readRequest(event);
 							if (client->getClientStatus() == READBODY || client->getClientStatus() == READCHUNKEDBODY || client->getClientStatus() == FINREAD)
-							{
 								_findServerBlock(client);
-							}
+              if (client->getClientStatus() >= READBODY && \
+                    client->getRequest().getParsedRequest()._body.size() > client->getResponse().getClientMaxBodySize())
+                throw(_413_REQUEST_ENTITY_TOO_LARGE);
 							if (client->getClientStatus() == FINREAD)
 							{
 								_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);

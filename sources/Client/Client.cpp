@@ -26,7 +26,6 @@ void Client::setCgi(Cgi *cgi) { _cgi = cgi; }
 
 void Client::readRequest(struct kevent *event)
 {
-	Config &conf = Config::getInstance();
 	ssize_t len;
 	std::string buf;
 
@@ -81,7 +80,7 @@ void Client::readRequest(struct kevent *event)
 				std::cout << _request.getParsedRequest()._body.length() << std::endl;
 				std::cout << "CHUNKEDBODY : " << _chunkedBodyBuf << std::endl;
 				_chunkedBodyBuf.clear();
-				return;
+				break;
 			}
 			else if (_chunkedBodyBuf.length() - (pos + 2) >= size + 2 && size != 0)
 			{
@@ -93,8 +92,6 @@ void Client::readRequest(struct kevent *event)
 				break;
 		}
 	}
-	if (_status >= READBODY && _request.getParsedRequest()._body.size() > conf.getClientMaxBodySize())
-		throw(_413_REQUEST_ENTITY_TOO_LARGE);
 	if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
 		_status = FINREAD;
 }

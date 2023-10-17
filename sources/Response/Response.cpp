@@ -58,15 +58,28 @@ bool &Response::getIsHead() { return (_isHead); }
 
 t_cgiInfo &Response::getCgiInfo() { return (_cgiInfo); }
 
+std::size_t &Response::getClientMaxBodySize() { return (_clientMaxBodySize); }
+
 void Response::setServerInfo(ServerInfo *serverBlock)
 {
   _serverInfo = serverBlock;
+  std::size_t clientMaxSize = ft_stoi(mapFind(_serverInfo->getServerInfo(), "client_max_body_size"));
+  if (clientMaxSize != 0)
+  {
+    _clientMaxBodySize = clientMaxSize;
+  }
 }
 
 void Response::setLocationInfo(LocationInfo *locationBlock)
 {
 	_locationInfo = locationBlock;
 	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
+
+  std::size_t clientMaxSize = ft_stoi(mapFind(tmp, "client_max_body_size"));
+  if (clientMaxSize != 0)
+  {
+    _clientMaxBodySize = clientMaxSize;
+  }
 	if (mapFind(tmp, "return").empty() == false)
 	{
 		std::stringstream ss;

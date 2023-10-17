@@ -37,6 +37,7 @@ public:
 	LocationInfo *getLocationInfo();
 	void setServerInfo(ServerInfo *serverBlock);
 	void setLocationInfo(LocationInfo *locationBlock);
+	void setResponse(std::string &response);
 	void initResponse();
 	bool isAllowedMethod(std::string method);
 	bool isCgi(std::string location);
@@ -46,7 +47,7 @@ public:
 	std::string getErrorPage();
 	t_cgiInfo &getCgiInfo();
 	std::string &getPath(std::string location);
-	void setResponse(std::string &response);
+  std::size_t &getClientMaxBodySize();
 
 private:
 	void _findRoot();
