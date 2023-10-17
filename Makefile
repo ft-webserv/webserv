@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------- #
 
 CC					:= c++
-CFLAGS				:= -std=c++98 -Wextra -Wall -fsanitize=address -g3 #-Werror
+CFLAGS				:= -std=c++98 -Wextra -Wall #-Werror
 CPPFLAGS			= -I includes
 MJ					= -MJ $(patsubst $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(BUILD_DIR)/$(JSON_DIR)/%.part.json, $@)
 

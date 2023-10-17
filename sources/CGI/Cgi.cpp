@@ -101,7 +101,7 @@ void Cgi::cgiStart()
   fcntl(_reqFd[0], F_SETFL, O_NONBLOCK);
   fcntl(_reqFd[1], F_SETFL, O_NONBLOCK);
   fcntl(_resFd[0], F_SETFL, O_NONBLOCK);
-  fcntl(_resFd[1], F_SETFL, O_NONBLOCK);
+  fcntl(_resFd[0], F_SETFL, O_NONBLOCK);
 	_pid = fork();
 	if (_pid == -1)
 	{
@@ -149,7 +149,6 @@ void Cgi::writeBody()
 	if (_request->getParsedRequest()._method == "GET")
 	{
 		kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
-		kqueue.enableEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
 		close(_reqFd[1]);
 	}
 	res = write(_reqFd[1], _requestBody.c_str() + _lastPos, _requestBody.length() - _lastPos);
