@@ -60,23 +60,12 @@ void ServerManager::_monitoringEvent()
 		try
 		{
 			numEvents = _kqueue.doKevent();
-			std::cout << "Events num : " << numEvents << std::endl;
 			for (int i = 0; i < numEvents; i++)
 			{
 				event = &_kqueue.getEventList()[i];
-				std::cout << "Events : " << event->ident << ", " << event->flags << ", " << event->fflags << ", " << event->filter << ", " << event->data << ", " << event->udata << std::endl;
 				eFdType type = _kqueue.getFdType(event->ident);
 				try
 				{
-					std::cout << "----------------------------------" << std::endl;
-					std::cout << ((type == SERVER) ? "Server : " : (type == CLIENT) ? "CLIENT : "
-																					: "CGI : ")
-							  << std::endl;
-					std::cout << event->ident << std::endl;
-					std::cout << ((event->filter == EVFILT_READ) ? "read" : (event->filter == EVFILT_WRITE) ? "write"
-																											: "timmer")
-							  << std::endl;
-					std::cout << "----------------------------------" << std::endl;
 					if (event->flags & EV_ERROR)
 					{
 						switch (type)
@@ -175,12 +164,12 @@ void ServerManager::_monitoringEvent()
 
 							client->sendErrorPage(event->ident, errorPagePath, _408_REQUEST_TIMEOUT);
 						}
+            std::cout << "[[[[[[[[[[Timer Error]]]]]]]]]]" << std::endl;
 						_disconnectClient(client);
 					}
 				}
 				catch (const eStatus &e)
 				{
-					std::cout << e << std::endl;
 					std::string errorPagePath;
 					switch (type)
 					{
@@ -204,7 +193,7 @@ void ServerManager::_monitoringEvent()
 				}
 				catch (std::exception &e)
 				{
-					std::cout << e.what() << std::endl;
+					std::cerr << e.what() << std::endl;
 					_disconnectClient(static_cast<Client *>(event->udata));
 				}
 			}

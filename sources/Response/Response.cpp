@@ -236,8 +236,6 @@ void Response::_makePath(std::string location)
 		_path.erase(i + 1, 1);
 	if (*_path.rbegin() == '/')
 		_path.pop_back();
-	std::cout << "*******************" << std::endl;
-	std::cout << _path << std::endl;
 }
 
 void Response::_setHeader(std::string path, off_t size)

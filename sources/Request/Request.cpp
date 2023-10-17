@@ -37,11 +37,7 @@ std::string Request::setHeaderBuf(std::string &buf)
 	{
 		_isBody = true;
 		tmp = _headerBuf.substr(newLinePos + 4, _headerBuf.length());
-		// std::cout << "pos :" << newLinePos << "headerbuf :" << _headerBuf.length() << std::endl;
 		_headerBuf = _headerBuf.substr(0, newLinePos) + "\r\n";
-		std::cout << "===============================" << std::endl;
-		std::cout << _headerBuf << std::endl;
-		std::cout << "===============================" << std::endl;
 		return (tmp);
 	}
 	return (buf);
@@ -59,10 +55,6 @@ void Request::setChunkedBodyBuf(const std::string buf)
 	if (_parsedRequest._body.size() > conf.getClientMaxBodySize())
 		throw(_413_REQUEST_ENTITY_TOO_LARGE);
 	_parsedRequest._body += buf.c_str();
-	// std::cout << "(((((((((((((())))))))))))))" << std::endl;
-	// std::cout << "CHUNKED BODY SIZE : " << _parsedRequest._body.size() << std::endl;
-	// std::cout << "CHUNKED BODY : " << _parsedRequest._body << std::endl;
-	// std::cout << "(((((((((((((())))))))))))))" << std::endl;
 }
 
 t_request Request::getParsedRequest() const { return (_parsedRequest); }

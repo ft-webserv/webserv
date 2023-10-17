@@ -22,7 +22,6 @@ Request &Client::getRequest() { return (_request); }
 Response &Client::getResponse() { return (_response); }
 Cgi *Client::getCgi() { return (_cgi); }
 void Client::setCgi(Cgi *cgi) { _cgi = cgi; }
-// bool Client::getIsCgi() { return (_isCgi); }
 
 void Client::readRequest(struct kevent *event)
 {
@@ -39,9 +38,7 @@ void Client::readRequest(struct kevent *event)
 		Exception::recvError("recv() error!");
 	else if (len <= 0)
 		Exception::disconnectDuringRecvError("disconnected during read()");
-	// std::cout << "***************************" << std::endl;
-	// std::cout << "BUF : " << buf << std::endl;
-	// std::cout << "***************************" << std::endl;
+  std::cout << " [READ] Server <- Client(" << this->_socket << ") " << len << "byte"<< std::endl;
 	if (_status == READHEADER)
 		buf = _request.setHeaderBuf(buf);
 	if (_request.getIsBody() == true && _status == READHEADER)
@@ -66,8 +63,6 @@ void Client::readRequest(struct kevent *event)
 			std::string::size_type pos;
 			std::size_t size = -1;
 
-			// std::cout << "CHUNKED BODY: " << _chunkedBodyBuf << std::endl;
-			// std::cout << "CHUNKED BODY SIZE : " << _chunkedBodyBuf.length() << std::endl;
 			pos = _chunkedBodyBuf.find("\r\n");
 			if (pos == std::string::npos)
 				break;
@@ -77,8 +72,6 @@ void Client::readRequest(struct kevent *event)
 			if (size == 0 && _chunkedBodyBuf.find("\r\n\r\n") != std::string::npos)
 			{
 				_status = FINREAD;
-				std::cout << _request.getParsedRequest()._body.length() << std::endl;
-				std::cout << "CHUNKEDBODY : " << _chunkedBodyBuf << std::endl;
 				_chunkedBodyBuf.clear();
 				break;
 			}
@@ -139,26 +132,19 @@ void Client::writeResponse()
 
 void Client::_sendResponse()
 {
-	size_t sendSize = 2048;
 	std::string &response = _response.getResponse();
 
-	if (response.length() - _lastPos < sendSize)
-		sendSize = response.length() - _lastPos;
 	ssize_t res = write(_socket, response.c_str() + _lastPos, response.length() - _lastPos);
+  std::cout << "[WRITE] Server -> Client(" << this->_socket << ") " << _lastPos << "byte"<< std::endl;
 	if (res == -1)
 		throw(_500_INTERNAL_SERVER_ERROR);
 	else if (res <= 0)
 		Exception::disconnectDuringSendError("disconnected during send()");
-	std::cout << "RES : " << res << std::endl;
-	std::cout << "LAST POS : " << _lastPos << std::endl;
 	if (static_cast<size_t>(res) < response.length() - _lastPos)
 	{
 		_lastPos += res;
 		return;
 	}
-	// std::cout << ")))))))))))))))))))))" << std::endl;
-	// std::cout << response.size() << std::endl;
-	// std::cout << response << std::endl;
 	_status = FINWRITE;
 }
 

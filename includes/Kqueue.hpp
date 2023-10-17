@@ -11,7 +11,7 @@
 
 // user define header
 
-#define EVENTSIZE (10)
+#define EVENTSIZE (64)
 
 enum eFdType
 {

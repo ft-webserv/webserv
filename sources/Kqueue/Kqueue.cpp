@@ -37,7 +37,6 @@ void Kqueue::addEvent(uintptr_t ident, int16_t filter, uint16_t flags, uint32_t 
 	struct kevent tempEvent;
 
 	EV_SET(&tempEvent, ident, filter, flags, fflags, data, udata);
-	// std::cout << "Add Event : " << tempEvent.ident << std::endl;
 	_changeList.push_back(tempEvent);
 }
 
@@ -48,9 +47,6 @@ void Kqueue::enableEvent(uintptr_t ident, int16_t filter, void *udata)
 	EV_SET(&tempEvent, ident, filter, EV_ENABLE, 0, 0, udata);
 	// kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
 	_changeList.push_back(tempEvent);
-	// std::cout << "enable event ident : " << tempEvent.ident << std::endl;
-	// std::cout << "enable event size : " << _changeList.size() << std::endl;
-	// std::cout << "enable event filter : " << tempEvent.filter << std::endl;
 }
 
 void Kqueue::disableEvent(uintptr_t ident, int16_t filter, void *udata)
@@ -60,9 +56,6 @@ void Kqueue::disableEvent(uintptr_t ident, int16_t filter, void *udata)
 	EV_SET(&tempEvent, ident, filter, EV_DISABLE, 0, 0, udata);
 	// kevent(_kq, &tempEvent, 1, NULL, 0, NULL);
 	_changeList.push_back(tempEvent);
-	// std::cout << "disable event ident : " << tempEvent.ident << std::endl;
-	// std::cout << "disable event size : " << _changeList.size() << std::endl;
-	// std::cout << "disable event filter : " << tempEvent.filter << std::endl;
 }
 
 void Kqueue::deleteEvent(const uintptr_t ident, int16_t filter, void *udata)
@@ -92,40 +85,7 @@ std::vector<struct kevent> &Kqueue::getChangeList()
 int Kqueue::doKevent()
 {
 	int res = kevent(_kq, &_changeList[0], _changeList.size(), &_eventList[0], EVENTSIZE, NULL);
-	if (res != 0)
-	{
-		std::cout << "-----------evn list-------------" << std::endl;
-		std::cout << "Change List : ";
-		for (int i = 0; i < _changeList.size(); i++)
-		{
-			std::cout << _changeList[i].ident << " ";
-		}
-		std::cout << std::endl;
-		for (int i = 0; i < _changeList.size(); i++)
-		{
-			std::cout << _changeList[i].filter << " ";
-		}
-		std::cout << std::endl;
-		for (int i = 0; i < _changeList.size(); i++)
-		{
-			std::cout << _changeList[i].flags << " ";
-		}
-		std::cout << std::endl;
-		std::cout << "Kevent num : " << res << std::endl;
-		std::cout << "Event List : ";
-		for (int i = 0; i < res; i++)
-		{
-			std::cout << _eventList[i].ident << " ";
-		}
-		std::cout << std::endl;
-		for (int i = 0; i < res; i++)
-		{
-			std::cout << _eventList[i].filter << " ";
-		}
-		std::cout << std::endl;
-		std::cout << "-----------evn list-------------" << std::endl;
-	}
-	if (res == -1)
+  if (res == -1)
 		Exception::keventError("kevent() error!");
 	_changeList.clear();
 	return (res);

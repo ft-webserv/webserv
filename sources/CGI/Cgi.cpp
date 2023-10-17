@@ -82,7 +82,6 @@ void Cgi::_addEnv(std::string key, std::string value)
 	_env[_envCnt] = new char[tmp.size() + 1];
 	tmp.copy(_env[_envCnt], tmp.size());
 	_env[_envCnt][tmp.size()] = '\0';
-	std::cout << _env[_envCnt] << std::endl;
 	_envCnt++;
 	_env[_envCnt] = NULL;
 }
@@ -91,8 +90,6 @@ void Cgi::cgiStart()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
 
-	std::cout << "CGI INFO: 1 " << _cgiExec << std::endl;
-	std::cout << "CGI INFO: 2 " << _cgiPath << std::endl;
 	if (access(_cgiExec.c_str(), F_OK))
 		throw(_404_NOT_FOUND);
 	if (access(_cgiExec.c_str(), X_OK))
@@ -101,6 +98,10 @@ void Cgi::cgiStart()
 		throw(_500_INTERNAL_SERVER_ERROR);
 	if (pipe(_resFd))
 		throw(_500_INTERNAL_SERVER_ERROR);
+  fcntl(_reqFd[0], F_SETFL, O_NONBLOCK);
+  fcntl(_reqFd[1], F_SETFL, O_NONBLOCK);
+  fcntl(_resFd[0], F_SETFL, O_NONBLOCK);
+  fcntl(_resFd[1], F_SETFL, O_NONBLOCK);
 	_pid = fork();
 	if (_pid == -1)
 	{
@@ -131,8 +132,6 @@ void Cgi::cgiStart()
 	}
 	else
 	{
-		fcntl(_reqFd[1], F_SETFL, O_NONBLOCK);
-		fcntl(_resFd[0], F_SETFL, O_NONBLOCK);
 		close(_reqFd[0]);
 		close(_resFd[1]);
 		kqueue.setFdset(_reqFd[1], CGI);
@@ -147,10 +146,6 @@ void Cgi::writeBody()
 	Kqueue &kqueue = Kqueue::getInstance();
 	ssize_t res;
 
-	std::cout << "REQUEST BODY SIZE : " << _requestBodyLength << std::endl;
-	std::cout << "_lastPos : " << _lastPos << std::endl;
-	std::cout << "CGI INFO: 1 " << _cgiExec << std::endl;
-	std::cout << "CGI INFO: 2 " << _cgiPath << std::endl;
 	if (_request->getParsedRequest()._method == "GET")
 	{
 		kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
@@ -158,7 +153,7 @@ void Cgi::writeBody()
 		close(_reqFd[1]);
 	}
 	res = write(_reqFd[1], _requestBody.c_str() + _lastPos, _requestBody.length() - _lastPos);
-	std::cout << "RESULT : " << res << std::endl;
+  std::cout << "[WRITE] Server -> Cgi(" << this->_reqFd[1] << ") " << _lastPos << "byte"<< std::endl;
 	// if (res == -1)
 	// 	throw(_500_INTERNAL_SERVER_ERROR);
 	_lastPos += res;
@@ -179,15 +174,12 @@ void Cgi::readResponse(struct kevent *event)
 	buf.clear();
 	buf.resize(event->data);
 	readSize = read(_resFd[0], &buf[0], event->data);
-	// std::cout << "ReadSize : " << readSize << std::endl;
-	// std::cout << "CGIRESPONSE LENGTH : " << _cgiResponse.length() << std::endl;
-	// std::cout << buf << std::endl;
+  std::cout << " [READ] Server <- Cgi(" << this->_resFd[0] << ") " << _cgiResponse.size() << "byte"<< std::endl;
 	if (readSize == -1)
 		throw(_500_INTERNAL_SERVER_ERROR);
 	else if (readSize == 0)
 	{
 		result = waitpid(_pid, NULL, WNOHANG);
-		std::cout << "Result : " << result << std::endl;
 		switch (result)
 		{
 		case 0:
@@ -202,9 +194,6 @@ void Cgi::readResponse(struct kevent *event)
 
 			if (_cgiResponse.find("Status: ") != std::string::npos)
 			{
-				// std::cout << "%%%%%%%%%%%%%%%%%%%%" << std::endl;
-				std::cout << _cgiResponse.substr(0, 200) << std::endl;
-				// std::cout << "%%%%%%%%%%%%%%%%%%%%" << std::endl;
 				if (_request->getParsedRequest()._method == "GET")
 					_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
 				else
