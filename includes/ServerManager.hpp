@@ -28,4 +28,13 @@ private:
 	void _setRequestTimeOut(Client *client);
 	port_t _findOutPort(uintptr_t clntsock);
 	void _disconnectClient(Client *client);
+
+	void _handleErrorFlag(eFdType type, void *udata);
+	void _handleReadFilter(eFdType type, struct kevent *event);
+	void _handleWriteFilter(eFdType type, struct kevent *event);
+	void _handleTimerFilter(struct kevent *event);
+	void _handleReadClient(struct kevent *event);
+	void _handleWriteClient(struct kevent *event);
+
+	void _catchKnownError(const eStatus &e, eFdType type, struct kevent *event);
 };

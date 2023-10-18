@@ -50,6 +50,141 @@ void ServerManager::runServer()
 	_monitoringEvent();
 }
 
+void ServerManager::_handleErrorFlag(eFdType type, void *udata)
+{
+	switch (type)
+	{
+	case SERVER:
+		std::cerr << "server socket error!" << std::endl;
+		break;
+	case CLIENT:
+		_disconnectClient(static_cast<Client *>(udata));
+		break;
+	case CGI:
+		_disconnectClient(static_cast<Cgi *>(udata)->getClient());
+		break;
+	default:
+		break;
+	}
+}
+
+void ServerManager::_handleReadFilter(eFdType type, struct kevent *event)
+{
+	switch (type)
+	{
+	case SERVER:
+		_acceptClient(event->ident);
+		break;
+	case CLIENT:
+	{
+		_handleReadClient(event);
+		break;
+	}
+	case CGI:
+	{
+		Cgi *cgi = static_cast<Cgi *>(event->udata);
+
+		cgi->readResponse(event);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+void ServerManager::_handleWriteFilter(eFdType type, struct kevent *event)
+{
+	switch (type)
+	{
+	case CLIENT:
+	{
+		_handleWriteClient(event);
+		break;
+	}
+	case CGI:
+	{
+		Cgi *cgi = static_cast<Cgi *>(event->udata);
+
+		cgi->writeBody();
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+void ServerManager::_handleTimerFilter(struct kevent *event)
+{
+	Client *client = static_cast<Client *>(event->udata);
+	if (client->getClientStatus() > START && client->getClientStatus() < FINWRITE)
+	{
+		std::string errorPagePath = client->getResponse().getErrorPage();
+
+		client->sendErrorPage(event->ident, errorPagePath, _408_REQUEST_TIMEOUT);
+	}
+	std::cout << "[[[[[[[[[[Timer Error]]]]]]]]]]" << std::endl;
+	_disconnectClient(client);
+}
+
+void ServerManager::_handleReadClient(struct kevent *event)
+{
+	Client *client = static_cast<Client *>(event->udata);
+
+	if (client->getClientStatus() == START)
+		_setRequestTimeOut(client);
+	client->readRequest(event);
+	if (client->getClientStatus() == READBODY || client->getClientStatus() == READCHUNKEDBODY || client->getClientStatus() == FINREAD)
+		_findServerBlock(client);
+	if (client->getClientStatus() >= READBODY &&
+		client->getRequest().getParsedRequest()._body.size() > client->getResponse().getClientMaxBodySize())
+		throw(_413_REQUEST_ENTITY_TOO_LARGE);
+	if (client->getClientStatus() == FINREAD)
+	{
+		_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
+		_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata);
+	}
+}
+
+void ServerManager::_handleWriteClient(struct kevent *event)
+{
+	Client *client = static_cast<Client *>(event->udata);
+
+	client->writeResponse();
+	if (client->getRequest().getParsedRequest()._connection == "close" && client->getClientStatus() == FINWRITE)
+		_disconnectClient(client);
+	else if (client->getClientStatus() == FINWRITE)
+	{
+		_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
+		_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
+		client->initClient();
+		_setKeepAliveTimeOut(client);
+	}
+}
+
+void ServerManager::_catchKnownError(const eStatus &e, eFdType type, struct kevent *event)
+{
+	std::string errorPagePath;
+	switch (type)
+	{
+	case CGI:
+	{
+		Cgi *cgi = static_cast<Cgi *>(event->udata);
+		errorPagePath = cgi->getResponse()->getErrorPage();
+
+		cgi->sendErrorPage(cgi->getClientSock(), errorPagePath, e);
+		_disconnectClient(cgi->getClient());
+		break;
+	}
+	default:
+		Client *client = static_cast<Client *>(event->udata);
+		errorPagePath = client->getResponse().getErrorPage();
+
+		client->sendErrorPage(event->ident, errorPagePath, e);
+		_disconnectClient(client);
+		break;
+	}
+}
+
 void ServerManager::_monitoringEvent()
 {
 	int numEvents;
@@ -67,129 +202,19 @@ void ServerManager::_monitoringEvent()
 				try
 				{
 					if (event->flags & EV_ERROR)
-					{
-						switch (type)
-						{
-						case SERVER:
-							std::cerr << "server socket error!" << std::endl;
-							break;
-						case CLIENT:
-							_disconnectClient(static_cast<Client *>(event->udata));
-							break;
-						case CGI:
-							_disconnectClient(static_cast<Cgi *>(event->udata)->getClient());
-							break;
-						default:
-							break;
-						}
-					}
+						_handleErrorFlag(type, event->udata);
 					else if (event->flags & EV_EOF && type == CLIENT)
-					{
 						_disconnectClient(static_cast<Client *>(event->udata));
-					}
 					else if (event->filter == EVFILT_READ)
-					{
-						switch (type)
-						{
-						case SERVER:
-							_acceptClient(event->ident);
-							break;
-						case CLIENT:
-						{
-							Client *client = static_cast<Client *>(event->udata);
-
-							if (client->getClientStatus() == START)
-								_setRequestTimeOut(client);
-							client->readRequest(event);
-							if (client->getClientStatus() == READBODY || client->getClientStatus() == READCHUNKEDBODY || client->getClientStatus() == FINREAD)
-								_findServerBlock(client);
-              if (client->getClientStatus() >= READBODY && \
-                    client->getRequest().getParsedRequest()._body.size() > client->getResponse().getClientMaxBodySize())
-                throw(_413_REQUEST_ENTITY_TOO_LARGE);
-							if (client->getClientStatus() == FINREAD)
-							{
-								_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
-								_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata);
-							}
-							break;
-						}
-						case CGI:
-						{
-							Cgi *cgi = static_cast<Cgi *>(event->udata);
-
-							cgi->readResponse(event);
-							break;
-						}
-						default:
-							break;
-						}
-					}
+						_handleReadFilter(type, event);
 					else if (event->filter == EVFILT_WRITE)
-					{
-						switch (type)
-						{
-						case CLIENT:
-						{
-							Client *client = static_cast<Client *>(event->udata);
-
-							client->writeResponse();
-							if (client->getRequest().getParsedRequest()._connection == "close" && client->getClientStatus() == FINWRITE)
-								_disconnectClient(client);
-							else if (client->getClientStatus() == FINWRITE)
-							{
-								_kqueue.enableEvent(event->ident, EVFILT_READ, event->udata);
-								_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
-								client->initClient();
-								_setKeepAliveTimeOut(client);
-							}
-							break;
-						}
-						case CGI:
-						{
-							Cgi *cgi = static_cast<Cgi *>(event->udata);
-
-							cgi->writeBody();
-							break;
-						}
-						default:
-							break;
-						}
-					}
+						_handleWriteFilter(type, event);
 					else if (event->filter == EVFILT_TIMER)
-					{
-						Client *client = static_cast<Client *>(event->udata);
-						if (client->getClientStatus() > START && client->getClientStatus() < FINWRITE)
-						{
-							std::string errorPagePath = client->getResponse().getErrorPage();
-
-							client->sendErrorPage(event->ident, errorPagePath, _408_REQUEST_TIMEOUT);
-						}
-            std::cout << "[[[[[[[[[[Timer Error]]]]]]]]]]" << std::endl;
-						_disconnectClient(client);
-					}
+						_handleTimerFilter(event);
 				}
 				catch (const eStatus &e)
 				{
-					std::string errorPagePath;
-					switch (type)
-					{
-					case CGI:
-					{
-						Cgi *cgi = static_cast<Cgi *>(event->udata);
-						errorPagePath = cgi->getResponse()->getErrorPage();
-
-						cgi->sendErrorPage(cgi->getClientSock(), errorPagePath, e);
-						_disconnectClient(cgi->getClient());
-						break;
-					}
-					default:
-						Client *client = static_cast<Client *>(event->udata);
-						errorPagePath = client->getResponse().getErrorPage();
-
-						client->sendErrorPage(event->ident, errorPagePath, e);
-						_disconnectClient(client);
-						break;
-					}
+					_catchKnownError(e, type, event);
 				}
 				catch (std::exception &e)
 				{
