@@ -4,7 +4,7 @@
 Response::Response()
 	: _serverInfo(NULL), _locationInfo(NULL)
 {
-  Config& conf = Config::getInstance();
+	Config &conf = Config::getInstance();
 
 	_isHead = false;
 	_statusText[0][0] = "OK";
@@ -18,7 +18,7 @@ Response::Response()
 	_statusText[1][4] = "NOT MODIFIED";
 	_statusText[1][7] = "TEMPORARY REDIRECT";
 	_statusText[1][8] = "PERMANENT REDIRECT";
-  _clientMaxBodySize = conf.getClientMaxBodySize();
+	_clientMaxBodySize = conf.getClientMaxBodySize();
 }
 
 Response::~Response()
@@ -62,12 +62,12 @@ std::size_t &Response::getClientMaxBodySize() { return (_clientMaxBodySize); }
 
 void Response::setServerInfo(ServerInfo *serverBlock)
 {
-  _serverInfo = serverBlock;
-  std::size_t clientMaxSize = ft_stoi(mapFind(_serverInfo->getServerInfo(), "client_max_body_size"));
-  if (clientMaxSize != 0)
-  {
-    _clientMaxBodySize = clientMaxSize;
-  }
+	_serverInfo = serverBlock;
+	std::size_t clientMaxSize = ft_stoi(mapFind(_serverInfo->getServerInfo(), "client_max_body_size"));
+	if (clientMaxSize != 0)
+	{
+		_clientMaxBodySize = clientMaxSize;
+	}
 }
 
 void Response::setLocationInfo(LocationInfo *locationBlock)
@@ -75,11 +75,11 @@ void Response::setLocationInfo(LocationInfo *locationBlock)
 	_locationInfo = locationBlock;
 	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
 
-  std::size_t clientMaxSize = ft_stoi(mapFind(tmp, "client_max_body_size"));
-  if (clientMaxSize != 0)
-  {
-    _clientMaxBodySize = clientMaxSize;
-  }
+	std::size_t clientMaxSize = ft_stoi(mapFind(tmp, "client_max_body_size"));
+	if (clientMaxSize != 0)
+	{
+		_clientMaxBodySize = clientMaxSize;
+	}
 	if (mapFind(tmp, "return").empty() == false)
 	{
 		std::stringstream ss;
@@ -269,7 +269,7 @@ void Response::_setBody(std::string path, off_t size)
 	_body.resize(size);
 	file.open(path);
 	if (file.is_open() == false)
-		Exception::fileOpenError("file open error!");
+		Exception::fileOpenError();
 	file.read(&_body[0], size);
 	file.close();
 }

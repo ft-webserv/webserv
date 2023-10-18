@@ -35,10 +35,10 @@ void Client::readRequest(struct kevent *event)
 	buf.resize(event->data);
 
 	if ((len = recv(_socket, &buf[0], event->data, 0)) == -1)
-		Exception::recvError("recv() error!");
+		Exception::recvError();
 	else if (len <= 0)
-		Exception::disconnectDuringRecvError("disconnected during read()");
-  std::cout << " [READ] Server <- Client(" << this->_socket << ") " << len << "byte"<< std::endl;
+		Exception::disconnectDuringRecvError();
+	std::cout << " [READ] Server <- Client(" << this->_socket << ") " << len << "byte" << std::endl;
 	if (_status == READHEADER)
 		buf = _request.setHeaderBuf(buf);
 	if (_request.getIsBody() == true && _status == READHEADER)
@@ -91,8 +91,6 @@ void Client::readRequest(struct kevent *event)
 
 void Client::writeResponse()
 {
-	// if (chdir(WORK_PATH) == -1)
-	// 	Exception::listenError("chdir() error!");
 	if (_response.isAllowedMethod(_request.getParsedRequest()._method) == false)
 	{
 		throw(_405_METHOD_NOT_ALLOWED);
@@ -135,11 +133,11 @@ void Client::_sendResponse()
 	std::string &response = _response.getResponse();
 
 	ssize_t res = write(_socket, response.c_str() + _lastPos, response.length() - _lastPos);
-  std::cout << "[WRITE] Server -> Client(" << this->_socket << ") " << _lastPos << "byte"<< std::endl;
+	std::cout << "[WRITE] Server -> Client(" << this->_socket << ") " << _lastPos << "byte" << std::endl;
 	if (res == -1)
 		throw(_500_INTERNAL_SERVER_ERROR);
 	else if (res <= 0)
-		Exception::disconnectDuringSendError("disconnected during send()");
+		Exception::disconnectDuringSendError();
 	if (static_cast<size_t>(res) < response.length() - _lastPos)
 	{
 		_lastPos += res;

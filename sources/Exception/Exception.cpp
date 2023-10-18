@@ -8,57 +8,52 @@ Exception::~Exception()
 {
 }
 
-void Exception::fileOpenError(const std::string &message)
+void Exception::fileOpenError()
 {
-	throw std::runtime_error(message);
+	throw std::runtime_error("file open error!");
 }
 
-void Exception::socketError(const std::string &message)
+void Exception::socketError()
 {
-	throw std::runtime_error(message);
+	throw std::runtime_error("socket() error!");
 }
 
-void Exception::bindError(const std::string &message)
+void Exception::bindError()
 {
-	throw std::runtime_error(message);
+	throw std::runtime_error("bind() error!");
 }
 
-void Exception::listenError(const std::string &message)
+void Exception::listenError()
 {
-	throw std::runtime_error(message);
+	throw std::runtime_error("listen() error!");
 }
 
-void Exception::kqueueError(const std::string &message)
+void Exception::kqueueError()
 {
-	throw std::runtime_error(message);
+	throw std::runtime_error("kqueue() error!");
 }
 
-void Exception::keventError(const std::string &message)
+void Exception::keventError()
 {
-	throw std::runtime_error(message);
+	throw std::runtime_error("kevent() error!");
 }
 
-void Exception::acceptError(const std::string &message)
+void Exception::acceptError()
 {
-	throw std::runtime_error(message);
+	throw std::runtime_error("accept() error!");
 }
 
-void Exception::recvError(const std::string &message)
+void Exception::recvError()
 {
-	throw std::runtime_error(message);
+	throw std::runtime_error("recv() error!");
 }
 
-void Exception::disconnectDuringRecvError(const std::string &message)
+void Exception::disconnectDuringRecvError()
 {
-	throw std::runtime_error(message);
+	throw std::runtime_error("disconnected during read()");
 }
 
-void Exception::disconnectDuringSendError(const std::string &message)
+void Exception::disconnectDuringSendError()
 {
-	throw std::runtime_error(message);
-}
-
-void Exception::chdirError(const std::string &message)
-{
-	throw std::runtime_error(message);
+	throw std::runtime_error("disconnected during send()");
 }

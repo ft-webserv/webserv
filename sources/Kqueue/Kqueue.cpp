@@ -4,7 +4,7 @@
 Kqueue::Kqueue()
 {
 	if ((_kq = kqueue()) == -1)
-		Exception::kqueueError("kqueue() error!");
+		Exception::kqueueError();
 	_eventList.resize(EVENTSIZE);
 	FD_ZERO(&_servers);
 	FD_ZERO(&_clients);
@@ -85,8 +85,8 @@ std::vector<struct kevent> &Kqueue::getChangeList()
 int Kqueue::doKevent()
 {
 	int res = kevent(_kq, &_changeList[0], _changeList.size(), &_eventList[0], EVENTSIZE, NULL);
-  if (res == -1)
-		Exception::keventError("kevent() error!");
+	if (res == -1)
+		Exception::keventError();
 	_changeList.clear();
 	return (res);
 }

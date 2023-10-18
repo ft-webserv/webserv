@@ -32,19 +32,19 @@ void ServerManager::runServer()
 	for (iter = _conf.getPorts().begin(); iter != _conf.getPorts().end(); iter++)
 	{
 		if ((servSock = socket(PF_INET, SOCK_STREAM, 0)) == -1)
-			Exception::socketError("socket() error!");
+			Exception::socketError();
 		int reuse = 1;
 		if (setsockopt(servSock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)) == -1)
-			Exception::socketError("setsockopt() error!");
+			Exception::socketError();
 		_kqueue.setFdset(servSock, SERVER);
 		memset(&servAddr, 0, sizeof(servAddr));
 		servAddr.sin_family = AF_INET;
 		servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 		servAddr.sin_port = htons(*iter);
 		if (bind(servSock, (struct sockaddr *)&servAddr, sizeof(servAddr)) == -1)
-			Exception::bindError("bind() error!");
+			Exception::bindError();
 		if (listen(servSock, BACKLOG) == -1)
-			Exception::listenError("listen() error!");
+			Exception::listenError();
 		fcntl(servSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 		_kqueue.addEvent(servSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		std::cout << "       Socket: \033[32m" << servSock << "\033[0m";
@@ -240,7 +240,7 @@ void ServerManager::_acceptClient(uintptr_t &servSock)
 	Client *client;
 
 	if ((clntSock = accept(servSock, NULL, NULL)) == -1)
-		Exception::acceptError("accept() error!");
+		Exception::acceptError();
 	fcntl(clntSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 	client = new Client(clntSock);
 	_kqueue.addEvent(clntSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, static_cast<void *>(client));
