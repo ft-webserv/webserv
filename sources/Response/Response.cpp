@@ -21,6 +21,40 @@ Response::Response()
 	_clientMaxBodySize = conf.getClientMaxBodySize();
 }
 
+Response::Response(const Response &src)
+{
+	*this = src;
+}
+
+Response &Response::operator=(Response const &rhs)
+{
+	if (this != &rhs)
+	{
+		this->_isHead = rhs._isHead;
+		this->_statusCode = rhs._statusCode;
+		this->_headerFields = rhs._headerFields;
+		this->_body = rhs._body;
+		this->_root = rhs._root;
+		this->_path = rhs._path;
+		this->_response = rhs._response;
+		this->_statusText[0][0] = "OK";
+		this->_statusText[0][1] = "CREATED";
+		this->_statusText[0][2] = "ACCEPTED";
+		this->_statusText[0][4] = "NO CONTENT";
+		this->_statusText[1][1] = "MOVED PERMANENTLY";
+		this->_statusText[1][2] = "FOUND";
+		this->_statusText[1][3] = "SEE OTHER";
+		this->_statusText[1][4] = "NOT MODIFIED";
+		this->_statusText[1][7] = "TEMPORARY REDIRECT";
+		this->_statusText[1][8] = "PERMANENT REDIRECT";
+		this->_serverInfo = rhs._serverInfo;
+		this->_locationInfo = rhs._locationInfo;
+		this->_cgiInfo = rhs._cgiInfo;
+		this->_clientMaxBodySize = rhs._clientMaxBodySize;
+	}
+	return *this;
+}
+
 Response::~Response()
 {
 }

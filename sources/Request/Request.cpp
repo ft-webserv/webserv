@@ -6,6 +6,19 @@ Request::Request()
 	_parsedRequest._contentLength = 0;
 }
 
+Request::Request(const Request &src) {}
+
+Request &Request::operator=(Request const &rhs)
+{
+	if (this != &rhs)
+	{
+		this->_etcHeader = rhs._etcHeader;
+		this->_headerBuf = rhs._headerBuf;
+		this->parseRequest = rhs.parseRequest;
+	}
+	return (*this);
+}
+
 Request::~Request()
 {
 }
@@ -213,4 +226,3 @@ void Request::_checkValidHeader()
 			throw(_400_BAD_REQUEST);
 	}
 }
-

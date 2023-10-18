@@ -23,11 +23,12 @@ typedef struct s_cgiInfo
 	std::string cgiExec;
 	std::string cgiPath;
 } t_cgiInfo;
-
 class Response
 {
 public:
 	Response();
+	Response(const Response &src);
+	Response &operator=(Response const &rhs);
 	~Response();
 	void handleGet(Request &rqs);
 	void handlePost(Request &rqs);
@@ -47,7 +48,7 @@ public:
 	std::string getErrorPage();
 	t_cgiInfo &getCgiInfo();
 	std::string &getPath(std::string location);
-  std::size_t &getClientMaxBodySize();
+	std::size_t &getClientMaxBodySize();
 
 private:
 	void _findRoot();
@@ -75,5 +76,5 @@ private:
 	ServerInfo *_serverInfo;
 	LocationInfo *_locationInfo;
 	t_cgiInfo _cgiInfo;
-  std::size_t _clientMaxBodySize;
+	std::size_t _clientMaxBodySize;
 };

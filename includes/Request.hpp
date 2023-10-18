@@ -28,6 +28,8 @@ class Request
 {
 public:
 	Request();
+	Request(const Request &src);
+	Request &operator=(Request const &rhs);
 	~Request();
 	void parseRequest();
 	void testPrintRequest();
@@ -39,7 +41,7 @@ public:
 	t_request getParsedRequest() const;
 	void initRequest();
 	bool getIsBody();
-  std::map<std::string, std::string> &getEtcHeader();
+	std::map<std::string, std::string> &getEtcHeader();
 
 private:
 	std::map<std::string, std::string> _etcHeader;
