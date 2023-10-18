@@ -1,5 +1,8 @@
 #include "Cgi.hpp"
+#include <sys/_types/_clock_t.h>
 #include "Client.hpp"
+#include "Config.hpp"
+#include <ctime>
 
 Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 {
@@ -147,15 +150,8 @@ void Cgi::writeBody()
 	Kqueue &kqueue = Kqueue::getInstance();
 	ssize_t res;
 
-	if (_request->getParsedRequest()._method == "GET")
-	{
-		kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
-		close(_reqFd[1]);
-	}
 	res = write(_reqFd[1], _requestBody.c_str() + _lastPos, _requestBody.length() - _lastPos);
   std::cout << "[WRITE] Server -> Cgi(" << this->_reqFd[1] << ") " << _lastPos << "byte"<< std::endl;
-	// if (res == -1)
-	// 	throw(_500_INTERNAL_SERVER_ERROR);
 	_lastPos += res;
 	if (_lastPos == _requestBodyLength)
 	{
@@ -168,7 +164,7 @@ void Cgi::writeBody()
 void Cgi::readResponse(struct kevent *event)
 {
 	// std::string buf;
-  char buf[50001];
+  char buf[BUFFERSIZE + 1];
 	ssize_t readSize;
 	pid_t result;
 
@@ -176,13 +172,12 @@ void Cgi::readResponse(struct kevent *event)
   {
     // buf.clear();
     // buf.resize(event->data);
-    memset(buf, 0 ,50001);
+    memset(buf, 0 ,BUFFERSIZE + 1);
     // readSize = read(_resFd[0], &buf[0], event->data);
-    readSize = read(_resFd[0], buf, 50000);
+    readSize = read(_resFd[0], buf, BUFFERSIZE);
     std::cout << " [READ] Server <- Cgi(" << this->_resFd[0] << ") " << _cgiResponse.size() << "byte"<< std::endl;
     if (readSize == -1)
       return;
-      // throw(_500_INTERNAL_SERVER_ERROR);
     else if (readSize == 0)
       break; 
     _cgiResponse += buf;
