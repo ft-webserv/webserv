@@ -1,4 +1,5 @@
 #include "Cgi.hpp"
+#include "Client.hpp"
 
 Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 {
@@ -97,7 +98,7 @@ void Cgi::cgiStart()
 	if (pipe(_reqFd))
 		throw(_500_INTERNAL_SERVER_ERROR);
 	if (pipe(_resFd))
-		throw(_500_INTERNAL_SERVER_ERROR);
+    throw(_500_INTERNAL_SERVER_ERROR);
   fcntl(_reqFd[0], F_SETFL, O_NONBLOCK);
   fcntl(_reqFd[1], F_SETFL, O_NONBLOCK);
   fcntl(_resFd[0], F_SETFL, O_NONBLOCK);
@@ -166,50 +167,52 @@ void Cgi::writeBody()
 
 void Cgi::readResponse(struct kevent *event)
 {
-	std::string buf;
+	// std::string buf;
+  char buf[50001];
 	ssize_t readSize;
 	pid_t result;
 
-	buf.clear();
-	buf.resize(event->data);
-	readSize = read(_resFd[0], &buf[0], event->data);
-  std::cout << " [READ] Server <- Cgi(" << this->_resFd[0] << ") " << _cgiResponse.size() << "byte"<< std::endl;
-	if (readSize == -1)
-		throw(_500_INTERNAL_SERVER_ERROR);
-	else if (readSize == 0)
-	{
-		result = waitpid(_pid, NULL, WNOHANG);
-		switch (result)
-		{
-		case 0:
-			return;
-		case -1:
-			throw(_500_INTERNAL_SERVER_ERROR);
-			break;
-		default:
-			Kqueue &kqueue = Kqueue::getInstance();
+  while (true)
+  {
+    // buf.clear();
+    // buf.resize(event->data);
+    memset(buf, 0 ,50001);
+    // readSize = read(_resFd[0], &buf[0], event->data);
+    readSize = read(_resFd[0], buf, 50000);
+    std::cout << " [READ] Server <- Cgi(" << this->_resFd[0] << ") " << _cgiResponse.size() << "byte"<< std::endl;
+    if (readSize == -1)
+      return;
+      // throw(_500_INTERNAL_SERVER_ERROR);
+    else if (readSize == 0)
+      break; 
+    _cgiResponse += buf;
+  }
+  result = waitpid(_pid, NULL, WNOHANG);
+  switch (result)
+  {
+  case 0:
+    return;
+  default:
+    Kqueue &kqueue = Kqueue::getInstance();
 
-			deleteCgiEvent();
+    deleteCgiEvent();
 
-			if (_cgiResponse.find("Status: ") != std::string::npos)
-			{
-				if (_request->getParsedRequest()._method == "GET")
-					_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
-				else
-				{
-					_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: " + ft_itos(_cgiResponse.substr(_cgiResponse.find("\r\n\r\n") + 4).length()) + "\r\nContent-Type: text/html; charset=utf-8" + _cgiResponse.substr(_cgiResponse.find("\r\n\r\n"));
-				}
-				_response->setResponse(_cgiResponse);
-			}
-			else
-				_response->setResponse(_cgiResponse);
-			kqueue.enableEvent(_clientSock, EVFILT_WRITE, static_cast<void *>(_client));
-			delete this;
-			break;
-		}
-	}
-	else
-		_cgiResponse += buf;
+    if (_cgiResponse.find("Status: ") != std::string::npos)
+    {
+      if (_request->getParsedRequest()._method == "GET")
+        _cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
+      else
+      {
+        _cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: " + ft_itos(_cgiResponse.substr(_cgiResponse.find("\r\n\r\n") + 4).length()) + "\r\nContent-Type: text/html; charset=utf-8" + _cgiResponse.substr(_cgiResponse.find("\r\n\r\n"));
+      }
+      _response->setResponse(_cgiResponse);
+    }
+    else
+      _response->setResponse(_cgiResponse);
+    kqueue.enableEvent(_clientSock, EVFILT_WRITE, static_cast<void *>(_client));
+    _client->setCgi(NULL);
+    delete this;
+  }
 }
 
 void Cgi::deleteCgiEvent()

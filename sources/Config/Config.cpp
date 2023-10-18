@@ -34,7 +34,6 @@ void Config::parseConfigFile(const std::string &fileName)
 {
 	std::ifstream file;
 	std::string word, key, val;
-	std::string whitespace = " \t\r\n\f\v";
 
 	file.open(fileName);
 
