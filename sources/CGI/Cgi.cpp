@@ -62,13 +62,14 @@ void Cgi::_makeEnvList(uintptr_t clntSock)
 	_addEnv("CONTENT_LENGTH", ft_itos(_request->getParsedRequest()._body.size()));
 	_addEnv("SERVER_NAME", mapFind(_response->getServerInfo()->getServerInfo(), "server_name"));
 	_addEnv("SERVER_PROTOCOL", "HTTP/1.1");
-	_addEnv("PATH_INFO", _cgiInfo.cgiInfo[0]);
+	_addEnv("PATH_INFO", _request->getParsedRequest()._location);
+	_addEnv("PATH_INFO", "/directory/youpi.bla");
 	_addEnv("SERVER_SOFTWARE", "webserv/0.1");
 	_addEnv("SERVER_PORT", ft_itos(port));
 	_addEnv("GETWAY_INTERFACE", "CGI/1.1");
 	_addEnv("REQUEST_METHOD", _request->getParsedRequest()._method);
 	_addEnv("REMOTE_ADDR", ft_itos(clnt.sin_addr.s_addr));
-	// _addEnv("SCRIPT_NAME", getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiExec);
+	_addEnv("SCRIPT_NAME", "");
 }
 
 void Cgi::_addEnv(std::string key, std::string value)
@@ -86,10 +87,12 @@ void Cgi::_addEnv(std::string key, std::string value)
 void Cgi::cgiStart()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
+  std::string cgiScript;
 
-	if (access(_cgiInfo.cgiInfo[0].c_str(), F_OK))
+  cgiScript = "./" + _response->getRoot() + "/" + _cgiInfo.cgiInfo;
+	if (access(cgiScript.c_str(), F_OK))
 		throw(_404_NOT_FOUND);
-	if (access(_cgiInfo.cgiInfo[0].c_str(), X_OK))
+	if (access(cgiScript.c_str(), X_OK))
 		throw(_403_FORBIDDEN);
 	if (pipe(_reqFd))
 		throw(_500_INTERNAL_SERVER_ERROR);
@@ -106,8 +109,7 @@ void Cgi::cgiStart()
 	}
 	else if (_pid == 0)
 	{
-		size_t size = _cgiInfo.cgiInfo.size();
-		char *args[size + 1];
+		char *args[2];
 
 		dup2(_reqFd[0], STDIN_FILENO);
 		dup2(_resFd[1], STDOUT_FILENO);
@@ -116,11 +118,9 @@ void Cgi::cgiStart()
 		close(_reqFd[1]);
 		close(_resFd[0]);
 
-		for (size_t i = 0; i < size; i++)
-			args[i] = const_cast<char *>(_cgiInfo.cgiInfo[i].c_str());
-		args[size] = NULL;
-		std::cerr << args[0] << std::endl;
-		execve(_cgiInfo.cgiInfo[0].c_str(), args, _env);
+    args[0] = const_cast<char *>(cgiScript.c_str());
+		args[1] = NULL;
+		execve(cgiScript.c_str(), args, _env);
 		// args[0] = new char[100];
 		// args[1] = new char[100];
 		// _cgiExec.copy(args[0], _cgiExec.size() + 1);
@@ -156,7 +156,7 @@ void Cgi::writeBody()
 	}
 }
 
-void Cgi::readResponse(struct kevent *event)
+void Cgi::readResponse()
 {
 	// std::string buf;
 	char buf[BUFFERSIZE + 1];
@@ -189,12 +189,7 @@ void Cgi::readResponse(struct kevent *event)
 
 		if (_cgiResponse.find("Status: ") != std::string::npos)
 		{
-			if (_request->getParsedRequest()._method == "GET")
-				_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nContent-Type: text/html; charset=utf-8\r\n\r\n";
-			else
-			{
-				_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: " + ft_itos(_cgiResponse.substr(_cgiResponse.find("\r\n\r\n") + 4).length()) + "\r\nContent-Type: text/html; charset=utf-8" + _cgiResponse.substr(_cgiResponse.find("\r\n\r\n"));
-			}
+      _cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: " + ft_itos(_cgiResponse.substr(_cgiResponse.find("\r\n\r\n") + 4).length()) + "\r\nContent-Type: text/html; charset=utf-8" + _cgiResponse.substr(_cgiResponse.find("\r\n\r\n"));
 			_response->setResponse(_cgiResponse);
 		}
 		else

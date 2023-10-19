@@ -27,7 +27,7 @@ public:
 	Cgi(Request *request, Response *response, uintptr_t socket, Client *client);
 	~Cgi();
 	void writeBody();
-	void readResponse(struct kevent *event);
+	void readResponse();
 	uintptr_t getClientSock();
 	Response *getResponse();
 	pid_t getPid();

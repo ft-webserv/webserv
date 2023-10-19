@@ -349,7 +349,7 @@ void Response::_showFileList(std::string path)
 		switch (buf.st_mode & S_IFMT)
 		{
 		case S_IFREG:
-			_body += "<td><a href=\"" + name + "\">" + "📄 " + name + "</a></td>";
+			_body += "<td><a href=\"" + dpPath + "\">" + "📄 " + name + "</a></td>";
 			_body += "<td>" + time + "</td>";
 			_body += "<td>" + ft_itos(buf.st_size) + "</td>";
 			break;
@@ -371,8 +371,7 @@ void Response::_showFileList(std::string path)
 
 bool Response::_isAutoIndex()
 {
-	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
-	std::map<std::string, std::string>::iterator it;
+	std::map<std::string, std::string> &tmp = _locationInfo->getLocationInfo();
 	if (mapFind(tmp, "autoindex") == "on")
 		return (true);
 	return (false);
@@ -391,13 +390,13 @@ bool Response::isCgi(std::string location)
 {
 	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
 
-	_cgiInfo.cgiInfo = _locationInfo->getCgiInfo();
-	if (_cgiInfo.cgiInfo.size() == 0)
+	_cgiInfo.cgiInfo = mapFind(tmp, "cgi_info");
+	if (_cgiInfo.cgiInfo == "")
 	{
 		tmp = _serverInfo->getServerInfo();
 		_cgiInfo.cgiExtension = mapFind(tmp, "cgi_extension");
-		_cgiInfo.cgiInfo = _serverInfo->getCgiInfo();
-		if (_cgiInfo.cgiExtension == "" || _cgiInfo.cgiInfo.size() == 0)
+		_cgiInfo.cgiInfo = mapFind(tmp, "cgi_info");
+		if (_cgiInfo.cgiExtension == "" || _cgiInfo.cgiInfo == "")
 			return (false);
 		if (findExtension(location) != _cgiInfo.cgiExtension)
 			return (false);
