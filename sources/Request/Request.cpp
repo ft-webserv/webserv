@@ -8,6 +8,7 @@ Request::Request()
 
 Request::Request(const Request &src)
 {
+  *this = src;
 }
 
 Request &Request::operator=(Request const &rhs)

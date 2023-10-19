@@ -88,7 +88,7 @@ void ServerManager::_handleReadFilter(eFdType type, struct kevent *event)
 	{
 		Cgi *cgi = static_cast<Cgi *>(event->udata);
 
-		cgi->readResponse(event);
+		cgi->readResponse();
 		break;
 	}
 	default:
