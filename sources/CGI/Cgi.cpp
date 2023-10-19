@@ -39,7 +39,6 @@ Client *Cgi::getClient() { return (_client); }
 
 void Cgi::_makeEnvList(uintptr_t clntSock)
 {
-	char buf[100];
 	struct sockaddr_in clnt;
 	socklen_t clntSockLen = sizeof(clnt);
 	port_t port;
@@ -63,7 +62,7 @@ void Cgi::_makeEnvList(uintptr_t clntSock)
 	_addEnv("CONTENT_LENGTH", ft_itos(_request->getParsedRequest()._body.size()));
 	_addEnv("SERVER_NAME", mapFind(_response->getServerInfo()->getServerInfo(), "server_name"));
 	_addEnv("SERVER_PROTOCOL", "HTTP/1.1");
-	_addEnv("PATH_INFO", getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiInfo[0]);
+	_addEnv("PATH_INFO", _cgiInfo.cgiInfo[0]);
 	_addEnv("SERVER_SOFTWARE", "webserv/0.1");
 	_addEnv("SERVER_PORT", ft_itos(port));
 	_addEnv("GETWAY_INTERFACE", "CGI/1.1");
@@ -87,12 +86,10 @@ void Cgi::_addEnv(std::string key, std::string value)
 void Cgi::cgiStart()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
-	char buf[100];
-	const std::string cgiRootPath = getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiInfo[0];
 
-	if (access(cgiRootPath.c_str(), F_OK))
+	if (access(_cgiInfo.cgiInfo[0].c_str(), F_OK))
 		throw(_404_NOT_FOUND);
-	if (access(cgiRootPath.c_str(), X_OK))
+	if (access(_cgiInfo.cgiInfo[0].c_str(), X_OK))
 		throw(_403_FORBIDDEN);
 	if (pipe(_reqFd))
 		throw(_500_INTERNAL_SERVER_ERROR);
@@ -123,7 +120,7 @@ void Cgi::cgiStart()
 			args[i] = const_cast<char *>(_cgiInfo.cgiInfo[i].c_str());
 		args[size] = NULL;
 		std::cerr << args[0] << std::endl;
-		execve(cgiRootPath.c_str(), args, _env);
+		execve(_cgiInfo.cgiInfo[0].c_str(), args, _env);
 		// args[0] = new char[100];
 		// args[1] = new char[100];
 		// _cgiExec.copy(args[0], _cgiExec.size() + 1);
