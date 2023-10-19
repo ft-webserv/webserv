@@ -139,10 +139,6 @@ void Client::_sendResponse()
 		_lastPos += res;
 		return;
 	}
-	std::cout << "FINWRITE" << std::endl;
-	std::cout << "LAST POS : " << _lastPos << std::endl;
-	std::cout << "RES : " << res << std::endl;
-	std::cout << "RESPONSE : " << response.length() << std::endl;
 	_status = FINWRITE;
 	// sleep(10);
 }

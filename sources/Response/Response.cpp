@@ -70,8 +70,7 @@ void Response::initResponse()
 	_serverInfo = NULL;
 	_locationInfo = NULL;
 	_cgiInfo.cgiExtension.clear();
-	_cgiInfo.cgiExec.clear();
-	_cgiInfo.cgiPath.clear();
+	_cgiInfo.cgiInfo.clear();
 }
 
 const std::string &Response::getResponse() const { return (_response); }
@@ -392,15 +391,13 @@ bool Response::isCgi(std::string location)
 {
 	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
 
-	_cgiInfo.cgiExec = mapFind(tmp, "cgi_exec");
-	_cgiInfo.cgiPath = mapFind(tmp, "cgi_path");
-	if (_cgiInfo.cgiExec == "" || _cgiInfo.cgiPath == "")
+	_cgiInfo.cgiInfo = _locationInfo->getCgiInfo();
+	if (_cgiInfo.cgiInfo.size() == 0)
 	{
 		tmp = _serverInfo->getServerInfo();
 		_cgiInfo.cgiExtension = mapFind(tmp, "cgi_extension");
-		_cgiInfo.cgiExec = mapFind(tmp, "cgi_exec");
-		_cgiInfo.cgiPath = mapFind(tmp, "cgi_path");
-		if (_cgiInfo.cgiExtension == "" || _cgiInfo.cgiExec == "" || _cgiInfo.cgiPath == "")
+		_cgiInfo.cgiInfo = _serverInfo->getCgiInfo();
+		if (_cgiInfo.cgiExtension == "" || _cgiInfo.cgiInfo.size() == 0)
 			return (false);
 		if (findExtension(location) != _cgiInfo.cgiExtension)
 			return (false);

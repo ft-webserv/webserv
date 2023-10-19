@@ -108,6 +108,20 @@ void Config::parseServerInfo(std::ifstream &file)
 			flag--;
 		else if (word == "location")
 			parseLocationInfo(file, tmp);
+		else if (word == "cgi_info")
+		{
+			while (1)
+			{
+				file >> word;
+				if (std::find(word.begin(), word.end(), ';') != word.end())
+				{
+					word.erase(std::find(word.begin(), word.end(), ';'));
+					tmp.setCgiInfo(word);
+					break;
+				}
+				tmp.setCgiInfo(word);
+			}
+		}
 		else
 		{
 			val = word;
@@ -152,6 +166,20 @@ void Config::parseLocationInfo(std::ifstream &file, ServerInfo &target)
 			flag++;
 		else if (word == "}")
 			flag--;
+		else if (word == "cgi_info")
+		{
+			while (1)
+			{
+				file >> word;
+				if (std::find(word.begin(), word.end(), ';') != word.end())
+				{
+					word.erase(std::find(word.begin(), word.end(), ';'));
+					tmp.setCgiInfo(word);
+					break;
+				}
+				tmp.setCgiInfo(word);
+			}
+		}
 		else
 		{
 			val = word;

@@ -21,10 +21,6 @@ Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 	_requestBodyLength = _requestBody.length();
 	_lastPos = 0;
 	_cgiInfo = response->getCgiInfo();
-	char buf[100];
-	// _cgiExec = "/usr/bin/python3";
-	_cgiExec = getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiExec;
-	_cgiPath = "." + _response->getRoot() + _cgiInfo.cgiPath;
 	_makeEnvList(_clientSock);
 }
 
@@ -43,6 +39,7 @@ Client *Cgi::getClient() { return (_client); }
 
 void Cgi::_makeEnvList(uintptr_t clntSock)
 {
+	char buf[100];
 	struct sockaddr_in clnt;
 	socklen_t clntSockLen = sizeof(clnt);
 	port_t port;
@@ -66,8 +63,7 @@ void Cgi::_makeEnvList(uintptr_t clntSock)
 	_addEnv("CONTENT_LENGTH", ft_itos(_request->getParsedRequest()._body.size()));
 	_addEnv("SERVER_NAME", mapFind(_response->getServerInfo()->getServerInfo(), "server_name"));
 	_addEnv("SERVER_PROTOCOL", "HTTP/1.1");
-	char buf[100];
-	_addEnv("PATH_INFO", getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiExec);
+	_addEnv("PATH_INFO", getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiInfo[0]);
 	_addEnv("SERVER_SOFTWARE", "webserv/0.1");
 	_addEnv("SERVER_PORT", ft_itos(port));
 	_addEnv("GETWAY_INTERFACE", "CGI/1.1");
@@ -92,9 +88,9 @@ void Cgi::cgiStart()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
 
-	if (access(_cgiExec.c_str(), F_OK))
+	if (access(_cgiInfo.cgiInfo[0].c_str(), F_OK))
 		throw(_404_NOT_FOUND);
-	if (access(_cgiExec.c_str(), X_OK))
+	if (access(_cgiInfo.cgiInfo[0].c_str(), X_OK))
 		throw(_403_FORBIDDEN);
 	if (pipe(_reqFd))
 		throw(_500_INTERNAL_SERVER_ERROR);
@@ -111,7 +107,8 @@ void Cgi::cgiStart()
 	}
 	else if (_pid == 0)
 	{
-		char *args[3];
+		size_t size = _cgiInfo.cgiInfo.size();
+		char *args[size + 1];
 
 		dup2(_reqFd[0], STDIN_FILENO);
 		dup2(_resFd[1], STDOUT_FILENO);
@@ -120,17 +117,18 @@ void Cgi::cgiStart()
 		close(_reqFd[1]);
 		close(_resFd[0]);
 
-		args[0] = new char[100];
-		args[1] = new char[100];
-		// args[2] = new char[100];
-		// args[0] = "/usr/bin/python3\0";
-		// args[1] = "./cgi-bin/post.py\0";
-		// args[2] = NULL;
-		_cgiExec.copy(args[0], _cgiExec.size() + 1);
-		args[0][_cgiExec.size()] = '\0';
-		args[1] = NULL;
-		execve(_cgiExec.c_str(), args, _env);
-		throw(_403_FORBIDDEN);
+		for (size_t i = 0; i < size; i++)
+			args[i] = const_cast<char *>(_cgiInfo.cgiInfo[i].c_str());
+		args[size] = NULL;
+		std::cerr << args[0] << std::endl;
+		execve(*args, args, _env);
+		// args[0] = new char[100];
+		// args[1] = new char[100];
+		// _cgiExec.copy(args[0], _cgiExec.size() + 1);
+		// args[0][_cgiExec.size()] = '\0';
+		// args[1] = NULL;
+		// execve(_cgiExec.c_str(), args, _env);
+		// throw(_403_FORBIDDEN);
 	}
 	else
 	{

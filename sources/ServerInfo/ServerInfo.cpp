@@ -6,8 +6,7 @@ ServerInfo::ServerInfo(void)
 
 ServerInfo::ServerInfo(const ServerInfo &src)
 {
-	this->_info = src._info;
-	this->_locationInfos = src._locationInfos;
+	*this = src;
 }
 
 ServerInfo::~ServerInfo(void)
@@ -18,6 +17,9 @@ ServerInfo &ServerInfo::operator=(ServerInfo const &rhs)
 {
 	if (this != &rhs)
 	{
+		this->_info = rhs._info;
+		this->_cgiInfo = rhs._cgiInfo;
+		this->_locationInfos = rhs._locationInfos;
 	}
 	return *this;
 }
@@ -25,6 +27,11 @@ ServerInfo &ServerInfo::operator=(ServerInfo const &rhs)
 void ServerInfo::setServerInfo(std::pair<std::string, std::string> pair)
 {
 	_info.insert(pair);
+}
+
+void ServerInfo::setCgiInfo(std::string cgiInfo)
+{
+	_cgiInfo.push_back(cgiInfo);
 }
 
 void ServerInfo::addLocationInfo(LocationInfo *tmp)
@@ -40,6 +47,11 @@ std::map<std::string, std::string> &ServerInfo::getServerInfo()
 std::vector<LocationInfo *> &ServerInfo::getLocationInfos()
 {
 	return (_locationInfos);
+}
+
+const std::vector<std::string> &ServerInfo::getCgiInfo() const
+{
+	return (_cgiInfo);
 }
 
 void ServerInfo::printServerInfo()

@@ -58,5 +58,4 @@ private:
 	uintptr_t _clientSock;
 	Client *_client;
 	t_cgiInfo _cgiInfo;
-
 };

@@ -20,8 +20,7 @@
 typedef struct s_cgiInfo
 {
 	std::string cgiExtension;
-	std::string cgiExec;
-	std::string cgiPath;
+	std::vector<std::string> cgiInfo;
 } t_cgiInfo;
 class Response
 {
