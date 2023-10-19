@@ -43,7 +43,7 @@ public:
 	bool isAllowedMethod(std::string method);
 	bool isCgi(std::string location);
 	bool &getIsHead();
-	std::string &getResponse(); // 굳이 client에서 response를 보내야하는가 ? 그냥 response에서 보내면 되지 않나 ?
+	const std::string &getResponse() const; // 굳이 client에서 response를 보내야하는가 ? 그냥 response에서 보내면 되지 않나 ?
 	std::string &getRoot();
 	std::string getErrorPage();
 	t_cgiInfo &getCgiInfo();

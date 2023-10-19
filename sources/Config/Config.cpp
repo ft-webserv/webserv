@@ -87,9 +87,9 @@ void Config::parseConfigFile(const std::string &fileName)
 		file >> word;
 	}
 	if (_keepAliveTime == 0)
-		_keepAliveTime = 1000;
+		_keepAliveTime = 75;
 	if (_requestTime == 0)
-		_requestTime = 1000;
+		_requestTime = 60;
 	file.close();
 }
 

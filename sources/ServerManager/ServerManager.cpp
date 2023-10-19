@@ -126,7 +126,6 @@ void ServerManager::_handleTimerFilter(struct kevent *event)
 
 		client->sendErrorPage(event->ident, errorPagePath, _408_REQUEST_TIMEOUT);
 	}
-	std::cout << "[[[[[[[[[[Timer Error]]]]]]]]]]" << std::endl;
 	_disconnectClient(client);
 }
 

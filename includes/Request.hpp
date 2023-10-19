@@ -38,9 +38,9 @@ public:
 	std::string setHeaderBuf(std::string &buf);
 	void setBodyBuf(std::string &buf);
 	void setChunkedBodyBuf(const std::string buf);
-	t_request getParsedRequest() const;
+	const t_request &getParsedRequest() const;
 	void initRequest();
-	bool getIsBody();
+	const bool &getIsBody() const;
 	std::map<std::string, std::string> &getEtcHeader();
 
 private:

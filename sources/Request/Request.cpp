@@ -6,15 +6,14 @@ Request::Request()
 	_parsedRequest._contentLength = 0;
 }
 
-Request::Request(const Request &src) {}
+Request::Request(const Request &src)
+{
+}
 
 Request &Request::operator=(Request const &rhs)
 {
 	if (this != &rhs)
 	{
-		this->_etcHeader = rhs._etcHeader;
-		this->_headerBuf = rhs._headerBuf;
-		this->parseRequest = rhs.parseRequest;
 	}
 	return (*this);
 }
@@ -70,9 +69,9 @@ void Request::setChunkedBodyBuf(const std::string buf)
 	_parsedRequest._body += buf.c_str();
 }
 
-t_request Request::getParsedRequest() const { return (_parsedRequest); }
+const t_request &Request::getParsedRequest() const { return (_parsedRequest); }
 
-bool Request::getIsBody() { return (_isBody); }
+const bool &Request::getIsBody() const { return (_isBody); }
 
 std::map<std::string, std::string> &Request::getEtcHeader() { return (_etcHeader); }
 

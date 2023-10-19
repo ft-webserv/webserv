@@ -74,7 +74,7 @@ void Response::initResponse()
 	_cgiInfo.cgiPath.clear();
 }
 
-std::string &Response::getResponse() { return (_response); }
+const std::string &Response::getResponse() const { return (_response); }
 
 std::string &Response::getRoot() { return (_root); }
 

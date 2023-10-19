@@ -45,11 +45,7 @@ void Client::readRequest(struct kevent *event)
 	{
 		_request.parseRequest();
 		if (_request.getParsedRequest()._transferEncoding == "chunked")
-		{
 			_status = READCHUNKEDBODY;
-			_chunkedBodyBuf = _request.getParsedRequest()._body;
-			_request.getParsedRequest()._body.clear();
-		}
 		else
 			_status = READBODY;
 	}
@@ -57,7 +53,7 @@ void Client::readRequest(struct kevent *event)
 		_request.setBodyBuf(buf);
 	else if (_status == READCHUNKEDBODY)
 	{
-		_chunkedBodyBuf.append(buf.c_str());
+		_chunkedBodyBuf += buf;
 		while (1)
 		{
 			std::string::size_type pos;
@@ -130,7 +126,7 @@ void Client::writeResponse()
 
 void Client::_sendResponse()
 {
-	std::string &response = _response.getResponse();
+	const std::string &response = _response.getResponse();
 
 	ssize_t res = write(_socket, response.c_str() + _lastPos, response.length() - _lastPos);
 	std::cout << "[WRITE] Server -> Client(" << this->_socket << ") " << _lastPos << "byte" << std::endl;
@@ -143,7 +139,12 @@ void Client::_sendResponse()
 		_lastPos += res;
 		return;
 	}
+	std::cout << "FINWRITE" << std::endl;
+	std::cout << "LAST POS : " << _lastPos << std::endl;
+	std::cout << "RES : " << res << std::endl;
+	std::cout << "RESPONSE : " << response.length() << std::endl;
 	_status = FINWRITE;
+	// sleep(10);
 }
 
 void Client::setServerBlock(port_t port)
