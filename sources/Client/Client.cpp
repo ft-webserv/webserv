@@ -87,7 +87,9 @@ void Client::readRequest(struct kevent *event)
 
 void Client::writeResponse()
 {
-	if (_response.isAllowedMethod(_request.getParsedRequest()._method) == false)
+	const std::string &method = _request.getParsedRequest()._method;
+
+	if (_response.isAllowedMethod(method) == false)
 	{
 		throw(_405_METHOD_NOT_ALLOWED);
 	}
@@ -105,15 +107,15 @@ void Client::writeResponse()
 	{
 		_status = CGIFIN;
 	}
-	else if (_request.getParsedRequest()._method == "GET" || _request.getParsedRequest()._method == "HEAD")
+	else if (method == "GET" || method == "HEAD")
 	{
 		_response.handleGet(_request);
 	}
-	else if (_request.getParsedRequest()._method == "POST")
+	else if (method == "POST")
 	{
 		_response.handlePost(_request);
 	}
-	else if (_request.getParsedRequest()._method == "DELETE")
+	else if (method == "DELETE")
 	{
 		_response.handleDelete(_request);
 	}
@@ -145,15 +147,17 @@ void Client::_sendResponse()
 
 void Client::setServerBlock(port_t port)
 {
+	Config &conf = Config::getInstance();
+	const std::vector<ServerInfo *> &serverInfos = conf.getServerInfos();
 	std::map<std::string, std::string>::iterator it;
 	std::map<std::string, std::string>::iterator end;
-	Config &conf = Config::getInstance();
 
-	for (size_t i = 0; i < conf.getServerInfos().size(); i++)
+	for (size_t i = 0; i < serverInfos.size(); i++)
 	{
 		int flag = 0;
-		it = conf.getServerInfos()[i]->getServerInfo().begin();
-		end = conf.getServerInfos()[i]->getServerInfo().end();
+		std::map<std::string, std::string> &serverInfo = serverInfos[i]->getServerInfo();
+		it = serverInfo.begin();
+		end = serverInfo.end();
 		for (; it != end; it++)
 		{
 			if (it->second == "listen")
@@ -162,7 +166,7 @@ void Client::setServerBlock(port_t port)
 				{
 					if (_response.getServerInfo() == NULL)
 					{
-						_response.setServerInfo(conf.getServerInfos()[i]);
+						_response.setServerInfo(serverInfos[i]);
 						setLocationBlock();
 					}
 					flag = 1;
@@ -172,7 +176,7 @@ void Client::setServerBlock(port_t port)
 			{
 				if (it->first == _request.getParsedRequest()._host)
 				{
-					_response.setServerInfo(conf.getServerInfos()[i]);
+					_response.setServerInfo(serverInfos[i]);
 					setLocationBlock();
 					return;
 				}

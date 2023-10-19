@@ -87,10 +87,12 @@ void Cgi::_addEnv(std::string key, std::string value)
 void Cgi::cgiStart()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
+	char buf[100];
+	const std::string cgiRootPath = getcwd(buf, 100) + _response->getRoot() + _cgiInfo.cgiInfo[0];
 
-	if (access(_cgiInfo.cgiInfo[0].c_str(), F_OK))
+	if (access(cgiRootPath.c_str(), F_OK))
 		throw(_404_NOT_FOUND);
-	if (access(_cgiInfo.cgiInfo[0].c_str(), X_OK))
+	if (access(cgiRootPath.c_str(), X_OK))
 		throw(_403_FORBIDDEN);
 	if (pipe(_reqFd))
 		throw(_500_INTERNAL_SERVER_ERROR);
@@ -121,7 +123,7 @@ void Cgi::cgiStart()
 			args[i] = const_cast<char *>(_cgiInfo.cgiInfo[i].c_str());
 		args[size] = NULL;
 		std::cerr << args[0] << std::endl;
-		execve(*args, args, _env);
+		execve(cgiRootPath.c_str(), args, _env);
 		// args[0] = new char[100];
 		// args[1] = new char[100];
 		// _cgiExec.copy(args[0], _cgiExec.size() + 1);
