@@ -1,6 +1,6 @@
 #include "Utils.hpp"
 
-std::string mapFind(std::map<std::string, std::string> tmp, std::string word)
+std::string mapFind(std::map<std::string, std::string> &tmp, std::string word)
 {
 	std::map<std::string, std::string>::iterator it;
 

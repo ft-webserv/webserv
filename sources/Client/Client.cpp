@@ -1,4 +1,6 @@
 #include "Client.hpp"
+#include "Status.hpp"
+#include "Utils.hpp"
 
 Client::Client(uintptr_t socket)
 	: _lastPos(0), _status(START), _socket(socket), _cgi(NULL) {}
@@ -88,7 +90,15 @@ void Client::readRequest(struct kevent *event)
 void Client::writeResponse()
 {
 	const std::string &method = _request.getParsedRequest()._method;
+  AuthManager& authManager = AuthManager::getInstance();
+  
+  std::string authRealm = mapFind(_response.getLocationInfo()->getLocationInfo(), "auth_basic");
 
+  if (authRealm == "on")
+  {
+    if (authManager.authentication("") == false)
+      throw(_401_UNAUTHORIZED);
+  }
 	if (_response.isAllowedMethod(method) == false)
 	{
 		throw(_405_METHOD_NOT_ALLOWED);
