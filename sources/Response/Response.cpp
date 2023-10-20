@@ -411,7 +411,7 @@ std::string Response::getErrorPage()
 
 	if (_serverInfo != NULL)
 	{
-		std::map<std::string, std::string> tmp = _serverInfo->getServerInfo();
+		std::map<std::string, std::string>& tmp = _serverInfo->getServerInfo();
 		findResult = mapFind(tmp, "errorpage");
 	}
 	if (findResult.empty() == false)

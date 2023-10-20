@@ -22,6 +22,7 @@ typedef struct s_cgiInfo
 	std::string cgiExtension;
 	std::string cgiInfo;
 } t_cgiInfo;
+
 class Response
 {
 public:
