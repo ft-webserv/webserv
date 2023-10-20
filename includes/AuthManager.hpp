@@ -1,11 +1,12 @@
 #include <string>
 #include <map>
+#include <iostream>
 
 class AuthManager
 {
 public:
   static AuthManager& getInstance();
-  bool authentication(const std::string credentials) const;
+  bool authentication(const std::string credentials);
 
 private:
   AuthManager();

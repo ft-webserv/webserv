@@ -37,6 +37,7 @@ void Request::initRequest()
 	_parsedRequest._transferEncoding.clear();
 	_parsedRequest._contentLengthStr.clear();
 	_parsedRequest._body.clear();
+  _parsedRequest._credentials.clear();
 	_parsedRequest._contentLength = 0;
 }
 
@@ -108,6 +109,14 @@ void Request::parseRequest()
 			{
 				line >> _parsedRequest._contentType;
 			}
+      else if (word == "Authorization:")
+      {
+        std::string authScheme;
+
+        line >> authScheme;
+        if (authScheme == "Basic")
+          line >> _parsedRequest._credentials;
+      }
 			else if (word == "Content-Length:")
 			{
 				std::string tmp;

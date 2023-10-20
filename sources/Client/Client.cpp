@@ -96,7 +96,8 @@ void Client::writeResponse()
 
   if (authRealm == "on")
   {
-    if (authManager.authentication("") == false)
+    // if (authManager.authentication("") == false)
+    if (authManager.authentication(_request.getParsedRequest()._credentials) == false)
       throw(_401_UNAUTHORIZED);
   }
 	if (_response.isAllowedMethod(method) == false)
