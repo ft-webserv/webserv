@@ -20,6 +20,7 @@ typedef struct s_request
 	std::string _contentType;
 	std::string _transferEncoding;
 	std::string _contentLengthStr;
+  std::string _credentials;
 	size_t _contentLength;
 	std::string _body;
 } t_request;
