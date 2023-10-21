@@ -1,4 +1,6 @@
 #include "Client.hpp"
+#include "Status.hpp"
+#include "Utils.hpp"
 
 Client::Client(uintptr_t socket)
 	: _lastPos(0), _status(START), _socket(socket), _cgi(NULL) {}
@@ -93,7 +95,32 @@ void Client::readRequest(struct kevent *event)
 void Client::writeResponse()
 {
 	const std::string &method = _request.getParsedRequest()._method;
+  AuthManager& authManager = AuthManager::getInstance();
+  
+  std::string auth = mapFind(_response.getLocationInfo()->getLocationInfo(), "auth_basic");
 
+  if (auth == "on")
+  {
+    const std::string& sessionId = _request.getParsedRequest()._sessionId;
+    if (sessionId == "")
+    {
+      const std::string& credentials = _request.getParsedRequest()._credentials;
+
+      if (authManager.authentication(credentials) == false)
+        throw(_401_UNAUTHORIZED);
+      _response.setCookie(authManager.generateSession(credentials));
+    }
+    else
+    {
+      Session* session = authManager.findSession(sessionId);
+
+      if (session == NULL)
+        throw(_401_UNAUTHORIZED);
+      if (authManager.authentication(session->getSessionData()) == false)
+        throw(_401_UNAUTHORIZED);
+      session->updateAccessTime();
+    }
+  }
 	if (_response.isAllowedMethod(method) == false)
 	{
 		throw(_405_METHOD_NOT_ALLOWED);

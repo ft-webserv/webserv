@@ -37,6 +37,8 @@ void Request::initRequest()
 	_parsedRequest._transferEncoding.clear();
 	_parsedRequest._contentLengthStr.clear();
 	_parsedRequest._body.clear();
+  _parsedRequest._credentials.clear();
+  _parsedRequest._sessionId.clear();
 	_parsedRequest._contentLength = 0;
 }
 
@@ -108,6 +110,23 @@ void Request::parseRequest()
 			{
 				line >> _parsedRequest._contentType;
 			}
+      else if (word == "Cookie:")
+      {
+        std::string cookie;
+        
+        line >> cookie;
+        size_t equal = cookie.find('=');
+        if (cookie.substr(0, equal) == "session-id")
+          _parsedRequest._sessionId = cookie.substr(equal + 1);
+      }
+      else if (word == "Authorization:")
+      {
+        std::string authScheme;
+
+        line >> authScheme;
+        if (authScheme == "Basic")
+          line >> _parsedRequest._credentials;
+      }
 			else if (word == "Content-Length:")
 			{
 				std::string tmp;

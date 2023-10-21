@@ -343,6 +343,8 @@ void Response::_showFileList(std::string path)
 	{
 		_body += "<tr>";
 		name = dp->d_name;
+    if (name == ".")
+      continue;
 		dpPath = path + "/" + name;
 		stat(dpPath.c_str(), &buf);
 		time = std::ctime(&buf.st_mtimespec.tv_sec);
@@ -411,7 +413,7 @@ std::string Response::getErrorPage()
 
 	if (_serverInfo != NULL)
 	{
-		std::map<std::string, std::string> tmp = _serverInfo->getServerInfo();
+		std::map<std::string, std::string>& tmp = _serverInfo->getServerInfo();
 		findResult = mapFind(tmp, "errorpage");
 	}
 	if (findResult.empty() == false)
@@ -460,4 +462,9 @@ std::string Response::_makeRandomName()
 void Response::setResponse(std::string &response)
 {
 	this->_response = response;
+}
+
+void Response::setCookie(std::string cookie)
+{
+	_headerFields.insert(std::pair<std::string, std::string>("Set-Cookie:", cookie));
 }

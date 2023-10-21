@@ -22,6 +22,7 @@ typedef struct s_cgiInfo
 	std::string cgiExtension;
 	std::string cgiInfo;
 } t_cgiInfo;
+
 class Response
 {
 public:
@@ -48,6 +49,7 @@ public:
 	t_cgiInfo &getCgiInfo();
 	std::string &getPath(std::string location);
 	std::size_t &getClientMaxBodySize();
+  void setCookie(std::string cookie);
 
 private:
 	void _findRoot();

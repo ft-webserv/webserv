@@ -9,6 +9,7 @@
 #include "Exception.hpp"
 #include "Error.hpp"
 #include "Cgi.hpp"
+#include "AuthManager.hpp"
 
 // user define value
 #define DEFAULTERRORPAGE "./error_page/html"
