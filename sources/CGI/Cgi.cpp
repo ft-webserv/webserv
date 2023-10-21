@@ -32,10 +32,12 @@ Cgi::~Cgi()
 }
 
 uintptr_t Cgi::getClientSock() { return (_clientSock); }
+
 Response *Cgi::getResponse() { return (_response); }
+
 pid_t Cgi::getPid() { return (_pid); }
+
 Client *Cgi::getClient() { return (_client); }
-// bool Cgi::getIsCgiFin() { return (_isCgiFin); }
 
 void Cgi::_makeEnvList(uintptr_t clntSock)
 {
@@ -87,9 +89,9 @@ void Cgi::_addEnv(std::string key, std::string value)
 void Cgi::cgiStart()
 {
 	Kqueue &kqueue = Kqueue::getInstance();
-  std::string cgiScript;
+	std::string cgiScript;
 
-  cgiScript = "./" + _response->getRoot() + "/" + _cgiInfo.cgiInfo;
+	cgiScript = "./" + _response->getRoot() + "/" + _cgiInfo.cgiInfo;
 	if (access(cgiScript.c_str(), F_OK))
 		throw(_404_NOT_FOUND);
 	if (access(cgiScript.c_str(), X_OK))
@@ -118,16 +120,9 @@ void Cgi::cgiStart()
 		close(_reqFd[1]);
 		close(_resFd[0]);
 
-    args[0] = const_cast<char *>(cgiScript.c_str());
+		args[0] = const_cast<char *>(cgiScript.c_str());
 		args[1] = NULL;
 		execve(cgiScript.c_str(), args, _env);
-		// args[0] = new char[100];
-		// args[1] = new char[100];
-		// _cgiExec.copy(args[0], _cgiExec.size() + 1);
-		// args[0][_cgiExec.size()] = '\0';
-		// args[1] = NULL;
-		// execve(_cgiExec.c_str(), args, _env);
-		// throw(_403_FORBIDDEN);
 	}
 	else
 	{
@@ -158,17 +153,13 @@ void Cgi::writeBody()
 
 void Cgi::readResponse()
 {
-	// std::string buf;
 	char buf[BUFFERSIZE + 1];
 	ssize_t readSize;
 	pid_t result;
 
 	while (true)
 	{
-		// buf.clear();
-		// buf.resize(event->data);
 		memset(buf, 0, BUFFERSIZE + 1);
-		// readSize = read(_resFd[0], &buf[0], event->data);
 		readSize = read(_resFd[0], buf, BUFFERSIZE);
 		std::cout << " [READ] Server <- Cgi(" << this->_resFd[0] << ") " << _cgiResponse.size() << "byte" << std::endl;
 		if (readSize == -1)
@@ -189,7 +180,7 @@ void Cgi::readResponse()
 
 		if (_cgiResponse.find("Status: ") != std::string::npos)
 		{
-      _cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: " + ft_itos(_cgiResponse.substr(_cgiResponse.find("\r\n\r\n") + 4).length()) + "\r\nContent-Type: text/html; charset=utf-8" + _cgiResponse.substr(_cgiResponse.find("\r\n\r\n"));
+			_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: " + ft_itos(_cgiResponse.substr(_cgiResponse.find("\r\n\r\n") + 4).length()) + "\r\nContent-Type: text/html; charset=utf-8" + _cgiResponse.substr(_cgiResponse.find("\r\n\r\n"));
 			_response->setResponse(_cgiResponse);
 		}
 		else

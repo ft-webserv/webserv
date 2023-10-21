@@ -17,10 +17,15 @@ Client::~Client()
 }
 
 eClientStatus &Client::getClientStatus() { return (_status); }
+
 uintptr_t &Client::getSocket() { return (_socket); }
+
 Request &Client::getRequest() { return (_request); }
+
 Response &Client::getResponse() { return (_response); }
+
 Cgi *Client::getCgi() { return (_cgi); }
+
 void Client::setCgi(Cgi *cgi) { _cgi = cgi; }
 
 void Client::readRequest(struct kevent *event)

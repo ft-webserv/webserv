@@ -5,11 +5,11 @@
 
 class Exception
 {
-public:
+private:
 	Exception();
-	Exception(const Exception &copy);
-	Exception &operator=(const Exception &copy);
 	~Exception();
+
+public:
 	static void fileOpenError();
 	static void socketError();
 	static void bindError();
