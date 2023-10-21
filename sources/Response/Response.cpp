@@ -343,6 +343,8 @@ void Response::_showFileList(std::string path)
 	{
 		_body += "<tr>";
 		name = dp->d_name;
+    if (name == ".")
+      continue;
 		dpPath = path + "/" + name;
 		stat(dpPath.c_str(), &buf);
 		time = std::ctime(&buf.st_mtimespec.tv_sec);
