@@ -3,6 +3,7 @@
 AuthManager::AuthManager()
 {
   _userTable["adminId"] = "adminPassword";
+  _userTable["siyang"] = "siyang";
 }
 
 AuthManager::~AuthManager() {}
