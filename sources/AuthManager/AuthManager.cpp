@@ -1,6 +1,7 @@
 #include "AuthManager.hpp"
 
-AuthManager::AuthManager() {
+AuthManager::AuthManager()
+{
   _userTable["adminId"] = "adminPassword";
 }
 
@@ -32,7 +33,6 @@ bool AuthManager::authentication(const std::string credentials)
     return (false);
 
   userData = _decodeBase64(credentials);
-  std::cout << userData.first << " : "<< userData.second << std::endl;
   serverData = _userTable.find(userData.first);
   if (serverData == _userTable.end())
     return (false);
@@ -43,17 +43,39 @@ bool AuthManager::authentication(const std::string credentials)
   return (true);
 }
 
+std::string AuthManager::generateSession(const std::string credentials)
+{
+  Session newSession(credentials);
+
+  _session.push_back(newSession);
+  return ("session-id=" + newSession.getSessionId());
+}
+
+Session* AuthManager::findSession(const std::string& sessionId)
+{
+  std::vector<Session>::iterator it = _session.begin();
+
+  for (; it != _session.end(); it++)
+  {
+    if (it->getSessionId() == sessionId)
+      return (&(*it)); 
+  }
+  return (NULL);
+}
+
 std::pair<std::string, std::string> AuthManager::_decodeBase64(const std::string credentials) const
 {
   static const std::string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
   size_t in_len = credentials.size();
-  if (in_len % 4 != 0) // 유효한 Base64 문자열이 아님
+  if (in_len % 4 != 0)
     return (std::make_pair("", ""));
 
   size_t out_len = in_len / 4 * 3;
-  if (credentials[in_len - 1] == '=') out_len--;
-  if (credentials[in_len - 2] == '=') out_len--;
+  if (credentials[in_len - 1] == '=')
+    out_len--;
+  if (credentials[in_len - 2] == '=')
+    out_len--;
 
   std::string decoded;
   decoded.resize(out_len);
@@ -65,9 +87,12 @@ std::pair<std::string, std::string> AuthManager::_decodeBase64(const std::string
       uint32_t sextet_d = credentials[i] == '=' ? 0 & i++ : base64_chars.find(credentials[i++]);
 
       uint32_t triple = (sextet_a << 18) + (sextet_b << 12) + (sextet_c << 6) + sextet_d;
-      if (j < out_len) decoded[j++] = (triple >> 16) & 0xFF;
-      if (j < out_len) decoded[j++] = (triple >> 8) & 0xFF;
-      if (j < out_len) decoded[j++] = triple & 0xFF;
+      if (j < out_len)
+        decoded[j++] = (triple >> 16) & 0xFF;
+      if (j < out_len) 
+        decoded[j++] = (triple >> 8) & 0xFF;
+      if (j < out_len)
+        decoded[j++] = triple & 0xFF;
   }
 
   size_t equal = decoded.find(':');

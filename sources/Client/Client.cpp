@@ -92,13 +92,29 @@ void Client::writeResponse()
 	const std::string &method = _request.getParsedRequest()._method;
   AuthManager& authManager = AuthManager::getInstance();
   
-  std::string authRealm = mapFind(_response.getLocationInfo()->getLocationInfo(), "auth_basic");
+  std::string auth = mapFind(_response.getLocationInfo()->getLocationInfo(), "auth_basic");
 
-  if (authRealm == "on")
+  if (auth == "on")
   {
-    // if (authManager.authentication("") == false)
-    if (authManager.authentication(_request.getParsedRequest()._credentials) == false)
-      throw(_401_UNAUTHORIZED);
+    const std::string& sessionId = _request.getParsedRequest()._sessionId;
+    if (sessionId == "")
+    {
+      const std::string& credentials = _request.getParsedRequest()._credentials;
+
+      if (authManager.authentication(credentials) == false)
+        throw(_401_UNAUTHORIZED);
+      _response.setCookie(authManager.generateSession(credentials));
+    }
+    else
+    {
+      Session* session = authManager.findSession(sessionId);
+
+      if (session == NULL)
+        throw(_401_UNAUTHORIZED);
+      if (authManager.authentication(session->getSessionData()) == false)
+        throw(_401_UNAUTHORIZED);
+      session->updateAccessTime();
+    }
   }
 	if (_response.isAllowedMethod(method) == false)
 	{
