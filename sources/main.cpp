@@ -29,14 +29,19 @@ int main(int argc, char *argv[])
 {
 	try
 	{
-		(void)argc;
-		Config::getInstance(argv[1]);
+		if (argc == 1)
+			Config::getInstance("./Config/shy.config");
+		else if (argc == 2)
+			Config::getInstance(argv[1]);
+		else
+			Exception::unvalidArgumentsError();
+
 		ServerManager testManager;
 		testManager.runServer();
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << e.what() << '\n';
+		std::cerr << e.what() << std::endl;
 	}
 	return (0);
 }
