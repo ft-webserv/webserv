@@ -192,6 +192,7 @@ void ServerManager::_monitoringEvent()
 {
 	int numEvents;
 	struct kevent *event;
+	AuthManager &authManager = AuthManager::getInstance();
 
 	while (true)
 	{
@@ -225,6 +226,7 @@ void ServerManager::_monitoringEvent()
 					_disconnectClient(static_cast<Client *>(event->udata));
 				}
 			}
+			authManager.deleteOldSession();
 		}
 		catch (std::exception &e)
 		{

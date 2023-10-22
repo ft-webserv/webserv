@@ -12,6 +12,7 @@ public:
   bool authentication(const std::string credentials);
   std::string generateSession(const std::string credentials);
   Session* findSession(const std::string& sessionId);
+  void  deleteOldSession();
 
 private:
   AuthManager();

@@ -4,6 +4,8 @@ AuthManager::AuthManager()
 {
   _userTable["adminId"] = "adminPassword";
   _userTable["siyang"] = "siyang";
+  _userTable["hyeonjun"] = "hyeonjun";
+  _userTable["youngmch"] = "youngmch";
 }
 
 AuthManager::~AuthManager() {}
@@ -13,13 +15,13 @@ AuthManager::AuthManager(const AuthManager &copy)
   (void)copy;
 }
 
-AuthManager& AuthManager::operator=(const AuthManager &copy)
+AuthManager &AuthManager::operator=(const AuthManager &copy)
 {
   (void)copy;
   return (getInstance());
 }
 
-AuthManager& AuthManager::getInstance()
+AuthManager &AuthManager::getInstance()
 {
   static AuthManager authManager;
   return (authManager);
@@ -52,16 +54,32 @@ std::string AuthManager::generateSession(const std::string credentials)
   return ("session-id=" + newSession.getSessionId());
 }
 
-Session* AuthManager::findSession(const std::string& sessionId)
+Session *AuthManager::findSession(const std::string &sessionId)
 {
   std::vector<Session>::iterator it = _session.begin();
 
   for (; it != _session.end(); it++)
   {
     if (it->getSessionId() == sessionId)
-      return (&(*it)); 
+      return (&(*it));
   }
   return (NULL);
+}
+
+void AuthManager::deleteOldSession()
+{
+  clock_t curr = clock();
+  std::vector<Session>::iterator it = _session.begin();
+  std::vector<Session>::iterator end = _session.end();
+
+  for (; it != end; it++)
+  {
+    if (curr - it->getLastAccessTime() > 1000)
+    {
+      _session.erase(it);
+      std::cout << "Erase Session!" << std::endl;
+    }
+  }
 }
 
 std::pair<std::string, std::string> AuthManager::_decodeBase64(const std::string credentials) const
@@ -81,19 +99,20 @@ std::pair<std::string, std::string> AuthManager::_decodeBase64(const std::string
   std::string decoded;
   decoded.resize(out_len);
 
-  for (size_t i = 0, j = 0; i < in_len;) {
-      uint32_t sextet_a = credentials[i] == '=' ? 0 & i++ : base64_chars.find(credentials[i++]);
-      uint32_t sextet_b = credentials[i] == '=' ? 0 & i++ : base64_chars.find(credentials[i++]);
-      uint32_t sextet_c = credentials[i] == '=' ? 0 & i++ : base64_chars.find(credentials[i++]);
-      uint32_t sextet_d = credentials[i] == '=' ? 0 & i++ : base64_chars.find(credentials[i++]);
+  for (size_t i = 0, j = 0; i < in_len;)
+  {
+    uint32_t sextet_a = credentials[i] == '=' ? 0 & i++ : base64_chars.find(credentials[i++]);
+    uint32_t sextet_b = credentials[i] == '=' ? 0 & i++ : base64_chars.find(credentials[i++]);
+    uint32_t sextet_c = credentials[i] == '=' ? 0 & i++ : base64_chars.find(credentials[i++]);
+    uint32_t sextet_d = credentials[i] == '=' ? 0 & i++ : base64_chars.find(credentials[i++]);
 
-      uint32_t triple = (sextet_a << 18) + (sextet_b << 12) + (sextet_c << 6) + sextet_d;
-      if (j < out_len)
-        decoded[j++] = (triple >> 16) & 0xFF;
-      if (j < out_len) 
-        decoded[j++] = (triple >> 8) & 0xFF;
-      if (j < out_len)
-        decoded[j++] = triple & 0xFF;
+    uint32_t triple = (sextet_a << 18) + (sextet_b << 12) + (sextet_c << 6) + sextet_d;
+    if (j < out_len)
+      decoded[j++] = (triple >> 16) & 0xFF;
+    if (j < out_len)
+      decoded[j++] = (triple >> 8) & 0xFF;
+    if (j < out_len)
+      decoded[j++] = triple & 0xFF;
   }
 
   size_t equal = decoded.find(':');
