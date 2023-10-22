@@ -10,6 +10,7 @@ public:
 	Exception(const Exception &copy);
 	Exception &operator=(const Exception &copy);
 	~Exception();
+	static void unvalidArgumentsError();
 	static void fileOpenError();
 	static void socketError();
 	static void bindError();
