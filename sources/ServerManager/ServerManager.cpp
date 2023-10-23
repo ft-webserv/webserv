@@ -49,6 +49,7 @@ void ServerManager::runServer()
 		_kqueue.addEvent(servSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		Logger::openedServerInfo(servSock, *iter);
 	}
+	std::cout << "\n==================================" << std::endl;
 	_monitoringEvent();
 }
 
