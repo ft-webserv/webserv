@@ -165,7 +165,6 @@ void Client::_sendResponse()
 		return;
 	}
 	_status = FINWRITE;
-	// sleep(10);
 }
 
 void Client::setServerBlock(port_t port)
