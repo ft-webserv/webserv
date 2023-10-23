@@ -141,7 +141,6 @@ void Cgi::writeBody()
 	ssize_t res;
 
 	res = write(_reqFd[1], _requestBody.c_str() + _lastPos, _requestBody.length() - _lastPos);
-	std::cout << "[WRITE] Server -> Cgi(" << this->_reqFd[1] << ") " << _lastPos << "byte" << std::endl;
 	_lastPos += res;
 	if (_lastPos == _requestBodyLength)
 	{
@@ -161,7 +160,6 @@ void Cgi::readResponse()
 	{
 		memset(buf, 0, BUFFERSIZE + 1);
 		readSize = read(_resFd[0], buf, BUFFERSIZE);
-		std::cout << " [READ] Server <- Cgi(" << this->_resFd[0] << ") " << _cgiResponse.size() << "byte" << std::endl;
 		if (readSize == -1)
 			return;
 		else if (readSize == 0)

@@ -8,6 +8,8 @@
 #include "Config.hpp"
 #include "Client.hpp"
 #include "Kqueue.hpp"
+#include "Logger.hpp"
+
 #define BACKLOG SOMAXCONN
 class ServerManager
 {

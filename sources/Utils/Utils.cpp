@@ -39,9 +39,20 @@ std::string findExtension(std::string fileName)
 	return (fileName.substr(pos, fileName.length() - pos));
 }
 
-void ft_toupper(char& c)
+void ft_toupper(char &c)
 {
-  c = std::toupper(c);
-  if (c == '-')
-    c = '_';
+	c = std::toupper(c);
+	if (c == '-')
+		c = '_';
+}
+
+std::string printDate()
+{
+	char buf[128];
+	std::time_t t = std::time(NULL);
+	std::tm *now = std::localtime(&t);
+
+	strftime(buf, sizeof(buf), "%Y-%m-%d %X", now);
+
+	return (buf);
 }

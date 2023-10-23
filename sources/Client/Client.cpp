@@ -34,7 +34,7 @@ void Client::readRequest(struct kevent *event)
 {
 	ssize_t len;
 	std::string buf;
-	const t_request	&parsedRequest = _request.getParsedRequest();
+	const t_request &parsedRequest = _request.getParsedRequest();
 
 	if (_status == START)
 		_status = READHEADER;
@@ -46,7 +46,6 @@ void Client::readRequest(struct kevent *event)
 		Exception::recvError();
 	else if (len <= 0)
 		Exception::disconnectDuringRecvError();
-	std::cout << " [READ] Server <- Client(" << this->_socket << ") " << len << "byte" << std::endl;
 	if (_status == READHEADER)
 		buf = _request.setHeaderBuf(buf);
 	if (_request.getIsBody() == true && _status == READHEADER)
@@ -96,32 +95,32 @@ void Client::readRequest(struct kevent *event)
 void Client::writeResponse()
 {
 	const std::string &method = _request.getParsedRequest()._method;
-  AuthManager& authManager = AuthManager::getInstance();
-  
-  std::string auth = mapFind(_response.getLocationInfo()->getLocationInfo(), "auth_basic");
+	AuthManager &authManager = AuthManager::getInstance();
 
-  if (auth == "on")
-  {
-    const std::string& sessionId = _request.getParsedRequest()._sessionId;
-    if (sessionId == "")
-    {
-      const std::string& credentials = _request.getParsedRequest()._credentials;
+	std::string auth = mapFind(_response.getLocationInfo()->getLocationInfo(), "auth_basic");
 
-      if (authManager.authentication(credentials) == false)
-        throw(_401_UNAUTHORIZED);
-      _response.setCookie(authManager.generateSession(credentials));
-    }
-    else
-    {
-      Session* session = authManager.findSession(sessionId);
+	if (auth == "on")
+	{
+		const std::string &sessionId = _request.getParsedRequest()._sessionId;
+		if (sessionId == "")
+		{
+			const std::string &credentials = _request.getParsedRequest()._credentials;
 
-      if (session == NULL)
-        throw(_401_UNAUTHORIZED);
-      if (authManager.authentication(session->getSessionData()) == false)
-        throw(_401_UNAUTHORIZED);
-      session->updateAccessTime();
-    }
-  }
+			if (authManager.authentication(credentials) == false)
+				throw(_401_UNAUTHORIZED);
+			_response.setCookie(authManager.generateSession(credentials));
+		}
+		else
+		{
+			Session *session = authManager.findSession(sessionId);
+
+			if (session == NULL)
+				throw(_401_UNAUTHORIZED);
+			if (authManager.authentication(session->getSessionData()) == false)
+				throw(_401_UNAUTHORIZED);
+			session->updateAccessTime();
+		}
+	}
 	if (_response.isAllowedMethod(method) == false)
 	{
 		throw(_405_METHOD_NOT_ALLOWED);
@@ -164,7 +163,6 @@ void Client::_sendResponse()
 	const std::string &response = _response.getResponse();
 
 	ssize_t res = write(_socket, response.c_str() + _lastPos, response.length() - _lastPos);
-	std::cout << "[WRITE] Server -> Client(" << this->_socket << ") " << _lastPos << "byte" << std::endl;
 	if (res == -1)
 		throw(_500_INTERNAL_SERVER_ERROR);
 	else if (res <= 0)

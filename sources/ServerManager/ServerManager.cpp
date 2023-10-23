@@ -145,6 +145,7 @@ void ServerManager::_handleReadClient(struct kevent *event)
 	{
 		_kqueue.disableEvent(event->ident, EVFILT_READ, event->udata);
 		_kqueue.enableEvent(event->ident, EVFILT_WRITE, event->udata);
+		Logger::serverRecvFromClient(event->ident);
 	}
 }
 
@@ -161,6 +162,7 @@ void ServerManager::_handleWriteClient(struct kevent *event)
 		_kqueue.disableEvent(event->ident, EVFILT_WRITE, event->udata);
 		client->initClient();
 		_setKeepAliveTimeOut(client);
+		Logger::serverSendToClient(event->ident);
 	}
 }
 
@@ -248,6 +250,7 @@ void ServerManager::_acceptClient(uintptr_t &servSock)
 	_kqueue.addEvent(clntSock, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, static_cast<void *>(client));
 	_kqueue.setFdset(clntSock, CLIENT);
 	_setKeepAliveTimeOut(client);
+	Logger::clientConnect(clntSock);
 }
 
 void ServerManager::_setKeepAliveTimeOut(Client *client)
@@ -286,7 +289,7 @@ void ServerManager::_findServerBlock(Client *client)
 
 void ServerManager::_disconnectClient(Client *client)
 {
-	std::cout << "Disconnected with client : " << client->getSocket() << std::endl;
+	Logger::clientDisconnect(client->getSocket());
 	close(client->getSocket());
 	_kqueue._deleteFdType(client->getSocket());
 	_kqueue.deleteEvent(client->getSocket(), EVFILT_TIMER, static_cast<void *>(client));

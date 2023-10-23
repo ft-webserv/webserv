@@ -1,12 +1,15 @@
 #pragma once
 
+#include <iostream>
 #include <map>
 #include <string>
 #include <sstream>
 #include <cctype>
+#include <ctime>
 
-std::string mapFind(std::map<std::string, std::string>& tmp, std::string word);
+std::string mapFind(std::map<std::string, std::string> &tmp, std::string word);
 size_t ft_stoi(std::string num);
 std::string ft_itos(size_t num);
 std::string findExtension(std::string fileName);
-void ft_toupper(char& c);
+void ft_toupper(char &c);
+std::string printDate();
