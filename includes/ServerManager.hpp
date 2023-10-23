@@ -6,10 +6,9 @@
 
 // user define header
 #include "Config.hpp"
-#include "Server.hpp"
 #include "Client.hpp"
 #include "Kqueue.hpp"
-
+#define BACKLOG SOMAXCONN
 class ServerManager
 {
 public:

@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------- #
 
 CC					:= c++
-CFLAGS				:= -std=c++98 -Wextra -Wall -Werror -O2 # -fsanitize=address -g3
+CFLAGS				:= -std=c++98 -Wextra -Wall -Werror -fsanitize=address -g3
 CPPFLAGS			= -I includes
 MJ					= -MJ $(patsubst $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(BUILD_DIR)/$(JSON_DIR)/%.part.json, $@)
 
@@ -14,7 +14,6 @@ MJ					= -MJ $(patsubst $(BUILD_DIR)/$(OBJ_DIR)/%.o, $(BUILD_DIR)/$(JSON_DIR)/%.
 SRC_DIR				:= sources
 
 CONFIG_DIR			:= Config
-SERVER_DIR			:= Server
 KQUEUE_DIR			:= Kqueue
 SERVERMANAGER_DIR	:= ServerManager
 REQUEST_DIR			:= Request
@@ -38,7 +37,6 @@ JSON_DIR			:= json
 
 SRCS				:= $(addprefix $(SRC_DIR)/, main.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(CONFIG_DIR)/, Config.cpp)
-SRCS				+= $(addprefix $(SRC_DIR)/$(SERVER_DIR)/, Server.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(KQUEUE_DIR)/, Kqueue.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(SERVERMANAGER_DIR)/, ServerManager.cpp)
 SRCS				+= $(addprefix $(SRC_DIR)/$(REQUEST_DIR)/, Request.cpp)
@@ -106,8 +104,8 @@ json:
 		@(echo '[' && find . -name "*.part.json" | xargs cat && echo ']') > $(JSON)
 
 dir_guard:
-		@mkdir -p $(addprefix $(BUILD_DIR)/$(OBJ_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(KQUEUE_DIR) $(SERVERMANAGER_DIR) $(REQUEST_DIR) $(RESPONSE_DIR) $(SERVERINFO_DIR) $(EXCEPTION_DIR) $(CLIENT_DIR) $(CGI_DIR) $(ERROR_DIR) $(UTILS_DIR) $(AUTHMANAGER_DIR) $(SESSION_DIR))\
-			$(addprefix $(BUILD_DIR)/$(JSON_DIR)/, $(CONFIG_DIR) $(SERVER_DIR) $(KQUEUE_DIR) $(SERVERMANAGER_DIR) $(REQUEST_DIR) $(RESPONSE_DIR) $(SERVERINFO_DIR) $(EXCEPTION_DIR) $(CLIENT_DIR) $(CGI_DIR) $(ERROR_DIR) $(UTILS_DIR) $(AUTHMANAGER_DIR) $(SESSION_DIR))
+		@mkdir -p $(addprefix $(BUILD_DIR)/$(OBJ_DIR)/, $(CONFIG_DIR) $(KQUEUE_DIR) $(SERVERMANAGER_DIR) $(REQUEST_DIR) $(RESPONSE_DIR) $(SERVERINFO_DIR) $(EXCEPTION_DIR) $(CLIENT_DIR) $(CGI_DIR) $(ERROR_DIR) $(UTILS_DIR) $(AUTHMANAGER_DIR) $(SESSION_DIR))\
+			$(addprefix $(BUILD_DIR)/$(JSON_DIR)/, $(CONFIG_DIR) $(KQUEUE_DIR) $(SERVERMANAGER_DIR) $(REQUEST_DIR) $(RESPONSE_DIR) $(SERVERINFO_DIR) $(EXCEPTION_DIR) $(CLIENT_DIR) $(CGI_DIR) $(ERROR_DIR) $(UTILS_DIR) $(AUTHMANAGER_DIR) $(SESSION_DIR))
 
 .PHONY: all clean fclean re dir_guard
 

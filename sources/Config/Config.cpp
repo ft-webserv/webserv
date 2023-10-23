@@ -38,7 +38,7 @@ void Config::parseConfigFile(const std::string &fileName)
 	file.open(fileName);
 
 	if (file.is_open() == false)
-		throw FileOpenFailException();
+		Exception::fileOpenError();
 
 	file >> word;
 
@@ -184,7 +184,7 @@ void Config::parseInclude(std::ifstream &file)
 		return;
 	mimeFile.open(word);
 	if (mimeFile.is_open() == false)
-		throw FileOpenFailException();
+		Exception::fileOpenError();
 	mimeFile >> val;
 	while (true)
 	{
@@ -213,8 +213,3 @@ size_t &Config::getKeepAliveTime() { return (_keepAliveTime); }
 size_t &Config::getRequestTime() { return (_requestTime); }
 size_t &Config::getClientHeadBufferSize() { return (_clientHeaderBufferSize); }
 size_t &Config::getClientMaxBodySize() { return (_clientMaxBodySize); }
-
-const char *Config::FileOpenFailException::what() const throw()
-{
-	return ("file open error");
-}

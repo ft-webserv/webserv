@@ -8,6 +8,11 @@ Exception::~Exception()
 {
 }
 
+void Exception::unvalidArgumentsError()
+{
+	throw std::runtime_error("unvalid arguments error!");
+}
+
 void Exception::fileOpenError()
 {
 	throw std::runtime_error("file open error!");

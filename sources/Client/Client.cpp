@@ -34,6 +34,7 @@ void Client::readRequest(struct kevent *event)
 {
 	ssize_t len;
 	std::string buf;
+	const t_request	&parsedRequest = _request.getParsedRequest();
 
 	if (_status == START)
 		_status = READHEADER;
@@ -51,7 +52,7 @@ void Client::readRequest(struct kevent *event)
 	if (_request.getIsBody() == true && _status == READHEADER)
 	{
 		_request.parseRequest();
-		if (_request.getParsedRequest()._transferEncoding == "chunked")
+		if (parsedRequest._transferEncoding == "chunked")
 			_status = READCHUNKEDBODY;
 		else
 			_status = READBODY;
@@ -88,7 +89,7 @@ void Client::readRequest(struct kevent *event)
 				break;
 		}
 	}
-	if (_status == READBODY && _request.getParsedRequest()._contentLength == _request.getParsedRequest()._body.length())
+	if (_status == READBODY && parsedRequest._contentLength == parsedRequest._body.length())
 		_status = FINREAD;
 }
 

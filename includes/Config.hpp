@@ -9,6 +9,7 @@
 #include <set>
 #include <sstream>
 
+#include "Exception.hpp"
 #include "ServerInfo.hpp"
 #include "Utils.hpp"
 
@@ -29,12 +30,6 @@ public:
 	size_t &getRequestTime();
 	size_t &getClientHeadBufferSize();
 	size_t &getClientMaxBodySize();
-	// it will be die
-	class FileOpenFailException : public std::exception
-	{
-	public:
-		virtual const char *what() const throw();
-	};
 
 private:
 	Config();
