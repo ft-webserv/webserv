@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	try
 	{
 		if (argc == 1)
-			Config::getInstance("./Config/shy.config");
+			Config::getInstance("./Config/tester.config");
 		else if (argc == 2)
 			Config::getInstance(argv[1]);
 		else
