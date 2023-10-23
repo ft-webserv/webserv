@@ -99,6 +99,7 @@ void Client::writeResponse()
 	AuthManager &authManager = AuthManager::getInstance();
 
 	std::string auth = mapFind(_response.getLocationInfo()->getLocationInfo(), "auth_basic");
+	std::string ret = mapFind(_response.getLocationInfo()->getLocationInfo(), "return");
 
 	if (auth == "on")
 	{
@@ -122,7 +123,9 @@ void Client::writeResponse()
 			session->updateAccessTime();
 		}
 	}
-	if (_response.isAllowedMethod(method) == false)
+	if (ret != "")
+		_response.handleRedirection();
+	else if (_response.isAllowedMethod(method) == false)
 		throw(_405_METHOD_NOT_ALLOWED);
 	else if (_status < CGISTART && _response.isCgi(parsedRequest._location) == true)
 	{

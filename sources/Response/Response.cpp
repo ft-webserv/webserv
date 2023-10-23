@@ -109,21 +109,6 @@ void Response::setLocationInfo(LocationInfo *locationBlock)
 	std::size_t clientMaxSize = ft_stoi(mapFind(tmp, "client_max_body_size"));
 	if (clientMaxSize != 0)
 		_clientMaxBodySize = clientMaxSize;
-	if (mapFind(tmp, "return").empty() == false)
-	{
-		std::stringstream ss;
-		std::map<std::string, std::string>::iterator it = tmp.begin();
-		std::string location;
-		int statusCode;
-
-		for (; it != tmp.end(); it++)
-			if (it->second == "return")
-				ss << it->first;
-		ss >> statusCode >> location;
-		_statusCode = static_cast<eStatus>(statusCode);
-		_headerFields.insert(std::pair<std::string, std::string>("Location:", location));
-		_makeResponse();
-	}
 	_findRoot();
 }
 
@@ -455,4 +440,21 @@ void Response::setResponse(std::string &response)
 void Response::setCookie(std::string cookie)
 {
 	_headerFields.insert(std::pair<std::string, std::string>("Set-Cookie:", cookie));
+}
+
+void Response::handleRedirection()
+{
+	std::map<std::string, std::string> tmp = _locationInfo->getLocationInfo();
+	std::stringstream ss;
+	std::map<std::string, std::string>::iterator it = tmp.begin();
+	std::string location;
+	int statusCode;
+
+	for (; it != tmp.end(); it++)
+		if (it->second == "return")
+			ss << it->first;
+	ss >> statusCode >> location;
+	_statusCode = static_cast<eStatus>(statusCode);
+	_headerFields.insert(std::pair<std::string, std::string>("Location:", location));
+	_makeResponse();
 }

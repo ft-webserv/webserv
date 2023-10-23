@@ -153,6 +153,7 @@ void Cgi::readResponse()
 	char buf[BUFFERSIZE + 1];
 	ssize_t readSize;
 	pid_t result;
+	int status;
 
 	while (true)
 	{
@@ -164,7 +165,7 @@ void Cgi::readResponse()
 			break;
 		_cgiResponse += buf;
 	}
-	result = waitpid(_pid, NULL, WNOHANG);
+	result = waitpid(_pid, &status, WNOHANG);
 	switch (result)
 	{
 	case 0:
@@ -174,7 +175,9 @@ void Cgi::readResponse()
 
 		deleteCgiEvent();
 
-		if (_cgiResponse.find("Status: ") != std::string::npos)
+		if (WIFEXITED(status) == true && WEXITSTATUS(status) == true)
+			throw(_500_INTERNAL_SERVER_ERROR);
+		else if (_cgiResponse.find("Status: ") != std::string::npos)
 		{
 			_cgiResponse = "HTTP/1.1 200 OK\r\nContent-Length: " + ft_itos(_cgiResponse.substr(_cgiResponse.find("\r\n\r\n") + 4).length()) + "\r\nContent-Type: text/html; charset=utf-8" + _cgiResponse.substr(_cgiResponse.find("\r\n\r\n"));
 			_response->setResponse(_cgiResponse);

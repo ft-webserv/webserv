@@ -49,7 +49,8 @@ public:
 	t_cgiInfo &getCgiInfo();
 	std::string &getPath(std::string location);
 	std::size_t &getClientMaxBodySize();
-  void setCookie(std::string cookie);
+	void setCookie(std::string cookie);
+	void handleRedirection();
 
 private:
 	void _findRoot();

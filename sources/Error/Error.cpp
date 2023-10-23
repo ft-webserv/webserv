@@ -76,8 +76,8 @@ void Error::sendErrorPage(uintptr_t socket, std::string errorPagePath, eStatus s
 		; // Log 만 찍기;
 	_response = "HTTP/1.1 " + ft_itos(statusCode) + " " + _findStatusText(statusCode) + "\r\n";
 	pos = errorPagePath.rfind(".");
-  if (statusCode == _401_UNAUTHORIZED)
-    _response += "WWW-Authenticate: Basic realm=admin\r\n";
+	if (statusCode == _401_UNAUTHORIZED)
+		_response += "WWW-Authenticate: Basic realm=admin\r\n";
 	if (pos == std::string::npos)
 		_response += "Content-Type: application/octet-stream\r\n";
 	else
