@@ -9,6 +9,7 @@
 #include <dirent.h>
 #include <algorithm>
 
+#include "Config.hpp"
 #include "Kqueue.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
@@ -16,6 +17,7 @@
 #include "Error.hpp"
 #include "Exception.hpp"
 #include "Utils.hpp"
+#include "Logger.hpp"
 
 #define ENVMAXSIZE 40
 

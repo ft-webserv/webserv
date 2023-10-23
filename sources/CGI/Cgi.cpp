@@ -1,8 +1,5 @@
 #include "Cgi.hpp"
-#include <sys/_types/_clock_t.h>
 #include "Client.hpp"
-#include "Config.hpp"
-#include <ctime>
 
 Cgi::Cgi(Request *request, Response *response, uintptr_t socket, Client *client)
 {
@@ -146,6 +143,7 @@ void Cgi::writeBody()
 	{
 		kqueue.deleteEvent(_reqFd[1], EVFILT_WRITE, static_cast<void *>(this));
 		kqueue.enableEvent(_resFd[0], EVFILT_READ, static_cast<void *>(this));
+		Logger::serverWriteToCgi(_reqFd[1]);
 		close(_reqFd[1]);
 	}
 }
@@ -185,6 +183,7 @@ void Cgi::readResponse()
 			_response->setResponse(_cgiResponse);
 		kqueue.enableEvent(_clientSock, EVFILT_WRITE, static_cast<void *>(_client));
 		_client->setCgi(NULL);
+		Logger::serverReadFromCgi(_resFd[0]);
 		delete this;
 	}
 }
