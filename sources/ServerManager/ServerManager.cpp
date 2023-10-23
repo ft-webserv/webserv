@@ -28,7 +28,7 @@ void ServerManager::runServer()
 	int servSock;
 	Config &_conf = Config::getInstance();
 
-	std::cout << "====== \033[1m\033[34mWebServer is opened!!\033[0m ======\n\n";
+	Logger::hellowWorld();
 	for (iter = _conf.getPorts().begin(); iter != _conf.getPorts().end(); iter++)
 	{
 		if ((servSock = socket(PF_INET, SOCK_STREAM, 0)) == -1)
@@ -47,10 +47,8 @@ void ServerManager::runServer()
 			Exception::listenError();
 		fcntl(servSock, F_SETFL, O_NONBLOCK, FD_CLOEXEC);
 		_kqueue.addEvent(servSock, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		std::cout << "       Socket: \033[32m" << servSock << "\033[0m";
-		std::cout << " | Port: \033[32m" << *iter << "\033[0m\n";
+		Logger::openedServerInfo(servSock, *iter);
 	}
-	std::cout << "\n===================================\n";
 	_monitoringEvent();
 }
 

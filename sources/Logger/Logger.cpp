@@ -8,6 +8,17 @@ Logger::~Logger()
 {
 }
 
+void Logger::hellowWorld()
+{
+	std::cout << "\n====== " << BOLD_BLUE << "WebServer is opened!!" << CLEAR << "======\n\n";
+}
+
+void Logger::openedServerInfo(int servSock, int port)
+{
+	std::cout << "       Socket: " << GREEN << servSock << CLEAR;
+	std::cout << " | Port: " << GREEN << port << CLEAR << std::endl;
+}
+
 void Logger::clientConnect(uintptr_t clntSock)
 {
 	std::cout << BLUE << "[" << printDate() << "]"
