@@ -1,6 +1,5 @@
 #pragma once
 
-// standard header
 #include <cstring>
 #include <sys/socket.h>
 

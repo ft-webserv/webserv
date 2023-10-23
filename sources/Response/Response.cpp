@@ -98,9 +98,7 @@ void Response::setServerInfo(ServerInfo *serverBlock)
 	_serverInfo = serverBlock;
 	std::size_t clientMaxSize = ft_stoi(mapFind(_serverInfo->getServerInfo(), "client_max_body_size"));
 	if (clientMaxSize != 0)
-	{
 		_clientMaxBodySize = clientMaxSize;
-	}
 }
 
 void Response::setLocationInfo(LocationInfo *locationBlock)
@@ -110,9 +108,7 @@ void Response::setLocationInfo(LocationInfo *locationBlock)
 
 	std::size_t clientMaxSize = ft_stoi(mapFind(tmp, "client_max_body_size"));
 	if (clientMaxSize != 0)
-	{
 		_clientMaxBodySize = clientMaxSize;
-	}
 	if (mapFind(tmp, "return").empty() == false)
 	{
 		std::stringstream ss;
@@ -121,10 +117,8 @@ void Response::setLocationInfo(LocationInfo *locationBlock)
 		int statusCode;
 
 		for (; it != tmp.end(); it++)
-		{
 			if (it->second == "return")
 				ss << it->first;
-		}
 		ss >> statusCode >> location;
 		_statusCode = static_cast<eStatus>(statusCode);
 		_headerFields.insert(std::pair<std::string, std::string>("Location:", location));
@@ -251,9 +245,6 @@ void Response::_deleteFile(std::string location)
 		throw(_403_FORBIDDEN);
 	if (std::remove(_path.c_str()) != 0)
 		throw(_500_INTERNAL_SERVER_ERROR);
-	// _headerFields.insert(std::pair<std::string, std::string>("Content-Length:", "19"));
-	// _headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "application/json"));
-	// _body += "\r\n{\"success\":\"true\"}";
 }
 
 void Response::_makePath(std::string location)
@@ -291,7 +282,6 @@ void Response::_setHeader(std::string path, off_t size)
 		else
 			_headerFields.insert(std::pair<std::string, std::string>("Content-Type:", "application/octet-stream"));
 	}
-	// _headerFields.insert(std::pair<std::string, std::string>("Connection:", "keep-alive"));
 	_setBody(path, size);
 }
 
@@ -334,17 +324,15 @@ void Response::_showFileList(std::string path)
 
 	dirp = opendir(path.c_str());
 	if (dirp == NULL)
-	{
 		throw(_500_INTERNAL_SERVER_ERROR);
-	}
 	_body += "<table width=\"450\" height=\"200\" align=\"left\">";
 	_body += "<th>Name</th><th>Last Modified</th><th>Size</th>";
 	while ((dp = readdir(dirp)) != NULL)
 	{
 		_body += "<tr>";
 		name = dp->d_name;
-    if (name == ".")
-      continue;
+		if (name == ".")
+			continue;
 		dpPath = path + "/" + name;
 		stat(dpPath.c_str(), &buf);
 		time = std::ctime(&buf.st_mtimespec.tv_sec);
@@ -413,7 +401,7 @@ std::string Response::getErrorPage()
 
 	if (_serverInfo != NULL)
 	{
-		std::map<std::string, std::string>& tmp = _serverInfo->getServerInfo();
+		std::map<std::string, std::string> &tmp = _serverInfo->getServerInfo();
 		findResult = mapFind(tmp, "errorpage");
 	}
 	if (findResult.empty() == false)

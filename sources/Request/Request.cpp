@@ -99,17 +99,11 @@ void Request::parseRequest()
 				line >> _parsedRequest._host;
 			}
 			else if (word == "Accept:")
-			{
 				line >> _parsedRequest._accept;
-			}
 			else if (word == "Connection:")
-			{
 				line >> _parsedRequest._connection;
-			}
 			else if (word == "Content-Type:")
-			{
 				line >> _parsedRequest._contentType;
-			}
 			else if (word == "Cookie:")
 			{
 				std::string cookie;
@@ -173,7 +167,6 @@ void Request::parseRequest()
 		}
 		_checkValidHeader();
 	}
-	// testPrintRequest();
 }
 
 void Request::_parseStartLine(std::string::size_type &pre, std::string::size_type &pos)
@@ -186,24 +179,6 @@ void Request::_parseStartLine(std::string::size_type &pre, std::string::size_typ
 	pos += 2;
 	pre = pos;
 	pos = _headerBuf.find("\r\n", pos);
-}
-
-void Request::testPrintRequest(void)
-{
-	std::cout << "Method: " << _parsedRequest._method << std::endl;
-	std::cout << "Location: " << _parsedRequest._location << std::endl;
-	std::cout << "HTTPVersion: " << _parsedRequest._httpVersion << std::endl;
-	std::cout << "HOST: " << _parsedRequest._host << std::endl;
-	std::cout << "Accept: " << _parsedRequest._accept << std::endl;
-	std::cout << "Connection: " << _parsedRequest._connection << std::endl;
-	std::cout << "ContentType: " << _parsedRequest._contentType << std::endl;
-	std::cout << "ContentLength: " << _parsedRequest._contentLength << std::endl;
-	std::cout << "Body: " << _parsedRequest._body << std::endl;
-	std::cout << "-------------------------------------------" << std::endl;
-	std::cout << "-------------------------------------------" << std::endl;
-	std::cout << "-------------------------------------------" << std::endl;
-	std::cout << "-------------------------------------------" << std::endl;
-	std::cout << "-------------------------------------------" << std::endl;
 }
 
 void Request::_checkValidHeader()

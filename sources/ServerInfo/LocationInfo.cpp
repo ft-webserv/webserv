@@ -49,7 +49,5 @@ void LocationInfo::printLocationInfo()
 	std::map<std::string, std::string>::iterator it;
 	it = _info.begin();
 	for (; it != _info.end(); it++)
-	{
 		std::cout << it->first << " : " << it->second << std::endl;
-	}
 }

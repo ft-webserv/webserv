@@ -5,7 +5,6 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <exception>
 #include <set>
 #include <sstream>
 
@@ -13,8 +12,6 @@
 #include "ServerInfo.hpp"
 #include "Utils.hpp"
 
-#define WORK_PATH "/Users/youngmch/Webserv"
-// #define WORK_PATH "/Users/youngmin/webserv"
 #define BUFFERSIZE 1024
 
 class Config

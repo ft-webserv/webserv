@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
 		else
 			Exception::unvalidArgumentsError();
 
-		ServerManager testManager;
-		testManager.runServer();
+		ServerManager serverManager;
+		serverManager.runServer();
 	}
 	catch (const std::exception &e)
 	{
