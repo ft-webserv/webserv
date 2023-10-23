@@ -12,4 +12,4 @@ size_t ft_stoi(std::string num);
 std::string ft_itos(size_t num);
 std::string findExtension(std::string fileName);
 void ft_toupper(char &c);
-std::string printDate();
+void printDate();

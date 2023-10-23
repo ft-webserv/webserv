@@ -46,13 +46,12 @@ void ft_toupper(char &c)
 		c = '_';
 }
 
-std::string printDate()
+void printDate()
 {
 	char buf[128];
 	std::time_t t = std::time(NULL);
 	std::tm *now = std::localtime(&t);
 
 	strftime(buf, sizeof(buf), "%Y-%m-%d %X", now);
-
-	return (buf);
+	std::cout << "[" << buf << "]";
 }
