@@ -94,17 +94,18 @@ void Client::readRequest(struct kevent *event)
 
 void Client::writeResponse()
 {
-	const std::string &method = _request.getParsedRequest()._method;
+	const t_request &parsedRequest = _request.getParsedRequest();
+	const std::string &method = parsedRequest._method;
 	AuthManager &authManager = AuthManager::getInstance();
 
 	std::string auth = mapFind(_response.getLocationInfo()->getLocationInfo(), "auth_basic");
 
 	if (auth == "on")
 	{
-		const std::string &sessionId = _request.getParsedRequest()._sessionId;
+		const std::string &sessionId = parsedRequest._sessionId;
 		if (sessionId == "")
 		{
-			const std::string &credentials = _request.getParsedRequest()._credentials;
+			const std::string &credentials = parsedRequest._credentials;
 
 			if (authManager.authentication(credentials) == false)
 				throw(_401_UNAUTHORIZED);
@@ -122,10 +123,8 @@ void Client::writeResponse()
 		}
 	}
 	if (_response.isAllowedMethod(method) == false)
-	{
 		throw(_405_METHOD_NOT_ALLOWED);
-	}
-	else if (_status < CGISTART && _response.isCgi(_request.getParsedRequest()._location) == true)
+	else if (_status < CGISTART && _response.isCgi(parsedRequest._location) == true)
 	{
 		Kqueue &kq = Kqueue::getInstance();
 
@@ -136,25 +135,15 @@ void Client::writeResponse()
 		return;
 	}
 	else if (_status >= CGISTART)
-	{
 		_status = CGIFIN;
-	}
 	else if (method == "GET" || method == "HEAD")
-	{
 		_response.handleGet(_request);
-	}
 	else if (method == "POST")
-	{
 		_response.handlePost(_request);
-	}
 	else if (method == "DELETE")
-	{
 		_response.handleDelete(_request);
-	}
 	else
-	{
 		throw(_501_NOT_IMPLEMENTED);
-	}
 	_sendResponse();
 }
 
